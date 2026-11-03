@@ -245,5 +245,6 @@
   "error.dataUntrusted": "A pasta de dados do PitCrew (%ProgramData%\\PitCrew) não está protegida, então ele não vai mudar nada nesta sessão. Abra o PitCrew de novo como administrador; se a mensagem continuar, confira as permissões dessa pasta.",
   "error.journalUnreadable": "O diário de desfazer do PitCrew não pode ser lido, então nada será alterado ou desfeito até isso ser resolvido. Detalhes no log.",
   "error.targetInUse": "Outro programa já mexeu nisto, então o PitCrew não vai tocar.",
-  "msg.undoPartial": "{0}: {1} passo(s) não puderam ser desfeitos e continuam registrados para tentar de novo depois."
+  "msg.undoPartial": "{0}: {1} passo(s) não puderam ser desfeitos e continuam registrados para tentar de novo depois.",
+  "error.busy": "Outra janela ou comando do PitCrew está mudando configurações agora. Espere terminar e tente de novo."
 }

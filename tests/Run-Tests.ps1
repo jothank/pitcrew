@@ -47,6 +47,9 @@ function New-TestTweak([string]$Id, [object[]]$Actions, [string]$Scope = 'machin
     }
 }
 
+# The real read-only task lookup, kept before it is replaced by a fake below
+$script:RealGetTaskEnabled = ${function:Get-PcScheduledTaskEnabled}
+
 # --- Fakes for everything that would touch the real system -------------------------------------
 # Services and hibernation keep their state in the redirected registry, like the real ones do;
 # scheduled tasks, power plans and the mouse refresh keep it in memory.
@@ -454,6 +457,38 @@ try {
             Assert-True ($script:SeenEntry -and @($script:SeenEntry.actions).Count -eq 1) 'first step was journaled before the second ran'
             Assert-True (-not (Get-PcJournalEntry $t)) 'rolled back and removed after the failure'
         } finally { $script:FakeFailService = '' }
+    }
+
+    Test-Case 'the real task lookup returns nothing (no error) for a task that does not exist' {
+        $result = & $script:RealGetTaskEnabled '\PitCrewNoSuchFolder\' 'NoSuchTask'
+        Assert-True ($null -eq $result) 'missing task is $null'
+    }
+
+    Test-Case 'a folder whose permissions cannot be read is simply not trusted' {
+        Assert-Equal $false (Test-PcPathTrusted (Join-Path $testData 'does-not-exist')) 'missing path'
+    }
+
+    Test-Case 'cleanup refuses a root that is a junction' {
+        $realRoot = Join-Path $testData 'real-root'
+        $linkRoot = Join-Path $testData 'link-root'
+        New-Item -ItemType Directory -Force -Path $realRoot | Out-Null
+        Set-Content (Join-Path $realRoot 'old.txt') 'x'
+        (Get-Item (Join-Path $realRoot 'old.txt')).LastWriteTime = (Get-Date).AddDays(-5)
+        & cmd.exe /c mklink /J $linkRoot $realRoot | Out-Null
+        $r = Remove-PcOldFiles $linkRoot
+        Assert-Equal 0 $r.FreedBytes 'nothing deleted through the junction root'
+        Assert-True (Test-Path (Join-Path $realRoot 'old.txt')) 'file kept'
+        & cmd.exe /c rmdir $linkRoot | Out-Null
+    }
+
+    Test-Case 'read-only temp files are deleted too' {
+        $ro = Join-Path $testData 'ro-root'
+        New-Item -ItemType Directory -Force -Path $ro | Out-Null
+        $file = Join-Path $ro 'readonly.txt'
+        Set-Content $file 'x'
+        $item = Get-Item $file; $item.LastWriteTime = (Get-Date).AddDays(-5); $item.IsReadOnly = $true
+        $r = Remove-PcOldFiles $ro
+        Assert-True (-not (Test-Path $file)) 'read-only file deleted'
     }
 
     Test-Case 'a junction is never a trusted data folder' {

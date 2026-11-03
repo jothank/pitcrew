@@ -38,6 +38,13 @@ what comes next. 🧩 = needs a new engine action type, 📋 = only content or U
 | 📋 | Pre-flight checks before applying: pending restart, third-party antivirus, BitLocker state, settings locked by policy |
 | 📋 | Update installed programs with `winget upgrade` (needs structured output, not the localized table) |
 
+## Security follow-ups (from the second review)
+
+| Status | Item |
+|---|---|
+| 📋 | Journal a "pending" record with the before-state *before* each step, so a kill during `sc.exe`/`powercfg` itself also leaves an Undo |
+| 📋 | At an elevated start, warn if PitCrew's own folder (`src`, `tweaks`) is writable by standard users |
+
 ## Later
 
 | Status | Item |

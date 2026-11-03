@@ -89,7 +89,8 @@ GUIDs) always comes from the catalog, every record carries a fingerprint of its 
 only used for the catalog action with the same one, and every value read back is validated.
 
 The journal is written after **each** step (write-ahead), so a crash or Ctrl+C still leaves an
-Undo for what was already changed. Undo keeps going when one step fails and keeps that step in
+Undo for what was already changed; a named mutex keeps two PitCrew processes from rewriting it at
+the same time, and a step whose rollback fails keeps its record. Undo keeps going when one step fails and keeps that step in
 the journal to retry. Undo stays possible after an edition upgrade made a tweak "not available".
 
 `%ProgramData%\PitCrew` is reused only when it is provably PitCrew's: owned by Administrators or

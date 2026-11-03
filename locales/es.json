@@ -245,5 +245,6 @@
   "error.dataUntrusted": "La carpeta de datos de PitCrew (%ProgramData%\\PitCrew) no está protegida, así que no cambiará nada en esta sesión. Vuelve a abrir PitCrew como administrador; si el mensaje sigue, revisa los permisos de esa carpeta.",
   "error.journalUnreadable": "No se puede leer el registro de deshacer de PitCrew, así que no se cambiará ni se deshará nada hasta corregirlo. Los detalles están en el registro.",
   "error.targetInUse": "Otro programa ya cambió esto, así que PitCrew no lo toca.",
-  "msg.undoPartial": "{0}: {1} paso(s) no se pudieron deshacer y siguen registrados para intentarlo más tarde."
+  "msg.undoPartial": "{0}: {1} paso(s) no se pudieron deshacer y siguen registrados para intentarlo más tarde.",
+  "error.busy": "Otra ventana o comando de PitCrew está cambiando configuraciones ahora. Espera a que termine y vuelve a intentarlo."
 }

@@ -145,8 +145,8 @@ function Get-PcMyJournalEntries {
 }
 
 function Get-PcActionTarget($Action) {
-    # Fingerprint of what an action touches. A journal record is only used for the action with the
-    # same target, so a catalog update that moves or changes actions can't mix up snapshots.
+    # Fingerprint of what an action touches. A journal record is only used for the catalog action
+    # with the same target, so a catalog update that moves or changes actions can't mix snapshots.
     switch ($Action.type) {
         'registry'      { '{0}|{1}' -f $Action.path, $Action.name }
         'dxSetting'     { $Action.key }
@@ -157,9 +157,35 @@ function Get-PcActionTarget($Action) {
     }
 }
 
-function Test-PcRecordMatches($Action, $Record) {
-    if (-not $Action -or $Action.type -ne $Record.type) { return $false }
-    return $Record.target -eq (Get-PcActionTarget $Action)
+function Find-PcRecordAction($Tweak, $Record) {
+    # The catalog action a journal record belongs to: same type and target, wherever it now sits.
+    # Records from before targets were stored fall back to index and type.
+    $actions = @($Tweak.actions)
+    if ($Record.PSObject.Properties['target'] -and $Record.target) {
+        for ($i = 0; $i -lt $actions.Count; $i++) {
+            if ($actions[$i].type -eq $Record.type -and (Get-PcActionTarget $actions[$i]) -eq $Record.target) { return $actions[$i] }
+        }
+        return $null
+    }
+    $index = [int]$Record.index
+    if ($index -ge 0 -and $index -lt $actions.Count -and $actions[$index].type -eq $Record.type) { return $actions[$index] }
+    return $null
+}
+
+function Use-PcJournalLock([scriptblock]$Body) {
+    # Two PitCrew processes (the window and a CLI run) must not read-modify-write the journal at
+    # the same time, or one would drop the other's undo records
+    $mutex = New-Object System.Threading.Mutex($false, 'Global\PitCrew.Journal')
+    $owned = $false
+    try {
+        try { $owned = $mutex.WaitOne([TimeSpan]::FromSeconds(60)) }
+        catch [System.Threading.AbandonedMutexException] { $owned = $true }
+        if (-not $owned) { throw (Get-PcText 'error.busy') }
+        & $Body
+    } finally {
+        if ($owned) { $mutex.ReleaseMutex() }
+        $mutex.Dispose()
+    }
 }
 
 # --- Tweak operations -----------------------------------------------------------------------------
@@ -197,6 +223,10 @@ function Invoke-PcTweakRefresh($Tweak) {
 function Invoke-PcTweak($Tweak) {
     # Returns $true when something changed, $false when it was already in place
     Assert-PcCanChange $Tweak
+    Use-PcJournalLock { Invoke-PcTweakLocked $Tweak }
+}
+
+function Invoke-PcTweakLocked($Tweak) {
     $entries = @(Get-PcJournal -Strict)
     $key = Get-PcJournalKey $Tweak
     $existing = $entries | Where-Object { $_.key -eq $key } | Select-Object -First 1
@@ -205,65 +235,87 @@ function Invoke-PcTweak($Tweak) {
     # Two tweaks that own the same thing (both power plans, say) would undo each other's snapshot
     foreach ($otherId in @($Tweak.conflictsWith)) {
         if (-not $otherId) { continue }
-        $owner = $others | Where-Object { $_.tweakId -eq $otherId } | Select-Object -First 1
-        if ($owner) { throw (Get-PcText 'error.conflict' -FormatArgs $otherId) }
+        if ($others | Where-Object { $_.tweakId -eq $otherId } | Select-Object -First 1) {
+            throw (Get-PcText 'error.conflict' -FormatArgs $otherId)
+        }
     }
 
     $state = Get-PcTweakState $Tweak
     if ($state -eq 'NotApplicable') { throw (Get-PcText 'error.notApplicable') }
-    if (-not $existing -and $state -eq 'Applied') {
-        # Already set by Windows, a policy or another tool: recording it would offer an Undo
-        # that can only put back the same values
+    if ($state -eq 'Error') { throw (Get-PcText 'msg.error' -FormatArgs $Tweak.id) }
+    if ($state -eq 'Applied') {
+        # Nothing to do. Without an entry it was set by Windows, a policy or another tool, and
+        # recording it would offer an Undo that can only put back the same values.
         Write-PcLog "Apply $($Tweak.id): already applied, nothing recorded"
         return $false
     }
 
     $actions = @($Tweak.actions)
     $fresh = New-Object System.Collections.Generic.List[object]     # what this call changed, for rollback
-    $records = New-Object System.Collections.Generic.List[object]   # what goes to the journal
+    # Journal records start from the existing ones, so an interrupted re-apply keeps the original
+    # snapshots of steps it hasn't reached
+    $records = New-Object System.Collections.Generic.List[object]
+    if ($existing) { foreach ($old in @($existing.actions)) { $records.Add($old) } }
+
+    $newEntry = {
+        [pscustomobject]@{
+            key       = $key
+            tweakId   = $Tweak.id
+            appliedAt = (Get-Date).ToString('o')
+            userSid   = Get-PcCurrentUserSid
+            actions   = $records.ToArray()
+        }
+    }
     try {
         foreach ($item in @(Get-PcAvailableActions $Tweak)) {
             $target = Get-PcActionTarget $item.Action
-            $previous = $null
-            if ($existing) {
-                $previous = @($existing.actions) | Where-Object { $_.index -eq $item.Index -and (Test-PcRecordMatches $item.Action $_) } | Select-Object -First 1
-            }
+            $previous = $records | Where-Object { (Find-PcRecordAction $Tweak $_) -eq $item.Action } | Select-Object -First 1
+
             $record = Invoke-PcAction $item.Action
             $record | Add-Member -NotePropertyName index -NotePropertyValue $item.Index -Force
             $record | Add-Member -NotePropertyName target -NotePropertyValue $target -Force
             $fresh.Add($record)
 
             # Applying twice must not lose the original state: the journal keeps the first snapshot
-            $journalRecord = $record
+            $journalRecord = $record.PSObject.Copy()
             if ($previous) {
-                $journalRecord = $record.PSObject.Copy()
                 $journalRecord.before = $previous.before
                 if ($previous.PSObject.Properties['createdKeys']) {
                     $journalRecord | Add-Member -NotePropertyName createdKeys -NotePropertyValue @($previous.createdKeys) -Force
                 }
+                [void]$records.Remove($previous)
             }
             $records.Add($journalRecord)
 
             # Write-ahead: what is already changed is recorded before the next step, so a crash,
             # a kill or Ctrl+C still leaves an Undo for it
-            $entry = [pscustomobject]@{
-                key       = $key
-                tweakId   = $Tweak.id
-                appliedAt = (Get-Date).ToString('o')
-                userSid   = Get-PcCurrentUserSid
-                actions   = $records.ToArray()
-            }
-            Save-PcJournal ($others + $entry)
+            Save-PcJournal ($others + (& $newEntry))
         }
     } catch {
         $err = $_
         # Leave nothing half-applied: put back what this call changed, using this call's own
         # snapshots (not the older ones kept for the journal)
+        $stuck = @()
         for ($j = $fresh.Count - 1; $j -ge 0; $j--) {
             try { [void](Undo-PcAction $actions[$fresh[$j].index] $fresh[$j] -Force) }
-            catch { Write-PcLog "Rollback of $($Tweak.id) action $($fresh[$j].index) failed: $($_.Exception.Message)" 'Error' }
+            catch {
+                $stuck += $fresh[$j].target
+                Write-PcLog "Rollback of $($Tweak.id) action $($fresh[$j].index) failed: $($_.Exception.Message)" 'Error'
+            }
         }
-        try { Save-PcJournal $entries } catch { Write-PcLog "Could not restore the journal after a failed apply: $($_.Exception.Message)" 'Error' }
+        try {
+            if ($stuck.Count -eq 0) {
+                Save-PcJournal $entries
+            } else {
+                # Back to the records from before this call, plus a record for each step that
+                # couldn't be put back (it carries the earliest snapshot), so it can be undone later
+                $base = @()
+                if ($existing) { $base = @($existing.actions | Where-Object { $stuck -notcontains $_.target }) }
+                $keep = $base + @($records | Where-Object { $stuck -contains $_.target })
+                $records.Clear(); foreach ($k in $keep) { $records.Add($k) }
+                Save-PcJournal ($others + (& $newEntry))
+            }
+        } catch { Write-PcLog "Could not update the journal after a failed apply: $($_.Exception.Message)" 'Error' }
         Invoke-PcTweakRefresh $Tweak
         Write-PcLog "Apply $($Tweak.id) failed and was rolled back: $($err.Exception.Message)" 'Error'
         throw $err
@@ -276,31 +328,34 @@ function Invoke-PcTweak($Tweak) {
 
 function Undo-PcTweak($Tweak, [switch]$Force) {
     Assert-PcCanChange $Tweak -ForUndo
+    Use-PcJournalLock { Undo-PcTweakLocked $Tweak -Force:$Force }
+}
+
+function Undo-PcTweakLocked($Tweak, [switch]$Force) {
     $entries = @(Get-PcJournal -Strict)
     $key = Get-PcJournalKey $Tweak
     $entry = $entries | Where-Object { $_.key -eq $key } | Select-Object -First 1
     if (-not $entry) { throw (Get-PcText 'error.notInJournal') }
 
-    $actions = @($Tweak.actions)
     $skipped = 0
+    $failed = 0
     $keep = New-Object System.Collections.Generic.List[object]   # records that stay in the journal
     foreach ($record in @($entry.actions) | Sort-Object index -Descending) {
-        $index = [int]$record.index
-        $action = $null
-        if ($index -ge 0 -and $index -lt $actions.Count) { $action = $actions[$index] }
-        # The catalog decides what an action is; a record that no longer matches it is ignored
-        if (-not (Test-PcRecordMatches $action $record)) { $skipped++; continue }
-        # Target missing right now (task deleted, service removed): keep the snapshot for later
-        if (-not (Test-PcActionAvailable $action)) { $keep.Add($record); continue }
+        $action = Find-PcRecordAction $Tweak $record
+        # No catalog action for it (catalog changed): keep the snapshot instead of losing it
+        if (-not $action) { $keep.Add($record); $skipped++; continue }
         try {
+            # Target missing right now (task deleted, service removed): keep the snapshot for later
+            if (-not (Test-PcActionAvailable $action)) { $keep.Add($record); $skipped++; continue }
             if (-not (Undo-PcAction $action $record -Force:$Force)) {
                 $skipped++
-                Write-PcLog "Undo $($Tweak.id): action $index changed since PitCrew applied it; left as is" 'Warn'
+                Write-PcLog "Undo $($Tweak.id): $($record.target) changed since PitCrew applied it; left as is" 'Warn'
             }
         } catch {
             # One failure doesn't stop the rest; the failed one stays in the journal to retry
             $keep.Add($record)
-            Write-PcLog "Undo $($Tweak.id) action ${index}: $($_.Exception.Message)" 'Error'
+            $failed++
+            Write-PcLog "Undo $($Tweak.id) $($record.target): $($_.Exception.Message)" 'Error'
         }
     }
     $others = @($entries | Where-Object { $_.key -ne $key })
@@ -311,6 +366,6 @@ function Undo-PcTweak($Tweak, [switch]$Force) {
         Save-PcJournal $others
     }
     Invoke-PcTweakRefresh $Tweak
-    Write-PcLog "Undid $($Tweak.id) (skipped $skipped, kept $($keep.Count))"
-    return [pscustomobject]@{ TweakId = $Tweak.id; Skipped = $skipped; Failed = $keep.Count }
+    Write-PcLog "Undid $($Tweak.id) (skipped $skipped, failed $failed)"
+    return [pscustomobject]@{ TweakId = $Tweak.id; Skipped = $skipped; Failed = $failed }
 }

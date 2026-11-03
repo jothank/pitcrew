@@ -13,18 +13,33 @@ $script:PcCleanupTargets = @(
 )
 
 function Get-PcCleanupFolders([string]$Id) {
+    # Known-folder API only: TEMP, windir and friends are environment variables a process of the
+    # same user can redirect, and cleanup deletes as administrator
+    $windows = [Environment]::GetFolderPath('Windows')
+    $programData = [Environment]::GetFolderPath('CommonApplicationData')
+    $localAppData = [Environment]::GetFolderPath('LocalApplicationData')
     switch ($Id) {
-        'user-temp'     { [IO.Path]::GetTempPath() }
-        'windows-temp'  { Join-Path $env:windir 'Temp' }
-        'wu-cache'      { Join-Path $env:windir 'SoftwareDistribution\Download' }
+        'user-temp'     { Join-Path $localAppData 'Temp' }
+        'windows-temp'  { Join-Path $windows 'Temp' }
+        'wu-cache'      { Join-Path $windows 'SoftwareDistribution\Download' }
         'error-reports' {
-            Join-Path $env:ProgramData 'Microsoft\Windows\WER\ReportArchive'
-            Join-Path $env:ProgramData 'Microsoft\Windows\WER\ReportQueue'
-            Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\WER\ReportArchive'
-            Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\WER\ReportQueue'
+            Join-Path $programData 'Microsoft\Windows\WER\ReportArchive'
+            Join-Path $programData 'Microsoft\Windows\WER\ReportQueue'
+            Join-Path $localAppData 'Microsoft\Windows\WER\ReportArchive'
+            Join-Path $localAppData 'Microsoft\Windows\WER\ReportQueue'
         }
-        'minidumps'     { Join-Path $env:windir 'Minidump' }
+        'minidumps'     { Join-Path $windows 'Minidump' }
     }
+}
+
+function Test-PcCleanupRoot([string]$Folder) {
+    # A root must be a real folder exactly where it is named: not a junction, and not resolving
+    # anywhere else, otherwise the whole cleanup would move with it
+    $item = Get-Item -LiteralPath $Folder -Force -ErrorAction SilentlyContinue
+    if (-not $item -or -not $item.PSIsContainer) { return $false }
+    if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { return $false }
+    $final = [PitCrew.SafeDelete]::FinalPath($Folder)
+    return [bool]($final -and $final.TrimEnd('\') -ieq $item.FullName.TrimEnd('\'))
 }
 
 function Test-PcRebootPending {
@@ -71,7 +86,8 @@ namespace PitCrew {
     public static class SafeDelete {
         const uint DELETE = 0x00010000, READ_ATTRIBUTES = 0x80, SHARE_ALL = 7, OPEN_EXISTING = 3;
         const uint BACKUP_SEMANTICS = 0x02000000, OPEN_REPARSE_POINT = 0x00200000, ATTR_REPARSE = 0x400;
-        [StructLayout(LayoutKind.Sequential)]
+        // BY_HANDLE_FILE_INFORMATION: FILETIMEs are 4-byte aligned there, hence Pack = 4
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
         struct FileInfo { public uint Attributes; public long Created, Accessed, Written; public uint Volume, SizeHigh, SizeLow, Links, IndexHigh, IndexLow; }
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         static extern SafeFileHandle CreateFileW(string name, uint access, uint share, IntPtr sa, uint disposition, uint flags, IntPtr template);
@@ -81,6 +97,8 @@ namespace PitCrew {
         static extern bool GetFileInformationByHandle(SafeFileHandle handle, out FileInfo info);
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern bool SetFileInformationByHandle(SafeFileHandle handle, int infoClass, ref byte deleteFile, uint size);
+        [DllImport("kernel32.dll", SetLastError = true, EntryPoint = "SetFileInformationByHandle")]
+        static extern bool SetDispositionEx(SafeFileHandle handle, int infoClass, ref uint flags, uint size);
 
         static string Final(SafeFileHandle h) {
             var sb = new StringBuilder(1024);
@@ -110,6 +128,10 @@ namespace PitCrew {
                 string real = Final(h);
                 string root = rootFinal.TrimEnd('\\') + "\\";
                 if (real == null || !real.StartsWith(root, StringComparison.OrdinalIgnoreCase)) return false;
+                // FileDispositionInfoEx (Windows 10 1809+): DELETE | IGNORE_READONLY_ATTRIBUTE, so
+                // read-only temp files go too; older builds fall back to the plain disposition
+                uint flags = 0x1 | 0x10;
+                if (SetDispositionEx(h, 21, ref flags, 4)) return true;
                 byte yes = 1;
                 return SetFileInformationByHandle(h, 4, ref yes, 1);   // FileDispositionInfo
             }
@@ -122,7 +144,10 @@ namespace PitCrew {
 function Remove-PcOldFiles([string]$Folder, [int]$MinAgeHours = 24) {
     $freed = [int64]0
     $failed = 0
-    if (-not (Test-Path -LiteralPath $Folder)) { return [pscustomobject]@{ FreedBytes = $freed; InUse = $failed } }
+    if (-not (Test-PcCleanupRoot $Folder)) {
+        if (Test-Path -LiteralPath $Folder) { Write-PcLog "Cleanup skipped $Folder : not a plain folder where expected" 'Warn' }
+        return [pscustomobject]@{ FreedBytes = $freed; InUse = $failed }
+    }
     $root = [PitCrew.SafeDelete]::FinalPath($Folder)
     foreach ($file in @(Get-PcOldFiles $Folder $MinAgeHours)) {
         if ([PitCrew.SafeDelete]::Delete($file.FullName, $root)) { $freed += $file.Length }

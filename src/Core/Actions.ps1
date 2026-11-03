@@ -190,8 +190,9 @@ function Get-PcScheduledTaskEnabled([string]$Path, [string]$Name) {
     # that can't be read isn't mistaken for a missing one and its undo record isn't dropped
     try {
         $task = Get-ScheduledTask -TaskPath $Path -TaskName $Name -ErrorAction Stop
-    } catch [Microsoft.Management.Infrastructure.CimException] {
-        if ([string]$_.Exception.NativeErrorCode -eq 'NotFound') { return $null }
+    } catch {
+        # "Not found" arrives as a CimJobException with category ObjectNotFound
+        if ($_.CategoryInfo.Category -eq 'ObjectNotFound' -or $_.FullyQualifiedErrorId -like 'CmdletizationQuery_NotFound*') { return $null }
         throw
     }
     if (-not $task) { return $null }

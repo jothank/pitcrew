@@ -11,7 +11,8 @@ function Initialize-PcContext {
         # Windows Sandbox and many VMs can't create restore points; only for testing there
         [switch]$SkipRestorePoint
     )
-    if (-not $DataDir) { $DataDir = Join-Path $env:ProgramData 'PitCrew' }
+    # The known-folder API, not $env:ProgramData: environment variables can be redirected per user
+    if (-not $DataDir) { $DataDir = Join-Path ([Environment]::GetFolderPath('CommonApplicationData')) 'PitCrew' }
     $script:Pc = @{
         Root             = $Root
         DataDir          = $DataDir
@@ -81,6 +82,10 @@ function Get-PcDataPath([string]$Child) {
     Assert-PcDataTrusted
     $path = Join-Path $Pc.DataDir $Child
     if (-not (Test-Path -LiteralPath $path)) { New-Item -ItemType Directory -Force -Path $path | Out-Null }
+    elseif ($Child -and -not $Pc.RegistryRedirect -and -not (Test-PcPathTrusted $path)) {
+        # A subfolder left over from before the folder was secured (a "logs" junction, say)
+        throw (Get-PcText 'error.dataUntrusted')
+    }
     return $path
 }
 
@@ -98,20 +103,25 @@ $script:PcTrustedWriters = @(
 $script:PcWriteRightsMask = [int64](2 + 4 + 16 + 64 + 256 + 65536 + 262144 + 524288 + 0x10000000 + 0x40000000)
 
 function Test-PcPathTrusted([string]$Path) {
-    $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
-    if (-not $item) { return $false }
-    if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { return $false }
-    $acl = Get-Acl -LiteralPath $Path
-    if (@('S-1-5-32-544', 'S-1-5-18') -notcontains $acl.GetOwner([Security.Principal.SecurityIdentifier]).Value) { return $false }
-    foreach ($rule in $acl.GetAccessRules($true, $true, [Security.Principal.SecurityIdentifier])) {
-        if ($rule.AccessControlType -ne 'Allow') { continue }
-        $sid = $rule.IdentityReference.Value
-        if ($script:PcTrustedWriters -contains $sid) { continue }
-        # CREATOR OWNER only reaches children, and only trusted accounts can create them here
-        if ($sid -eq 'S-1-3-0' -and ($rule.PropagationFlags -band [Security.AccessControl.PropagationFlags]::InheritOnly)) { continue }
-        if (([int64][int]$rule.FileSystemRights) -band $script:PcWriteRightsMask) { return $false }
+    # Any failure (no access to read the permissions, say) means "not trusted", never an error
+    # that stops the window or, under another error preference, falls through to $true
+    try {
+        $item = Get-Item -LiteralPath $Path -Force -ErrorAction Stop
+        if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { return $false }
+        $acl = Get-Acl -LiteralPath $Path -ErrorAction Stop
+        if (@('S-1-5-32-544', 'S-1-5-18') -notcontains $acl.GetOwner([Security.Principal.SecurityIdentifier]).Value) { return $false }
+        foreach ($rule in $acl.GetAccessRules($true, $true, [Security.Principal.SecurityIdentifier])) {
+            if ($rule.AccessControlType -ne 'Allow') { continue }
+            $sid = $rule.IdentityReference.Value
+            if ($script:PcTrustedWriters -contains $sid) { continue }
+            # CREATOR OWNER only reaches children, and only trusted accounts can create them here
+            if ($sid -eq 'S-1-3-0' -and ($rule.PropagationFlags -band [Security.AccessControl.PropagationFlags]::InheritOnly)) { continue }
+            if (([int64][int]$rule.FileSystemRights) -band $script:PcWriteRightsMask) { return $false }
+        }
+        return $true
+    } catch {
+        return $false
     }
-    return $true
 }
 
 # Kept for the tests and older callers
@@ -124,7 +134,8 @@ function Protect-PcDataDir {
     $path = $Pc.DataDir
     if (Test-Path -LiteralPath $path) {
         if (Test-PcPathTrusted $path) { return }
-        $aside = '{0}.untrusted-{1:yyyyMMdd-HHmmss}' -f $path.TrimEnd('\'), (Get-Date)
+        # Unpredictable name: a user can't pre-create it to make the move fail every time
+        $aside = '{0}.untrusted-{1:yyyyMMdd-HHmmss}-{2}' -f $path.TrimEnd('\'), (Get-Date), [guid]::NewGuid().ToString('N').Substring(0, 8)
         # Moving a junction moves the link itself, not what it points to
         [IO.Directory]::Move($path, $aside)
         Write-PcLog "Data folder with unsafe owner or permissions moved to $aside" 'Warn'
@@ -154,7 +165,9 @@ function Assert-PcDataTrusted {
 function Get-PcUntrustedJournals {
     $parent = Split-Path $Pc.DataDir.TrimEnd('\') -Parent
     $leaf = Split-Path $Pc.DataDir.TrimEnd('\') -Leaf
-    Get-ChildItem -LiteralPath $parent -Directory -Filter "$leaf.untrusted-*" -ErrorAction SilentlyContinue | ForEach-Object FullName
+    # Only set-aside folders that actually held a journal are worth telling the user about
+    Get-ChildItem -LiteralPath $parent -Directory -Filter "$leaf.untrusted-*" -ErrorAction SilentlyContinue |
+        Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'journal.json') } | ForEach-Object FullName
 }
 
 function Get-PcLogDir {
