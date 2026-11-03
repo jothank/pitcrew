@@ -77,58 +77,84 @@ function Get-PcWindowsInfo {
 }
 
 function Get-PcDataPath([string]$Child) {
+    # Writing into a folder someone else controls would follow their junctions as administrator
+    Assert-PcDataTrusted
     $path = Join-Path $Pc.DataDir $Child
     if (-not (Test-Path -LiteralPath $path)) { New-Item -ItemType Directory -Force -Path $path | Out-Null }
     return $path
 }
 
-# The undo journal decides what an administrator's Undo writes, so its folder must not be
-# writable by standard users. %ProgramData% lets any user create subfolders, hence the reset.
-$script:PcTrustedOwners = @('S-1-5-32-544', 'S-1-5-18')                         # Administrators, SYSTEM
-$script:PcUntrustedSids = @('S-1-5-32-545', 'S-1-5-11', 'S-1-1-0', 'S-1-5-4')    # Users, Authenticated Users, Everyone, Interactive
-# WriteData, AppendData, WriteExtendedAttributes, DeleteSubdirectoriesAndFiles, WriteAttributes,
-# Delete, ChangePermissions, TakeOwnership
-$script:PcWriteRightsMask = 2 + 4 + 16 + 64 + 256 + 65536 + 262144 + 524288
+# The undo journal decides what an administrator's Undo writes, so its folder may only be
+# writable by Administrators and SYSTEM. %ProgramData% lets any user create subfolders (even a
+# junction named PitCrew pointing at their own folder), so an existing folder is reused only when
+# it is provably ours, and everything that reads or writes there checks that again.
+$script:PcTrustedWriters = @(
+    'S-1-5-18'                                                          # SYSTEM
+    'S-1-5-32-544'                                                      # Administrators
+    'S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464'    # TrustedInstaller
+)
+# Any right that lets someone change or replace content: WriteData, AppendData, WriteEA,
+# DeleteChild, WriteAttributes, Delete, WriteDAC, WriteOwner, GENERIC_ALL, GENERIC_WRITE
+$script:PcWriteRightsMask = [int64](2 + 4 + 16 + 64 + 256 + 65536 + 262144 + 524288 + 0x10000000 + 0x40000000)
 
-function Test-PcDataDirTrusted([string]$Path) {
+function Test-PcPathTrusted([string]$Path) {
+    $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+    if (-not $item) { return $false }
+    if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { return $false }
     $acl = Get-Acl -LiteralPath $Path
-    $owner = $acl.GetOwner([Security.Principal.SecurityIdentifier]).Value
-    if ($script:PcTrustedOwners -notcontains $owner) { return $false }
+    if (@('S-1-5-32-544', 'S-1-5-18') -notcontains $acl.GetOwner([Security.Principal.SecurityIdentifier]).Value) { return $false }
     foreach ($rule in $acl.GetAccessRules($true, $true, [Security.Principal.SecurityIdentifier])) {
         if ($rule.AccessControlType -ne 'Allow') { continue }
-        if ($script:PcUntrustedSids -contains $rule.IdentityReference.Value -and ([int]$rule.FileSystemRights -band $script:PcWriteRightsMask)) {
-            return $false
-        }
+        $sid = $rule.IdentityReference.Value
+        if ($script:PcTrustedWriters -contains $sid) { continue }
+        # CREATOR OWNER only reaches children, and only trusted accounts can create them here
+        if ($sid -eq 'S-1-3-0' -and ($rule.PropagationFlags -band [Security.AccessControl.PropagationFlags]::InheritOnly)) { continue }
+        if (([int64][int]$rule.FileSystemRights) -band $script:PcWriteRightsMask) { return $false }
     }
     return $true
 }
 
+# Kept for the tests and older callers
+function Test-PcDataDirTrusted([string]$Path) { Test-PcPathTrusted $Path }
+
 function Protect-PcDataDir {
-    # Admin only. Creates the data folder, or resets its permissions if anyone else could have
-    # written to it; a journal found in an untrusted folder is set aside, never trusted.
+    # Admin only. A data folder that isn't provably ours (owned by someone else, writable by
+    # others, or a junction) is moved aside and never read; a new one is created with its
+    # permissions already set. Throws when that can't be done, and callers stay read-only.
     $path = $Pc.DataDir
-    if (-not (Test-Path -LiteralPath $path)) { New-Item -ItemType Directory -Force -Path $path | Out-Null }
-    if (Test-PcDataDirTrusted $path) { return }
-    $journal = Join-Path $path 'journal.json'
-    if (Test-Path -LiteralPath $journal) {
-        $aside = Join-Path $path ('journal.untrusted-{0:yyyyMMdd-HHmmss}.json' -f (Get-Date))
-        Move-Item -LiteralPath $journal -Destination $aside
-        Write-PcLog "Journal in a folder with unsafe permissions moved to $aside" 'Warn'
+    if (Test-Path -LiteralPath $path) {
+        if (Test-PcPathTrusted $path) { return }
+        $aside = '{0}.untrusted-{1:yyyyMMdd-HHmmss}' -f $path.TrimEnd('\'), (Get-Date)
+        # Moving a junction moves the link itself, not what it points to
+        [IO.Directory]::Move($path, $aside)
+        Write-PcLog "Data folder with unsafe owner or permissions moved to $aside" 'Warn'
     }
     $acl = New-Object System.Security.AccessControl.DirectorySecurity
-    $acl.SetOwner((New-Object Security.Principal.SecurityIdentifier 'S-1-5-32-544'))
     $acl.SetAccessRuleProtection($true, $false)
     foreach ($rule in @(@('S-1-5-18', 'FullControl'), @('S-1-5-32-544', 'FullControl'), @('S-1-5-32-545', 'ReadAndExecute'))) {
         $acl.AddAccessRule((New-Object System.Security.AccessControl.FileSystemAccessRule(
             (New-Object Security.Principal.SecurityIdentifier $rule[0]), $rule[1], 'ContainerInherit, ObjectInherit', 'None', 'Allow')))
     }
-    Set-Acl -LiteralPath $path -AclObject $acl
-    Write-PcLog 'Data folder permissions set: Administrators and SYSTEM full control, Users read'
+    # Created with its ACL in one step: no window with the inherited, user-writable permissions.
+    # An elevated token's default owner is Administrators; the check below confirms it.
+    [void][IO.Directory]::CreateDirectory($path, $acl)
+    # If someone recreated the folder in between, CreateDirectory returned theirs untouched
+    if (-not (Test-PcPathTrusted $path)) { throw "The data folder $path could not be secured" }
+    Write-PcLog 'Data folder created: Administrators and SYSTEM full control, Users read'
+}
+
+function Assert-PcDataTrusted {
+    # Before anything reads the journal to act on it or writes into the data folder
+    if ($Pc.RegistryRedirect) { return }   # tests use a temp folder owned by the test user
+    if (-not (Test-PcPathTrusted $Pc.DataDir)) { throw (Get-PcText 'error.dataUntrusted') }
+    $journal = Join-Path $Pc.DataDir 'journal.json'
+    if ((Test-Path -LiteralPath $journal) -and -not (Test-PcPathTrusted $journal)) { throw (Get-PcText 'error.dataUntrusted') }
 }
 
 function Get-PcUntrustedJournals {
-    if (-not (Test-Path -LiteralPath $Pc.DataDir)) { return }
-    Get-ChildItem -LiteralPath $Pc.DataDir -Filter 'journal.untrusted-*.json' -ErrorAction SilentlyContinue | ForEach-Object FullName
+    $parent = Split-Path $Pc.DataDir.TrimEnd('\') -Parent
+    $leaf = Split-Path $Pc.DataDir.TrimEnd('\') -Leaf
+    Get-ChildItem -LiteralPath $parent -Directory -Filter "$leaf.untrusted-*" -ErrorAction SilentlyContinue | ForEach-Object FullName
 }
 
 function Get-PcLogDir {

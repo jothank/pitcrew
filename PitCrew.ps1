@@ -42,7 +42,8 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'src\Load.ps1')
 Initialize-PcContext -Root $PSScriptRoot -Language $Language -SkipRestorePoint:$NoRestorePoint
 if (Test-PcAdmin) {
-    try { Protect-PcDataDir } catch { Write-PcLog "Could not secure $($Pc.DataDir): $($_.Exception.Message)" 'Warn' }
+    # Fails closed: if the folder can't be secured, every change is refused (Assert-PcDataTrusted)
+    try { Protect-PcDataDir } catch { Write-PcLog "Could not secure $($Pc.DataDir): $($_.Exception.Message)" 'Error' }
 }
 
 if ($List) {

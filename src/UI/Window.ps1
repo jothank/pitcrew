@@ -498,7 +498,8 @@ function Invoke-PcApplyTweaks {
         param($r)
         $res = $r[-1]
         if ($res.NoRestorePoint) {
-            if (Confirm-PcAction (Get-PcText 'msg.noRestorePoint')) {
+            # A policy that locks System Restore settings means PitCrew must not offer to change them
+            if (-not (Test-PcRestoreConfigLocked) -and (Confirm-PcAction (Get-PcText 'msg.noRestorePoint'))) {
                 Start-PcJob -Work { param($Sync) Enable-PcSystemProtection } -Status (Get-PcText 'status.enablingProtection') -OnDone {
                     param($r)
                     Start-PcJob -Work $script:PcApplyWork -Arguments $script:PcPendingApply -Status (Get-PcText 'status.creatingRestorePoint') -OnDone ${function:Complete-PcApply}
@@ -533,7 +534,12 @@ function Invoke-PcUndoTweaks {
             $t = $tweaks | Where-Object id -eq $id
             if (-not (Get-PcJournalEntry $t)) { $notApplied++; continue }
             $Sync.Status = '{0} {1}' -f (Get-PcText 'status.undoing'), (Resolve-PcLocalized $t.title)
-            try { $skipped += (Undo-PcTweak $t).Skipped; $done++ }
+            try {
+                $u = Undo-PcTweak $t
+                $skipped += $u.Skipped
+                $done++
+                if ($u.Failed -gt 0) { $failed += Get-PcText 'msg.undoPartial' -FormatArgs (Resolve-PcLocalized $t.title), $u.Failed }
+            }
             catch { $failed += '{0}: {1}' -f (Resolve-PcLocalized $t.title), $_.Exception.Message }
         }
         [pscustomobject]@{ Done = $done; Skipped = $skipped; NotApplied = $notApplied; Failed = $failed }
@@ -594,6 +600,7 @@ function Invoke-PcLoadRestorePoints {
 
 function Invoke-PcCreateRestorePoint {
     if (Test-PcRestorePolicyBlocked) { Show-PcMessage (Get-PcText 'msg.restorePolicyBlocked') 'Warning'; return }
+    if ($Pc.SkipRestorePoint) { Show-PcMessage (Get-PcText 'dialog.apply.testMode'); return }
     $work = {
         param($Sync, $EnableFirst)
         if ($EnableFirst) { Enable-PcSystemProtection }
@@ -604,7 +611,7 @@ function Invoke-PcCreateRestorePoint {
     Start-PcJob -Work $work -Arguments @{ EnableFirst = $false } -Status (Get-PcText 'status.creatingRestorePoint') -OnDone {
         param($r)
         if ($r[-1].Created) { Show-PcMessage (Get-PcText 'msg.restorePointCreated' -FormatArgs $r[-1].Name); Invoke-PcLoadRestorePoints; return }
-        if (-not (Confirm-PcAction (Get-PcText 'msg.noRestorePoint'))) { return }
+        if ((Test-PcRestoreConfigLocked) -or -not (Confirm-PcAction (Get-PcText 'msg.noRestorePoint'))) { Show-PcMessage (Get-PcText 'msg.noRestorePointAbort') 'Warning'; return }
         Start-PcJob -Work $script:PcRestoreWork -Arguments @{ EnableFirst = $true } -Status (Get-PcText 'status.enablingProtection') -OnDone {
             param($r)
             if ($r[-1].Created) { Show-PcMessage (Get-PcText 'msg.restorePointCreated' -FormatArgs $r[-1].Name) }
@@ -713,6 +720,7 @@ function Invoke-PcRunCleanup {
         $inUse = [int](@($r) | Measure-Object InUse -Sum).Sum
         $text = Get-PcText 'msg.cleanDone' -FormatArgs (Format-PcBytes $freed)
         if ($inUse -gt 0) { $text += "`n" + (Get-PcText 'msg.cleanInUse' -FormatArgs $inUse) }
+        foreach ($bad in @($r | Where-Object Error)) { $text += "`n" + ('{0}: {1}' -f (Get-PcText "cleanup.$($bad.Id).detail").Split('.')[0], $bad.Error) }
         Show-PcMessage $text
         Invoke-PcAnalyzeCleanup
     }
@@ -853,6 +861,8 @@ function Set-PcStaticTexts {
     if (-not $script:PcIsAdmin) { $banner += Get-PcText 'banner.readOnly' }
     if ($script:PcOtherUser) { $banner += Get-PcText 'banner.otherUser' }
     if ($Pc.SkipRestorePoint) { $banner += Get-PcText 'banner.testMode' }
+    # Fail closed: an unsafe data folder means nothing can be changed this session
+    if ($script:PcIsAdmin -and -not $Pc.RegistryRedirect -and -not (Test-PcPathTrusted $Pc.DataDir)) { $banner += Get-PcText 'error.dataUntrusted' }
     $Ui.BannerText.Text = $banner -join "`n"
     $Ui.Banner.Visibility = if ($banner) { 'Visible' } else { 'Collapsed' }
 }

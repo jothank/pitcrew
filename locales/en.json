@@ -240,5 +240,10 @@
   "startup.disabled": "Disabled",
   "startup.empty": "No apps start with Windows.",
   "startup.enabled": "Starts with Windows",
-  "startup.missing": "Program not found"
+  "startup.missing": "Program not found",
+  "error.conflict": "Undo \"{0}\" first: both change the same setting.",
+  "error.dataUntrusted": "PitCrew\u0027s data folder (%ProgramData%\\PitCrew) isn\u0027t protected, so it won\u0027t change anything this session. Open PitCrew again as administrator; if this message stays, check that folder\u0027s permissions.",
+  "error.journalUnreadable": "PitCrew\u0027s undo journal can\u0027t be read, so nothing will be changed or undone until it is fixed. Details are in the log.",
+  "error.targetInUse": "Another program already set this, so PitCrew leaves it alone.",
+  "msg.undoPartial": "{0}: {1} step(s) could not be undone and stay recorded, so you can try again later."
 }

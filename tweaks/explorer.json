@@ -93,7 +93,7 @@
       "zh-CN": "右键直接显示完整的经典菜单，无需点击“显示更多选项”。你将不再使用 Windows 11 的精简菜单。"
     },
     "actions": [
-      { "type": "registry", "path": "HKCU:\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32", "name": "", "kind": "String", "value": "" }
+      { "type": "registry", "restoreBefore": "absentOnly", "path": "HKCU:\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32", "name": "", "kind": "String", "value": "" }
     ]
   },
   {

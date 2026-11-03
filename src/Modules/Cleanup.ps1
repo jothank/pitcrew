@@ -56,21 +56,84 @@ function Get-PcOldFiles([string]$Folder, [int]$MinAgeHours = 24) {
     Get-PcFolderTree $Folder | Where-Object { -not $_.PSIsContainer -and $_.LastWriteTime -lt $limit }
 }
 
-function Remove-PcOldFiles([string]$Folder) {
-    $freed = [int64]0
-    $failed = 0
-    foreach ($file in @(Get-PcOldFiles $Folder)) {
-        try {
-            Remove-Item -LiteralPath $file.FullName -Force -ErrorAction Stop
-            $freed += $file.Length
-        } catch {
-            $failed++    # in use; it goes away on its own later
+if (-not ('PitCrew.SafeDelete' -as [type])) {
+    Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+using Microsoft.Win32.SafeHandles;
+namespace PitCrew {
+    // Deletes by handle instead of by path. Cleanup runs as administrator in folders standard
+    // users can write to (Windows\Temp, WER queues); between listing a file and deleting it, a
+    // folder on its path could be swapped for a junction to C:\Windows. Here the object is opened
+    // first (the last component never followed if it is a link), its real location is checked
+    // against the root, and that exact object is deleted.
+    public static class SafeDelete {
+        const uint DELETE = 0x00010000, READ_ATTRIBUTES = 0x80, SHARE_ALL = 7, OPEN_EXISTING = 3;
+        const uint BACKUP_SEMANTICS = 0x02000000, OPEN_REPARSE_POINT = 0x00200000, ATTR_REPARSE = 0x400;
+        [StructLayout(LayoutKind.Sequential)]
+        struct FileInfo { public uint Attributes; public long Created, Accessed, Written; public uint Volume, SizeHigh, SizeLow, Links, IndexHigh, IndexLow; }
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        static extern SafeFileHandle CreateFileW(string name, uint access, uint share, IntPtr sa, uint disposition, uint flags, IntPtr template);
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        static extern uint GetFinalPathNameByHandleW(SafeFileHandle handle, StringBuilder path, uint length, uint flags);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool GetFileInformationByHandle(SafeFileHandle handle, out FileInfo info);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool SetFileInformationByHandle(SafeFileHandle handle, int infoClass, ref byte deleteFile, uint size);
+
+        static string Final(SafeFileHandle h) {
+            var sb = new StringBuilder(1024);
+            uint n = GetFinalPathNameByHandleW(h, sb, (uint)sb.Capacity, 0);
+            if (n == 0 || n >= sb.Capacity) return null;
+            string p = sb.ToString();
+            if (p.StartsWith(@"\\?\UNC\")) return @"\\" + p.Substring(8);
+            if (p.StartsWith(@"\\?\")) return p.Substring(4);
+            return p;
+        }
+
+        // The real, link-resolved path of a folder (used once for each cleanup root)
+        public static string FinalPath(string path) {
+            using (var h = CreateFileW(path, READ_ATTRIBUTES, SHARE_ALL, IntPtr.Zero, OPEN_EXISTING, BACKUP_SEMANTICS, IntPtr.Zero)) {
+                return h.IsInvalid ? null : Final(h);
+            }
+        }
+
+        // True when deleted. False when it is a link, lies outside the root, is in use or the
+        // folder isn't empty.
+        public static bool Delete(string path, string rootFinal) {
+            if (string.IsNullOrEmpty(rootFinal)) return false;
+            using (var h = CreateFileW(path, DELETE | READ_ATTRIBUTES, SHARE_ALL, IntPtr.Zero, OPEN_EXISTING, BACKUP_SEMANTICS | OPEN_REPARSE_POINT, IntPtr.Zero)) {
+                if (h.IsInvalid) return false;
+                FileInfo info;
+                if (!GetFileInformationByHandle(h, out info) || (info.Attributes & ATTR_REPARSE) != 0) return false;
+                string real = Final(h);
+                string root = rootFinal.TrimEnd('\\') + "\\";
+                if (real == null || !real.StartsWith(root, StringComparison.OrdinalIgnoreCase)) return false;
+                byte yes = 1;
+                return SetFileInformationByHandle(h, 4, ref yes, 1);   // FileDispositionInfo
+            }
         }
     }
-    # Folders left empty, deepest first; links were never collected, so they stay untouched
-    Get-PcFolderTree $Folder | Where-Object PSIsContainer | Sort-Object { $_.FullName.Length } -Descending |
-        Where-Object { -not (Get-ChildItem -LiteralPath $_.FullName -Force -ErrorAction SilentlyContinue) } |
-        ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force -ErrorAction SilentlyContinue }
+}
+'@
+}
+
+function Remove-PcOldFiles([string]$Folder, [int]$MinAgeHours = 24) {
+    $freed = [int64]0
+    $failed = 0
+    if (-not (Test-Path -LiteralPath $Folder)) { return [pscustomobject]@{ FreedBytes = $freed; InUse = $failed } }
+    $root = [PitCrew.SafeDelete]::FinalPath($Folder)
+    foreach ($file in @(Get-PcOldFiles $Folder $MinAgeHours)) {
+        if ([PitCrew.SafeDelete]::Delete($file.FullName, $root)) { $freed += $file.Length }
+        else { $failed++ }    # in use (goes away later), or no longer where it was listed
+    }
+    # Folders left empty, deepest first, only if untouched for the same period; a folder that
+    # still has anything in it simply isn't deleted
+    $limit = (Get-Date).AddHours(-$MinAgeHours)
+    Get-PcFolderTree $Folder | Where-Object { $_.PSIsContainer -and $_.LastWriteTime -lt $limit } |
+        Sort-Object { $_.FullName.Length } -Descending |
+        ForEach-Object { [void][PitCrew.SafeDelete]::Delete($_.FullName, $root) }
     return [pscustomobject]@{ FreedBytes = $freed; InUse = $failed }
 }
 
@@ -127,13 +190,18 @@ function Invoke-PcWindowsUpdateCacheCleanup {
         $services | Stop-Service -Force -ErrorAction Stop
         return Remove-PcOldFiles (Get-PcCleanupFolders 'wu-cache')
     } finally {
-        foreach ($s in $services) { Start-Service -Name $s.Name -ErrorAction SilentlyContinue }
+        foreach ($s in $services) {
+            try { Start-Service -Name $s.Name -ErrorAction Stop }
+            catch { Write-PcLog "Could not restart $($s.Name) after cleanup: $($_.Exception.Message)" 'Error' }
+        }
     }
 }
 
 function Invoke-PcCleanup {
     param([Parameter(Mandatory)][string[]]$Ids)
     foreach ($id in $Ids) {
+      # One target failing (reboot pending, cache busy) doesn't stop the others
+      try {
         $target = $script:PcCleanupTargets | Where-Object Id -eq $id
         if (-not $target) { throw "Unknown cleanup target: $id" }
         if ($target.NeedsAdmin -and -not (Test-PcAdmin)) { throw (Get-PcText 'error.needsAdmin') }
@@ -165,7 +233,11 @@ function Invoke-PcCleanup {
             }
         }
         Write-PcLog "Cleanup $id freed $freed bytes ($failed files in use)"
-        [pscustomobject]@{ Id = $id; FreedBytes = $freed; InUse = $failed }
+        [pscustomobject]@{ Id = $id; FreedBytes = $freed; InUse = $failed; Error = $null }
+      } catch {
+        Write-PcLog "Cleanup $id failed: $($_.Exception.Message)" 'Error'
+        [pscustomobject]@{ Id = $id; FreedBytes = [int64]0; InUse = 0; Error = $_.Exception.Message }
+      }
     }
 }
 

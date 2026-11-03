@@ -363,7 +363,126 @@ try {
         } finally { $Pc.WindowsInfo = $savedInfo; $Pc.FormFactor = $savedForm }
     }
 
+    Write-Host "`nReview fixes" -ForegroundColor Cyan
+
+    Test-Case 'undo keeps going after a failing step and keeps that step to retry' {
+        [void](Set-PcRegistryValue (Get-PcServiceKey 'PcFakeUndoFail') 'Start' 'DWord' 3)
+        $t = New-TestTweak 't.undofail' @(
+            (New-RegAction 'HKLM:\SOFTWARE\PcP' 'V' 'DWord' 1),
+            [pscustomobject]@{ type = 'service'; name = 'PcFakeUndoFail'; startupType = 'Disabled' })
+        [void](Invoke-PcTweak $t)
+        $script:FakeFailService = 'PcFakeUndoFail'
+        try { $r = Undo-PcTweak $t } finally { $script:FakeFailService = '' }
+        Assert-Equal 1 $r.Failed 'failed steps'
+        Assert-True (-not (Get-PcRegistryValue 'HKLM:\SOFTWARE\PcP' 'V').Exists) 'the other step was undone'
+        $left = Get-PcJournalEntry $t
+        Assert-Equal 1 @($left.actions).Count 'failed step kept in the journal'
+        $r2 = Undo-PcTweak $t
+        Assert-Equal 0 $r2.Failed 'retry works'
+        Assert-Equal 'Manual' (Get-PcServiceStartup 'PcFakeUndoFail') 'service restored on retry'
+    }
+
+    Test-Case 'a tweak that conflicts with an applied one is refused' {
+        $a = New-TestTweak 't.planA' @(New-RegAction 'HKLM:\SOFTWARE\PcQ' 'A')
+        $b = New-TestTweak 't.planB' @(New-RegAction 'HKLM:\SOFTWARE\PcQ' 'B')
+        $b | Add-Member -NotePropertyName conflictsWith -NotePropertyValue @('t.planA')
+        [void](Invoke-PcTweak $a)
+        $threw = $false
+        try { [void](Invoke-PcTweak $b) } catch { $threw = $true }
+        Assert-True $threw 'conflict refused'
+        Assert-True (-not (Get-PcRegistryValue 'HKLM:\SOFTWARE\PcQ' 'B').Exists) 'nothing written'
+        [void](Undo-PcTweak $a)
+    }
+
+    Test-Case 'a create-only (absentOnly) target is never written back from the journal' {
+        $path = 'HKCU:\Software\PcClasses2\CLSID\{y}\InprocServer32'
+        $t = New-TestTweak 't.absentonly' @([pscustomobject]@{ type = 'registry'; restoreBefore = 'absentOnly'; path = $path; name = ''; kind = 'String'; value = '' }) 'user'
+        [void](Invoke-PcTweak $t)
+        $entries = @(Get-PcJournal)
+        foreach ($e in $entries | Where-Object tweakId -eq 't.absentonly') {
+            $e.actions[0].before = [pscustomobject]@{ exists = $true; kind = 'ExpandString'; data = '%PUBLIC%\evil.dll' }
+        }
+        Save-PcJournal $entries
+        [void](Undo-PcTweak $t)
+        Assert-True (-not (Get-PcRegistryValue $path '').Exists) 'value deleted, not replaced by the journal value'
+        # And an existing value set by someone else is not taken over
+        [void](Set-PcRegistryValue $path '' 'String' 'C:\Other\server.dll')
+        $threw = $false
+        try { [void](Invoke-PcTweak $t) } catch { $threw = $true }
+        Assert-True $threw 'apply refused'
+        Assert-Equal 'C:\Other\server.dll' (Get-PcRegistryValue $path '').Data 'other value untouched'
+    }
+
+    Test-Case 'undo still works after the tweak became not applicable (edition upgrade)' {
+        $savedInfo = $Pc.WindowsInfo
+        try {
+            $Pc.WindowsInfo = [pscustomobject]@{ Edition = 'Professional'; Build = 26100 }
+            $t = New-TestTweak 't.edition' @(New-RegAction 'HKLM:\SOFTWARE\PcR' 'V') 'machine' ([pscustomobject]@{ editions = @('pro') })
+            [void](Invoke-PcTweak $t)
+            $Pc.WindowsInfo = [pscustomobject]@{ Edition = 'Enterprise'; Build = 26100 }
+            Assert-Equal 'NotApplicable' (Get-PcTweakState $t) 'now not applicable'
+            [void](Undo-PcTweak $t)
+            Assert-True (-not (Get-PcRegistryValue 'HKLM:\SOFTWARE\PcR' 'V').Exists) 'undone anyway'
+        } finally { $Pc.WindowsInfo = $savedInfo }
+    }
+
+    Test-Case 'a journal record is only used for the action with the same target' {
+        [void](Set-PcRegistryValue 'HKLM:\SOFTWARE\PcS' 'Old' 'DWord' 7)
+        $t1 = New-TestTweak 't.moved' @(New-RegAction 'HKLM:\SOFTWARE\PcS' 'Old' 'DWord' 1)
+        [void](Invoke-PcTweak $t1)
+        # A catalog update points the same index at another value
+        $t2 = New-TestTweak 't.moved' @(New-RegAction 'HKLM:\SOFTWARE\PcS' 'New' 'DWord' 1)
+        [void](Set-PcRegistryValue 'HKLM:\SOFTWARE\PcS' 'New' 'DWord' 1)
+        $r = Undo-PcTweak $t2
+        Assert-Equal 1 $r.Skipped 'old record ignored'
+        Assert-Equal 1 (Get-PcRegistryValue 'HKLM:\SOFTWARE\PcS' 'New').Data 'new value not given the old snapshot'
+    }
+
+    Test-Case 'the journal is written after each step (write-ahead)' {
+        $script:FakeFailService = 'PcFakeWal'
+        [void](Set-PcRegistryValue (Get-PcServiceKey 'PcFakeWal') 'Start' 'DWord' 3)
+        try {
+            # Watch the journal right after the first step by failing the second one
+            $t = New-TestTweak 't.wal' @(
+                (New-RegAction 'HKLM:\SOFTWARE\PcT' 'V' 'DWord' 1),
+                [pscustomobject]@{ type = 'service'; name = 'PcFakeWal'; startupType = 'Disabled' })
+            $seen = $null
+            $orig = ${function:Set-PcServiceStartup}
+            ${function:Set-PcServiceStartup} = { param($Name, $StartupType) $script:SeenEntry = Get-PcJournalEntry $t; throw 'fake fail' }
+            try { [void](Invoke-PcTweak $t) } catch { }
+            ${function:Set-PcServiceStartup} = $orig
+            Assert-True ($script:SeenEntry -and @($script:SeenEntry.actions).Count -eq 1) 'first step was journaled before the second ran'
+            Assert-True (-not (Get-PcJournalEntry $t)) 'rolled back and removed after the failure'
+        } finally { $script:FakeFailService = '' }
+    }
+
+    Test-Case 'a junction is never a trusted data folder' {
+        $real = Join-Path $testData 'real-folder'
+        $link = Join-Path $testData 'link-folder'
+        New-Item -ItemType Directory -Force -Path $real | Out-Null
+        & cmd.exe /c mklink /J $link $real | Out-Null
+        Assert-Equal $false (Test-PcPathTrusted $link) 'junction'
+        & cmd.exe /c rmdir $link | Out-Null
+    }
+
     Write-Host "`nCleanup" -ForegroundColor Cyan
+
+    Test-Case 'safe delete refuses a path that now runs through a junction' {
+        $base = Join-Path $testData 'toctou'
+        $root = Join-Path $base 'root'
+        $outside = Join-Path $base 'outside'
+        New-Item -ItemType Directory -Force -Path (Join-Path $root 'sub'), $outside | Out-Null
+        Set-Content (Join-Path $outside 'victim.txt') 'keep'
+        $rootFinal = [PitCrew.SafeDelete]::FinalPath($root)
+        # Listed as root\sub\victim.txt, then "sub" is swapped for a junction to outside
+        Remove-Item (Join-Path $root 'sub') -Force
+        & cmd.exe /c mklink /J (Join-Path $root 'sub') $outside | Out-Null
+        Assert-Equal $false ([PitCrew.SafeDelete]::Delete((Join-Path $root 'sub\victim.txt'), $rootFinal)) 'refused'
+        Assert-True (Test-Path (Join-Path $outside 'victim.txt')) 'file outside the root kept'
+        Set-Content (Join-Path $base 'root\plain.txt') 'temp'
+        Assert-Equal $true ([PitCrew.SafeDelete]::Delete((Join-Path $root 'plain.txt'), $rootFinal)) 'normal file deleted'
+        & cmd.exe /c rmdir (Join-Path $root 'sub') | Out-Null
+    }
 
     Test-Case 'cleanup never follows a junction out of the folder' {
         $base = Join-Path $testData 'junction-test'
@@ -383,7 +502,8 @@ try {
         $result = Remove-PcOldFiles $target
         Assert-True (Test-Path (Join-Path $outside 'precious.txt')) 'file behind the junction kept'
         Assert-True (-not (Test-Path (Join-Path $target 'inner\old.txt'))) 'old temp file deleted'
-        Assert-True (-not (Test-Path (Join-Path $target 'inner'))) 'emptied folder removed'
+        # Emptying a folder touches it, so it waits for the same 24 hours as files before going
+        Assert-True (Test-Path (Join-Path $target 'inner')) 'folder emptied just now is kept until it is old'
         Assert-Equal 0 (@(Get-PcOldFiles $target)).Count 'nothing left to delete'
         Assert-True ($result.FreedBytes -gt 0) 'freed bytes counted'
         & cmd.exe /c rmdir (Join-Path $target 'link') | Out-Null
@@ -447,12 +567,14 @@ try {
             }
             if ($t.appliesTo.formFactor) { Assert-True ($script:PcFormFactors -contains $t.appliesTo.formFactor) "$id formFactor" }
             if ($t.refresh) { Assert-True (@('mouse') -contains $t.refresh) "$id refresh" }
+            foreach ($other in @($t.conflictsWith)) { if ($other) { Assert-True ($tweaks.id -contains $other) "$id conflictsWith $other" } }
             foreach ($a in @($t.actions)) {
                 Assert-True ($script:PcActionTypes.ContainsKey($a.type)) "$id action type '$($a.type)'"
                 if ($script:PcActionTypes[$a.type].MachineOnly) { Assert-Equal 'machine' $t.scope "$id $($a.type) needs machine scope" }
                 switch ($a.type) {
                     'registry' {
                         Assert-True ($a.path -match '^HK(LM|CU):\\') "$id path"
+                        if ($a.restoreBefore) { Assert-Equal 'absentOnly' $a.restoreBefore "$id restoreBefore" }
                         if ($a.path -like 'HKCU:*') { Assert-Equal 'user' $t.scope "$id HKCU action needs user scope" }
                         else { Assert-Equal 'machine' $t.scope "$id HKLM action needs machine scope" }
                         if (-not $a.absent) { Assert-True ($script:PcRegistryKinds -contains $a.kind) "$id kind" }

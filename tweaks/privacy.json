@@ -131,6 +131,7 @@
     "scope": "machine",
     "evidence": "learn",
     "reversible": true,
+    "conflictsWith": ["privacy.diagnostic-data-off"],
     "reference": "https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-system#allowtelemetry",
     "appliesTo": { "editions": ["home", "pro"] },
     "title": {
@@ -163,6 +164,7 @@
     "scope": "machine",
     "evidence": "learn",
     "reversible": true,
+    "conflictsWith": ["privacy.diagnostic-data-minimum"],
     "reference": "https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-system#allowtelemetry",
     "appliesTo": { "editions": ["enterprise", "education"] },
     "title": {

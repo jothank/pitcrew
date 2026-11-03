@@ -18,8 +18,11 @@ function New-PcRestorePoint {
 
     $key = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore'
     $savedFile = Join-Path (Get-PcDataPath '') 'restore-frequency-original.txt'
+    $parsed = 0
     if (Test-Path -LiteralPath $savedFile) {
-        $saved = (Get-Content -LiteralPath $savedFile -Raw).Trim()
+        $saved = ([string](Get-Content -LiteralPath $savedFile -Raw)).Trim()
+        # A corrupt file must not block every later restore point: treat it as "no value"
+        if ($saved -ne 'none' -and -not [int]::TryParse($saved, [ref]$parsed)) { $saved = 'none' }
     } else {
         $current = (Get-ItemProperty $key -ErrorAction SilentlyContinue).SystemRestorePointCreationFrequency
         $saved = if ($null -eq $current) { 'none' } else { "$current" }
@@ -31,12 +34,15 @@ function New-PcRestorePoint {
     } catch {
         Write-PcLog "Restore point: $($_.Exception.Message)" 'Warn'
     } finally {
-        if ($saved -eq 'none') {
-            Remove-ItemProperty -Path $key -Name SystemRestorePointCreationFrequency -ErrorAction SilentlyContinue
-        } else {
-            $null = New-ItemProperty -Path $key -Name SystemRestorePointCreationFrequency -Value ([int]$saved) -PropertyType DWord -Force
+        try {
+            if ($saved -eq 'none' -or -not [int]::TryParse($saved, [ref]$parsed)) {
+                Remove-ItemProperty -Path $key -Name SystemRestorePointCreationFrequency -ErrorAction SilentlyContinue
+            } else {
+                $null = New-ItemProperty -Path $key -Name SystemRestorePointCreationFrequency -Value $parsed -PropertyType DWord -Force
+            }
+        } finally {
+            Remove-Item -LiteralPath $savedFile -ErrorAction SilentlyContinue
         }
-        Remove-Item -LiteralPath $savedFile -ErrorAction SilentlyContinue
     }
     $created = @(Get-PcRestorePointList | Where-Object { $_.Description -eq $Description -and $_.SequenceNumber -gt $before })
     Write-PcLog "Restore point '$Description': $($created.Count -gt 0)"
@@ -44,9 +50,16 @@ function New-PcRestorePoint {
 }
 
 function Test-PcRestorePolicyBlocked {
-    # Set by Group Policy (or a tweak tool): PitCrew never overrides it
+    # "Turn off System Restore" (DisableSR) stops restore points; PitCrew never overrides it
     $p = Get-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\SystemRestore' -ErrorAction SilentlyContinue
-    return [bool]($p -and ($p.DisableSR -eq 1 -or $p.DisableConfig -eq 1))
+    return [bool]($p -and $p.DisableSR -eq 1)
+}
+
+function Test-PcRestoreConfigLocked {
+    # "Turn off Configuration" (DisableConfig) only hides the settings: restore points still
+    # work, but PitCrew must not offer to switch System Protection on
+    $p = Get-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\SystemRestore' -ErrorAction SilentlyContinue
+    return [bool]($p -and $p.DisableConfig -eq 1)
 }
 
 function Get-PcLastRestorePoint {

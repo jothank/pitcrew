@@ -75,11 +75,17 @@ function Set-PcRegistryValue([string]$Path, [string]$Name, [string]$Kind, $Data)
         $missing.Insert(0, $probe)
         $probe = Split-Path $probe -Parent
     }
-    foreach ($k in $missing) {
-        New-Item -Path $k -Force | Out-Null
-        $created.Add($k)
+    try {
+        foreach ($k in $missing) {
+            New-Item -Path $k -Force | Out-Null
+            $created.Add($k)
+        }
+        New-ItemProperty -LiteralPath $real -Name (Get-PcRegistryCmdletName $Name) -PropertyType $Kind -Value (ConvertTo-PcNativeData $Kind $Data) -Force | Out-Null
+    } catch {
+        # The caller gets no record of a failed write, so don't leave the keys made for it behind
+        Remove-PcEmptyKeys $created.ToArray()
+        throw
     }
-    New-ItemProperty -LiteralPath $real -Name (Get-PcRegistryCmdletName $Name) -PropertyType $Kind -Value (ConvertTo-PcNativeData $Kind $Data) -Force | Out-Null
     return , $created.ToArray()
 }
 

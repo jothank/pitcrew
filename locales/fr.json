@@ -240,5 +240,10 @@
   "startup.disabled": "Désactivé",
   "startup.empty": "Aucune application ne démarre avec Windows.",
   "startup.enabled": "Démarre avec Windows",
-  "startup.missing": "Programme introuvable"
+  "startup.missing": "Programme introuvable",
+  "error.conflict": "Annulez d\u0027abord « {0} » : les deux modifient le même réglage.",
+  "error.dataUntrusted": "Le dossier de données de PitCrew (%ProgramData%\\PitCrew) n\u0027est pas protégé : rien ne sera modifié pendant cette session. Rouvrez PitCrew en tant qu\u0027administrateur ; si le message persiste, vérifiez les autorisations de ce dossier.",
+  "error.journalUnreadable": "Le journal d\u0027annulation de PitCrew est illisible : rien ne sera modifié ou annulé tant qu\u0027il n\u0027est pas réparé. Les détails sont dans le journal.",
+  "error.targetInUse": "Un autre programme a déjà modifié ce réglage ; PitCrew n\u0027y touche pas.",
+  "msg.undoPartial": "{0} : {1} étape(s) n\u0027ont pas pu être annulées et restent enregistrées pour réessayer plus tard."
 }

@@ -240,5 +240,10 @@
   "startup.disabled": "Deaktiviert",
   "startup.empty": "Keine App startet mit Windows.",
   "startup.enabled": "Startet mit Windows",
-  "startup.missing": "Programm nicht gefunden"
+  "startup.missing": "Programm nicht gefunden",
+  "error.conflict": "Mache zuerst \"{0}\" rückgängig: Beide ändern dieselbe Einstellung.",
+  "error.dataUntrusted": "Der Datenordner von PitCrew (%ProgramData%\\PitCrew) ist nicht geschützt, daher ändert PitCrew in dieser Sitzung nichts. Öffne PitCrew erneut als Administrator; bleibt die Meldung, prüfe die Berechtigungen dieses Ordners.",
+  "error.journalUnreadable": "Das Rückgängig-Protokoll von PitCrew kann nicht gelesen werden; bis das behoben ist, wird nichts geändert oder rückgängig gemacht. Details stehen im Log.",
+  "error.targetInUse": "Ein anderes Programm hat das bereits gesetzt, daher lässt PitCrew es in Ruhe.",
+  "msg.undoPartial": "{0}: {1} Schritt(e) konnten nicht rückgängig gemacht werden und bleiben gespeichert, damit du es später erneut versuchen kannst."
 }

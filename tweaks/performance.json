@@ -99,6 +99,7 @@
     "scope": "machine",
     "evidence": "learn",
     "reversible": true,
+    "conflictsWith": ["performance.ultimate-performance-plan"],
     "reference": "https://learn.microsoft.com/en-us/windows-hardware/design/device-experiences/powercfg-command-line-options",
     "appliesTo": { "formFactor": "desktop" },
     "title": {
@@ -131,6 +132,7 @@
     "scope": "machine",
     "evidence": "learn",
     "reversible": true,
+    "conflictsWith": ["performance.high-performance-plan"],
     "reference": "https://learn.microsoft.com/en-us/windows-hardware/design/device-experiences/powercfg-command-line-options",
     "appliesTo": { "formFactor": "desktop" },
     "title": {

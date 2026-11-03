@@ -42,6 +42,9 @@ function Test-PcRegistryActionApplied($Action) {
 
 function Invoke-PcRegistryAction($Action) {
     $before = Get-PcRegistryValue $Action.path $Action.name
+    # "absentOnly" targets load code (e.g. a COM server path): PitCrew only ever creates and later
+    # deletes them, and won't take over a value another program already set
+    if ($Action.restoreBefore -eq 'absentOnly' -and $before.Exists) { throw (Get-PcText 'error.targetInUse') }
     $createdKeys = @()
     if ($Action.absent) { Remove-PcRegistryValue $Action.path $Action.name }
     else { $createdKeys = Set-PcRegistryValue $Action.path $Action.name $Action.kind $Action.value }
@@ -60,7 +63,10 @@ function Get-PcAllowedCreatedKeys([string]$Path, $Record) {
 }
 
 function Undo-PcRegistryAction($Action, $Record) {
-    if ($Record.before.exists) {
+    if ($Action.restoreBefore -eq 'absentOnly') {
+        # Never write a value taken from the journal into a code-loading location
+        Remove-PcRegistryValue $Action.path $Action.name
+    } elseif ($Record.before.exists) {
         if ($script:PcRegistryKinds -notcontains $Record.before.kind) { throw "Journal has an invalid registry kind: $($Record.before.kind)" }
         [void](Set-PcRegistryValue $Action.path $Action.name $Record.before.kind $Record.before.data)
     } else {
@@ -180,7 +186,14 @@ function Undo-PcServiceAction($Action, $Record) {
 # --- scheduledTask: enabled / disabled -----------------------------------------------------------
 
 function Get-PcScheduledTaskEnabled([string]$Path, [string]$Name) {
-    $task = Get-ScheduledTask -TaskPath $Path -TaskName $Name -ErrorAction SilentlyContinue
+    # $null only when the task doesn't exist; any other error (access denied) is raised, so a task
+    # that can't be read isn't mistaken for a missing one and its undo record isn't dropped
+    try {
+        $task = Get-ScheduledTask -TaskPath $Path -TaskName $Name -ErrorAction Stop
+    } catch [Microsoft.Management.Infrastructure.CimException] {
+        if ([string]$_.Exception.NativeErrorCode -eq 'NotFound') { return $null }
+        throw
+    }
     if (-not $task) { return $null }
     return [bool]($task.State -ne 'Disabled')
 }
@@ -261,10 +274,16 @@ function Invoke-PcPowerPlanAction($Action) {
     [pscustomobject]@{ before = [pscustomobject]@{ activeScheme = $before; created = $created } }
 }
 
+$script:PcBalancedScheme = '381b4222-f694-41f0-9685-ff5bb260df2e'
+
 function Undo-PcPowerPlanAction($Action, $Record) {
     $old = [string]$Record.before.activeScheme
-    if (-not (Test-PcGuid $old) -or @(Get-PcPowerSchemes) -notcontains $old.ToLowerInvariant()) {
-        throw "Journal has an unknown power plan: $old"
+    if (-not (Test-PcGuid $old)) { throw "Journal has an invalid power plan: $old" }
+    $schemes = @(Get-PcPowerSchemes)
+    if ($schemes -notcontains $old.ToLowerInvariant()) {
+        # The previous plan was deleted since; Balanced is the Windows default and always exists
+        Write-PcLog "Power plan $old no longer exists; switching back to Balanced" 'Warn'
+        $old = $script:PcBalancedScheme
     }
     Set-PcActivePowerScheme $old
     if ($Record.before.created -eq $true) { Remove-PcPowerScheme $Action.guid }

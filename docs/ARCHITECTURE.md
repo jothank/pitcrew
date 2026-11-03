@@ -51,6 +51,15 @@ tools/Build-CatalogDoc.ps1  regenerates docs/CATALOG.md from the catalog
 One tweak has one scope, because the undo journal is keyed by it: split a setting that has both a
 machine and a per-user part into two tweaks.
 
+Two more optional fields:
+
+- `"conflictsWith": ["other.id"]` for tweaks that own the same thing (the two power plans, the
+  two diagnostic-data levels). Applying one is refused while the other is recorded, so undoing
+  them can't restore each other's snapshot.
+- `"restoreBefore": "absentOnly"` on a registry action whose location loads code (a COM server
+  path, for example). PitCrew only creates the value and later deletes it; it refuses to take over
+  a value another program already set, and Undo never writes a value read from the journal there.
+
 ### Action types
 
 | type | fields | scope | notes |
@@ -76,10 +85,21 @@ Before each action runs, the engine records the previous state in the journal
 - which registry keys it had to create.
 
 The journal stores only previous *values*; where to act (paths, service and task names, plan
-GUIDs) always comes from the catalog, and every value read back from the journal is validated
-before use. As administrator, PitCrew makes `%ProgramData%\PitCrew` writable only by
-Administrators and SYSTEM; a journal found in a folder others could write to is set aside as
-`journal.untrusted-*.json` and ignored.
+GUIDs) always comes from the catalog, every record carries a fingerprint of its target and is
+only used for the catalog action with the same one, and every value read back is validated.
+
+The journal is written after **each** step (write-ahead), so a crash or Ctrl+C still leaves an
+Undo for what was already changed. Undo keeps going when one step fails and keeps that step in
+the journal to retry. Undo stays possible after an edition upgrade made a tweak "not available".
+
+`%ProgramData%\PitCrew` is reused only when it is provably PitCrew's: owned by Administrators or
+SYSTEM, not a junction, and writable by no one else. Otherwise it is moved aside (never read) and
+a new one is created with its permissions set in the same call. If that fails, PitCrew changes
+nothing (fail closed), and every apply, undo and write into the folder checks this again.
+
+Cleanup deletes by handle: each file or folder is opened without following a final link, its real
+location is checked against the folder being cleaned, and only then is that exact object deleted.
+A folder swapped for a junction between listing and deleting can't redirect it.
 
 Undo restores that state and deletes created keys that are empty again, **but only where the
 current value is still the one PitCrew wrote**. If something else changed it since, that action is

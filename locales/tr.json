@@ -240,5 +240,10 @@
   "startup.disabled": "Devre dışı",
   "startup.empty": "Windows ile açılan uygulama yok.",
   "startup.enabled": "Windows ile başlar",
-  "startup.missing": "Program bulunamadı"
+  "startup.missing": "Program bulunamadı",
+  "error.conflict": "Önce \"{0}\" ayarını geri al: ikisi de aynı ayarı değiştiriyor.",
+  "error.dataUntrusted": "PitCrew\u0027un veri klasörü (%ProgramData%\\PitCrew) korumalı değil, bu yüzden bu oturumda hiçbir şey değiştirilmeyecek. PitCrew\u0027u yönetici olarak yeniden aç; mesaj devam ederse bu klasörün izinlerini kontrol et.",
+  "error.journalUnreadable": "PitCrew\u0027un geri alma günlüğü okunamıyor; düzeltilene kadar hiçbir şey değiştirilmeyecek veya geri alınmayacak. Ayrıntılar günlükte.",
+  "error.targetInUse": "Bunu başka bir program zaten değiştirmiş, bu yüzden PitCrew dokunmuyor.",
+  "msg.undoPartial": "{0}: {1} adım geri alınamadı ve daha sonra tekrar denemek için kayıtlı kalıyor."
 }
