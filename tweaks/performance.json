@@ -1,0 +1,62 @@
+[
+  {
+    "id": "performance.game-recording",
+    "risk": "safe",
+    "scope": "machine",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-applicationmanagement#allowgamedvr",
+    "title": {
+      "en": "Turn off Windows game recording",
+      "pt-BR": "Desligar a gravação de jogos do Windows",
+      "es": "Desactivar la grabación de juegos de Windows",
+      "fr": "Désactiver l'enregistrement de jeux de Windows",
+      "de": "Windows-Spielaufzeichnung ausschalten",
+      "ru": "Отключить запись игр в Windows",
+      "tr": "Windows oyun kaydını kapat",
+      "zh-CN": "关闭 Windows 游戏录制"
+    },
+    "description": {
+      "en": "Stops Xbox Game Bar from recording and streaming gameplay. Background recording uses CPU, GPU and disk while you play. You lose Game Bar clips and screenshots (Win+Alt+R, Win+Alt+PrtScn).",
+      "pt-BR": "Impede a Xbox Game Bar de gravar e transmitir jogos. A gravação em segundo plano usa processador, placa de vídeo e disco enquanto você joga. Você perde os clipes e capturas da Game Bar (Win+Alt+R, Win+Alt+PrtScn).",
+      "es": "Evita que Xbox Game Bar grabe y transmita partidas. La grabación en segundo plano usa CPU, GPU y disco mientras juegas. Pierdes los clips y las capturas de Game Bar (Win+Alt+R, Win+Alt+PrtScn).",
+      "fr": "Empêche Xbox Game Bar d'enregistrer et de diffuser vos parties. L'enregistrement en arrière-plan utilise le processeur, la carte graphique et le disque pendant que vous jouez. Vous perdez les clips et les captures de Game Bar (Win+Alt+R, Win+Alt+PrtScn).",
+      "de": "Verhindert, dass die Xbox Game Bar Spiele aufzeichnet und streamt. Die Aufzeichnung im Hintergrund belastet CPU, GPU und Festplatte, während du spielst. Du verlierst die Game-Bar-Clips und -Screenshots (Win+Alt+R, Win+Alt+PrtScn).",
+      "ru": "Не даёт Xbox Game Bar записывать и транслировать игру. Фоновая запись нагружает процессор, видеокарту и диск, пока вы играете. Вы потеряете клипы и снимки экрана Game Bar (Win+Alt+R, Win+Alt+PrtScn).",
+      "tr": "Xbox Game Bar'ın oyunları kaydetmesini ve yayınlamasını engeller. Arka planda kayıt, sen oynarken işlemciyi, ekran kartını ve diski kullanır. Game Bar klipleri ve ekran görüntüleri kaybolur (Win+Alt+R, Win+Alt+PrtScn).",
+      "zh-CN": "阻止 Xbox Game Bar 录制和直播游戏。后台录制会在你玩游戏时占用 CPU、GPU 和磁盘。你将无法使用 Game Bar 的视频片段和截图（Win+Alt+R、Win+Alt+PrtScn）。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR", "name": "AllowGameDVR", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "performance.background-apps",
+    "risk": "moderate",
+    "scope": "machine",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#1817-background-apps",
+    "title": {
+      "en": "Don't let Store apps run in the background",
+      "pt-BR": "Não deixar apps da Loja rodarem em segundo plano",
+      "es": "No dejar que las apps de la Tienda se ejecuten en segundo plano",
+      "fr": "Ne pas laisser les applications du Store s'exécuter en arrière-plan",
+      "de": "Store-Apps nicht im Hintergrund laufen lassen",
+      "ru": "Не разрешать приложениям из Store работать в фоне",
+      "tr": "Mağaza uygulamalarının arka planda çalışmasına izin verme",
+      "zh-CN": "不让应用商店应用在后台运行"
+    },
+    "description": {
+      "en": "Store apps stop working while closed, which saves memory, battery and network. Side effect: Store apps such as WhatsApp, Phone Link or new Outlook stop sending notifications until you open them.",
+      "pt-BR": "Os apps da Loja param de trabalhar quando estão fechados, o que economiza memória, bateria e internet. Efeito colateral: apps da Loja como WhatsApp, Vincular ao Celular ou o novo Outlook param de mostrar notificações até você abri-los.",
+      "es": "Las apps de la Tienda dejan de trabajar mientras están cerradas, lo que ahorra memoria, batería y datos de red. Efecto secundario: apps de la Tienda como WhatsApp, Vincular con el móvil o el nuevo Outlook dejan de enviar notificaciones hasta que las abras.",
+      "fr": "Les applications du Store cessent de travailler lorsqu'elles sont fermées, ce qui économise de la mémoire, de la batterie et de la bande passante. Effet secondaire : les applications du Store comme WhatsApp, Lien avec le téléphone ou le nouvel Outlook n'envoient plus de notifications tant que vous ne les ouvrez pas.",
+      "de": "Store-Apps arbeiten nicht mehr, solange sie geschlossen sind. Das spart Arbeitsspeicher, Akku und Netzwerkdaten. Nebenwirkung: Store-Apps wie WhatsApp, Link zum Smartphone oder das neue Outlook senden keine Benachrichtigungen mehr, bis du sie öffnest.",
+      "ru": "Приложения из Store перестают работать, пока закрыты, что экономит память, заряд батареи и трафик. Побочный эффект: приложения из Store, такие как WhatsApp, «Связь с телефоном» или новый Outlook, перестают присылать уведомления, пока вы их не откроете.",
+      "tr": "Mağaza uygulamaları kapalıyken çalışmayı bırakır; bu da bellekten, pilden ve ağdan tasarruf sağlar. Yan etki: WhatsApp, Telefon Bağlantısı veya yeni Outlook gibi Mağaza uygulamaları, sen açana kadar bildirim göndermez.",
+      "zh-CN": "应用商店应用在关闭后会停止工作，从而节省内存、电量和网络流量。副作用：WhatsApp、手机连接或新版 Outlook 等应用商店应用在你打开之前不会再发送通知。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy", "name": "LetAppsRunInBackground", "kind": "DWord", "value": 2 }
+    ]
+  }
+]

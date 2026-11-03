@@ -1,0 +1,124 @@
+[
+  {
+    "id": "privacy.advertising-id",
+    "risk": "safe",
+    "scope": "machine",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#181-general",
+    "title": {
+      "en": "Turn off the advertising ID",
+      "pt-BR": "Desligar o ID de publicidade",
+      "es": "Desactivar el identificador de publicidad",
+      "fr": "Désactiver l'identifiant publicitaire",
+      "de": "Werbe-ID ausschalten",
+      "ru": "Отключить рекламный идентификатор",
+      "tr": "Reklam kimliğini kapat",
+      "zh-CN": "关闭广告 ID"
+    },
+    "description": {
+      "en": "Apps stop receiving a per-user ID that ad networks use to profile you across apps. Ads still appear, just less targeted.",
+      "pt-BR": "Os apps deixam de receber um ID usado por redes de anúncios para traçar seu perfil entre apps. Os anúncios continuam, só menos direcionados.",
+      "es": "Las apps dejan de recibir un identificador por usuario que las redes publicitarias usan para elaborar tu perfil entre apps. Los anuncios siguen apareciendo, solo que menos personalizados.",
+      "fr": "Les applications ne reçoivent plus d'identifiant propre à chaque utilisateur que les régies publicitaires utilisent pour établir votre profil d'une application à l'autre. Les publicités continuent d'apparaître, mais sont moins ciblées.",
+      "de": "Apps erhalten keine benutzerbezogene ID mehr, mit der Werbenetzwerke dich über Apps hinweg profilieren. Werbung wird weiterhin angezeigt, nur weniger gezielt.",
+      "ru": "Приложения перестают получать идентификатор пользователя, с помощью которого рекламные сети составляют ваш профиль по разным приложениям. Реклама по-прежнему показывается, но менее целевая.",
+      "tr": "Uygulamalar, reklam ağlarının seni uygulamalar arasında profillemek için kullandığı kullanıcıya özel kimliği almayı bırakır. Reklamlar yine görünür, yalnızca daha az hedefli olur.",
+      "zh-CN": "应用将不再收到广告网络用来跨应用为你建立画像的用户专属 ID。广告仍会出现，只是针对性更低。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\AdvertisingInfo", "name": "DisabledByGroupPolicy", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "privacy.activity-history",
+    "risk": "safe",
+    "scope": "machine",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#1822-activity-history",
+    "title": {
+      "en": "Turn off activity history",
+      "pt-BR": "Desligar o histórico de atividades",
+      "es": "Desactivar el historial de actividades",
+      "fr": "Désactiver l'historique des activités",
+      "de": "Aktivitätsverlauf ausschalten",
+      "ru": "Отключить журнал действий",
+      "tr": "Etkinlik geçmişini kapat",
+      "zh-CN": "关闭活动历史记录"
+    },
+    "description": {
+      "en": "Windows stops recording which apps, files and sites you open, and stops sending that history to Microsoft.",
+      "pt-BR": "O Windows para de registrar quais apps, arquivos e sites você abre, e para de enviar esse histórico para a Microsoft.",
+      "es": "Windows deja de registrar qué apps, archivos y sitios abres, y deja de enviar ese historial a Microsoft.",
+      "fr": "Windows cesse d'enregistrer les applications, fichiers et sites que vous ouvrez, et cesse d'envoyer cet historique à Microsoft.",
+      "de": "Windows zeichnet nicht mehr auf, welche Apps, Dateien und Websites du öffnest, und sendet diesen Verlauf nicht mehr an Microsoft.",
+      "ru": "Windows перестаёт записывать, какие приложения, файлы и сайты вы открываете, и перестаёт отправлять эту историю в Microsoft.",
+      "tr": "Windows hangi uygulamaları, dosyaları ve siteleri açtığını kaydetmeyi ve bu geçmişi Microsoft'a göndermeyi bırakır.",
+      "zh-CN": "Windows 将不再记录你打开了哪些应用、文件和网站，也不再把这些历史记录发送给 Microsoft。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System", "name": "EnableActivityFeed", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System", "name": "PublishUserActivities", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System", "name": "UploadUserActivities", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "privacy.tailored-experiences",
+    "risk": "safe",
+    "scope": "user",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#1816-feedback--diagnostics",
+    "title": {
+      "en": "Don't use diagnostic data for tailored experiences",
+      "pt-BR": "Não usar dados de diagnóstico para \"experiências personalizadas\"",
+      "es": "No usar datos de diagnóstico para \"experiencias personalizadas\"",
+      "fr": "Ne pas utiliser les données de diagnostic pour des « expériences personnalisées »",
+      "de": "Diagnosedaten nicht für \"maßgeschneiderte Erfahrungen\" verwenden",
+      "ru": "Не использовать диагностические данные для «персонализированных возможностей»",
+      "tr": "Tanılama verilerini \"kişiselleştirilmiş deneyimler\" için kullanma",
+      "zh-CN": "不将诊断数据用于“定制体验”"
+    },
+    "description": {
+      "en": "Microsoft stops using your diagnostic data to pick tips, ads and recommendations for you. Applies to the current user.",
+      "pt-BR": "A Microsoft deixa de usar seus dados de diagnóstico para escolher dicas, anúncios e recomendações para você. Vale para o usuário atual.",
+      "es": "Microsoft deja de usar tus datos de diagnóstico para elegir consejos, anuncios y recomendaciones para ti. Se aplica al usuario actual.",
+      "fr": "Microsoft cesse d'utiliser vos données de diagnostic pour choisir des conseils, des publicités et des recommandations à votre intention. S'applique à l'utilisateur actuel.",
+      "de": "Microsoft verwendet deine Diagnosedaten nicht mehr, um Tipps, Werbung und Empfehlungen für dich auszuwählen. Gilt für den aktuellen Benutzer.",
+      "ru": "Microsoft перестаёт использовать ваши диагностические данные для подбора советов, рекламы и рекомендаций. Действует для текущего пользователя.",
+      "tr": "Microsoft, senin için ipuçları, reklamlar ve öneriler seçmek amacıyla tanılama verilerini kullanmayı bırakır. Geçerli kullanıcı için geçerlidir.",
+      "zh-CN": "Microsoft 将不再使用你的诊断数据来为你挑选提示、广告和推荐内容。适用于当前用户。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent", "name": "DisableTailoredExperiencesWithDiagnosticData", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "privacy.feedback-notifications",
+    "risk": "safe",
+    "scope": "machine",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#1816-feedback--diagnostics",
+    "title": {
+      "en": "Stop feedback requests",
+      "pt-BR": "Parar os pedidos de opinião",
+      "es": "Detener las solicitudes de opinión",
+      "fr": "Arrêter les demandes d'avis",
+      "de": "Feedback-Anfragen stoppen",
+      "ru": "Остановить запросы отзывов",
+      "tr": "Geri bildirim isteklerini durdur",
+      "zh-CN": "停止反馈请求"
+    },
+    "description": {
+      "en": "Windows stops popping up \"How likely are you to recommend...\" surveys. You can still open Feedback Hub on your own.",
+      "pt-BR": "O Windows para de abrir pesquisas do tipo \"Qual a chance de você recomendar...\". O Hub de Comentários continua disponível se você quiser usar.",
+      "es": "Windows deja de mostrar encuestas del tipo \"¿Qué probabilidad hay de que recomiendes...?\". Aun así, puedes abrir el Centro de opiniones cuando quieras.",
+      "fr": "Windows cesse d'afficher des enquêtes du type « Dans quelle mesure recommanderiez-vous... ». Vous pouvez toujours ouvrir le Hub de commentaires de vous-même.",
+      "de": "Windows blendet keine Umfragen mehr ein wie \"Wie wahrscheinlich ist es, dass du ... weiterempfiehlst\". Den Feedback-Hub kannst du weiterhin selbst öffnen.",
+      "ru": "Windows перестаёт показывать опросы вроде «Насколько вероятно, что вы порекомендуете...». Центр отзывов по-прежнему можно открыть самостоятельно.",
+      "tr": "Windows \"Önerme olasılığınız nedir...\" gibi anketleri açmayı bırakır. Geri Bildirim Merkezi'ni yine de kendin açabilirsin.",
+      "zh-CN": "Windows 将不再弹出“你有多大可能推荐……”之类的调查。你仍然可以自己打开反馈中心。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection", "name": "DoNotShowFeedbackNotifications", "kind": "DWord", "value": 1 }
+    ]
+  }
+]

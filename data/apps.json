@@ -1,0 +1,52 @@
+[
+  {
+    "package": "Microsoft.BingNews",
+    "storeId": "9WZDNCRFHVFW",
+    "name": { "en": "Microsoft News", "pt-BR": "Microsoft Notícias", "es": "Microsoft Noticias", "fr": "Microsoft Actualités", "de": "Microsoft News", "ru": "Microsoft Новости", "tr": "Microsoft Haberler", "zh-CN": "Microsoft News" }
+  },
+  {
+    "package": "Microsoft.BingWeather",
+    "storeId": "9WZDNCRFJ3Q2",
+    "name": { "en": "MSN Weather", "pt-BR": "MSN Clima", "es": "MSN Tiempo", "fr": "MSN Météo", "de": "MSN Wetter", "ru": "MSN Погода", "tr": "MSN Hava Durumu", "zh-CN": "MSN 天气" }
+  },
+  {
+    "package": "Clipchamp.Clipchamp",
+    "storeId": "9P1J8S7CCWWT",
+    "name": { "en": "Microsoft Clipchamp", "pt-BR": "Microsoft Clipchamp", "es": "Microsoft Clipchamp", "fr": "Microsoft Clipchamp", "de": "Microsoft Clipchamp", "ru": "Microsoft Clipchamp", "tr": "Microsoft Clipchamp", "zh-CN": "Microsoft Clipchamp" }
+  },
+  {
+    "package": "Microsoft.WindowsFeedbackHub",
+    "storeId": "9NBLGGH4R32N",
+    "name": { "en": "Feedback Hub", "pt-BR": "Hub de Comentários", "es": "Centro de opiniones", "fr": "Hub de commentaires", "de": "Feedback-Hub", "ru": "Центр отзывов", "tr": "Geri Bildirim Merkezi", "zh-CN": "反馈中心" }
+  },
+  {
+    "package": "Microsoft.GetHelp",
+    "storeId": "9PKDZBMV1H3T",
+    "name": { "en": "Get Help", "pt-BR": "Obter Ajuda", "es": "Obtener ayuda", "fr": "Obtenir de l'aide", "de": "Hilfe anfordern", "ru": "Техническая поддержка", "tr": "Yardım Al", "zh-CN": "获取帮助" }
+  },
+  {
+    "package": "Microsoft.Todos",
+    "storeId": "9NBLGGH5R558",
+    "name": { "en": "Microsoft To Do", "pt-BR": "Microsoft To Do", "es": "Microsoft To Do", "fr": "Microsoft To Do", "de": "Microsoft To Do", "ru": "Microsoft To Do", "tr": "Microsoft To Do", "zh-CN": "Microsoft To Do" }
+  },
+  {
+    "package": "Microsoft.OutlookForWindows",
+    "storeId": "9NRX63209R7B",
+    "name": { "en": "Outlook (new)", "pt-BR": "Outlook (novo)", "es": "Outlook (nuevo)", "fr": "Outlook (nouveau)", "de": "Outlook (neu)", "ru": "Outlook (новый)", "tr": "Outlook (yeni)", "zh-CN": "Outlook（新版）" }
+  },
+  {
+    "package": "Microsoft.Copilot",
+    "storeId": "9NHT9RB2F4HD",
+    "name": { "en": "Microsoft Copilot", "pt-BR": "Microsoft Copilot", "es": "Microsoft Copilot", "fr": "Microsoft Copilot", "de": "Microsoft Copilot", "ru": "Microsoft Copilot", "tr": "Microsoft Copilot", "zh-CN": "Microsoft Copilot" }
+  },
+  {
+    "package": "Microsoft.PowerAutomateDesktop",
+    "storeId": "9NFTCH6J7FHV",
+    "name": { "en": "Power Automate", "pt-BR": "Power Automate", "es": "Power Automate", "fr": "Power Automate", "de": "Power Automate", "ru": "Power Automate", "tr": "Power Automate", "zh-CN": "Power Automate" }
+  },
+  {
+    "package": "Microsoft.MicrosoftOfficeHub",
+    "storeId": "9WZDNCRD29V9",
+    "name": { "en": "Microsoft 365 Copilot", "pt-BR": "Microsoft 365 Copilot", "es": "Microsoft 365 Copilot", "fr": "Microsoft 365 Copilot", "de": "Microsoft 365 Copilot", "ru": "Microsoft 365 Copilot", "tr": "Microsoft 365 Copilot", "zh-CN": "Microsoft 365 Copilot" }
+  }
+]

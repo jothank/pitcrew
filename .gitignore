@@ -1,0 +1,17 @@
+# Runtime data normally lives in %ProgramData%\PitCrew; these catch anything written next to the code
+logs/
+reports/
+driver-backups/
+*.log
+
+# The original stand-alone driver script this project grew from (now src/Modules/Drivers.ps1)
+/atualizar-drivers/
+
+# Local renders and scratch files
+/screenshots-local/
+*.tmp
+
+# Editors
+.vscode/
+.idea/
+*.swp
