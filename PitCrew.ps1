@@ -41,6 +41,9 @@ param(
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'src\Load.ps1')
 Initialize-PcContext -Root $PSScriptRoot -Language $Language -SkipRestorePoint:$NoRestorePoint
+if (Test-PcAdmin) {
+    try { Protect-PcDataDir } catch { Write-PcLog "Could not secure $($Pc.DataDir): $($_.Exception.Message)" 'Warn' }
+}
 
 if ($List) {
     Import-PcTweaks | ForEach-Object {
@@ -65,7 +68,10 @@ if ($Apply -or $Undo) {
         if (-not (New-PcRestorePoint -Description ('PitCrew {0:yyyy-MM-dd HH:mm}' -f (Get-Date)))) {
             throw (Get-PcText 'msg.noRestorePointAbort')
         }
-        foreach ($id in $ids) { Invoke-PcTweak ($tweaks | Where-Object id -eq $id); Write-Host "Applied $id" }
+        foreach ($id in $ids) {
+            $changed = Invoke-PcTweak ($tweaks | Where-Object id -eq $id)
+            if ($changed) { Write-Host "Applied $id" } else { Write-Host "Already in place: $id" }
+        }
     } else {
         foreach ($id in $ids) { $r = Undo-PcTweak ($tweaks | Where-Object id -eq $id); Write-Host "Undid $id (skipped $($r.Skipped))" }
     }

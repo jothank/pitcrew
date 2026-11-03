@@ -22,17 +22,24 @@ pelo Windows Update, tudo numa janela só.
 - **Linguagem simples.** Cada item diz o que faz e o que você perde.
 - **Sem telemetria, sem anúncios, sem baixar código desconhecido.**
 
-## O que tem nesta primeira versão
+## O que faz
 
 | Área | O que faz |
 |---|---|
-| Desempenho | Desligar a gravação de jogos; impedir apps da Loja de rodar em segundo plano |
-| Privacidade | ID de publicidade, histórico de atividades, experiências personalizadas, pedidos de opinião |
-| Limpeza | Temporários (seus e do Windows) e Lixeira, mostrando o tamanho antes de apagar |
-| Apps de fábrica | Remover ou reinstalar uma lista escolhida de apps pré-instalados, só do seu usuário |
-| Drivers | Atualizações do Windows Update, conferindo se cada uma é mesmo mais nova, com backup dos drivers trocados |
+| Desempenho | Planos de energia (PC de mesa), hibernação e Inicialização Rápida, gravação de jogos, aceleração do mouse, jogos em janela, agendamento de GPU, apps em segundo plano e mais |
+| Privacidade | Dados de diagnóstico, serviço e tarefas de telemetria, anúncios e sugestões, Copilot, Recall, Widgets, localização, coleta de dados do Edge/Firefox/Brave e mais |
+| Explorer e barra de tarefas | Extensões de arquivo, menu de contexto clássico, alinhamento e botões da barra, Finalizar tarefa, modo escuro e mais |
+| Inicialização | Ligar ou desligar os programas que abrem com o Windows, do mesmo jeito que o Gerenciador de Tarefas |
+| Predefinições e perfis | "Essencial", "Jogos" e "Mais privacidade" só marcam os itens para você conferir; exporte o que está aplicado num PC e importe em outro |
+| Limpeza | Temporários, downloads do Windows Update, cache da Otimização de Entrega, relatórios de erro, despejos de travamento e Lixeira, mostrando o tamanho antes |
+| Manutenção | Reparar arquivos do sistema (DISM + SFC), remover arquivos antigos de atualizações, saúde dos discos, backup de todos os drivers |
+| Apps de fábrica | Remover ou reinstalar 30 apps pré-instalados, cada um marcado "pode remover" ou "leia antes de remover" |
+| Drivers | Drivers do Windows Update, conferindo se cada um é mesmo mais novo, com backup dos trocados e link do fabricante da placa-mãe |
+| Restauração | Ver os pontos existentes, criar um agora, abrir a Restauração do Sistema; antes de aplicar, o PitCrew oferece criar um (já marcado) |
+| Histórico | Tudo o que o PitCrew mudou, com Desfazer |
 
-A lista completa planejada está em [docs/TWEAKS.md](docs/TWEAKS.md).
+Cada ajuste e sua fonte estão em [docs/CATALOG.md](docs/CATALOG.md) (gerado a partir do código); o
+que vem a seguir está em [docs/TWEAKS.md](docs/TWEAKS.md).
 
 ## Como usar
 

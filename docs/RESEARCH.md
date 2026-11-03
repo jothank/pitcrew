@@ -59,6 +59,31 @@ Generates `autounattend.xml` through a local web UI. No license, content derived
 risky defaults (UAC prompt off, automatic device encryption blocked, lock screen disabled,
 automatic maintenance off, feature updates deferred a year). Nothing reused.
 
+## Round 2: WinUtil, Win11Debloat, Sophia Script (Nov 2026)
+
+| Project | License | What we took |
+|---|---|---|
+| [ChrisTitusTech/winutil](https://github.com/ChrisTitusTech/winutil) | MIT | Restore point runs first and is offered before any change; Minimal/Standard/Advanced presets (as an idea: presets may only pre-tick); confirmation before risky actions |
+| [Raphire/Win11Debloat](https://github.com/Raphire/Win11Debloat) | MIT | Restore point checkbox checked by default; an overview of pending changes before applying; per-feature build limits; safe/optional/unsafe app labels; registry backup before each run |
+| [farag2/Sophia-Script-for-Windows](https://github.com/farag2/Sophia-Script-for-Windows) | MIT (bundled cursor pack and HEVC package excluded) | The most careful restore point code (frequency limit lifted only for the call); the app filter that hides system, framework and non-removable packages; the list of apps never to offer (Store, Terminal, codecs, GPU/audio control panels) |
+
+Candidates added to the catalog from this round (verified one by one before shipping): Copilot
+and Widgets off through their documented policies, Settings and Start ads, location through the
+same switch Settings uses, Find My Device, automatic sign-in after updates, device companion app
+auto-install, Notepad and Paint AI, Brave extras, transparency, Multiplane Overlay
+(troubleshooting only), Delivery Optimization peer sharing, and an "Explorer & taskbar" category
+(file extensions, classic context menu, taskbar alignment and buttons, Sticky Keys shortcut,
+End Task, seconds on the clock, dark mode).
+
+**Restore point lessons:** say when a recent point already exists; lift the 24-hour limit only for
+the call and put back the previous value; never delete an administrator's `DisableSR` policy,
+just explain it; ask before turning System Protection on.
+
+**Left out from this round** (details in [NOT-INCLUDED.md](NOT-INCLUDED.md)): decrypting BitLocker,
+force-removing Windows AI packages, denying ACLs on Store files or vendor folders, `/ResetBase`,
+bypassing the UCPD driver with a renamed `powershell.exe`, IPv6 off, service and visual-effects
+bundles, WPBT off, Defender sample submission off, and hard-coded "defaults" as undo.
+
 **Idea kept for later:** a small clean-install answer-file generator that writes PitCrew's own
 catalog into the setup (locale, local account, privacy defaults, app removal), with
 [schneegans/unattend-generator](https://github.com/cschneegans/unattend-generator) (MIT) as the

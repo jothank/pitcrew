@@ -73,7 +73,7 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
           </Grid.ColumnDefinitions>
-          <CheckBox Grid.Column="0" VerticalAlignment="Top" Margin="0,3,12,0"
+          <CheckBox x:Name="Pick" Grid.Column="0" VerticalAlignment="Top" Margin="0,3,12,0"
                     IsChecked="{Binding IsSelected, Mode=TwoWay}" IsEnabled="{Binding IsEnabled}"/>
           <StackPanel Grid.Column="1">
             <DockPanel LastChildFill="False">
@@ -86,7 +86,7 @@
               </Border>
             </DockPanel>
             <TextBlock Text="{Binding Detail}" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,0"/>
-            <DockPanel LastChildFill="False" Margin="0,4,0,0">
+            <DockPanel x:Name="MetaRow" LastChildFill="False" Margin="0,4,0,0">
               <TextBlock DockPanel.Dock="Left" Text="{Binding Meta}" FontSize="11.5" Foreground="#8A919C"/>
               <TextBlock x:Name="LinkBlock" DockPanel.Dock="Left" FontSize="11.5" Margin="10,0,0,0">
                 <Hyperlink NavigateUri="{Binding Link}" Foreground="#0B62D6"><Run Text="{Binding LinkText}"/></Hyperlink>
@@ -128,6 +128,16 @@
         <DataTrigger Binding="{Binding Meta}" Value="">
           <Setter TargetName="LinkBlock" Property="Margin" Value="0"/>
         </DataTrigger>
+        <DataTrigger Binding="{Binding Selectable}" Value="False">
+          <Setter TargetName="Pick" Property="Visibility" Value="Collapsed"/>
+        </DataTrigger>
+        <MultiDataTrigger>
+          <MultiDataTrigger.Conditions>
+            <Condition Binding="{Binding Meta}" Value=""/>
+            <Condition Binding="{Binding Link}" Value="{x:Null}"/>
+          </MultiDataTrigger.Conditions>
+          <Setter TargetName="MetaRow" Property="Visibility" Value="Collapsed"/>
+        </MultiDataTrigger>
       </DataTemplate.Triggers>
     </DataTemplate>
   </Window.Resources>
@@ -156,9 +166,14 @@
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="14">
           <ListBoxItem x:Name="NavPerformance" Tag="performance"/>
           <ListBoxItem x:Name="NavPrivacy" Tag="privacy"/>
+          <ListBoxItem x:Name="NavExplorer" Tag="explorer"/>
+          <ListBoxItem x:Name="NavStartup" Tag="startup"/>
           <ListBoxItem x:Name="NavCleanup" Tag="cleanup"/>
+          <ListBoxItem x:Name="NavMaintenance" Tag="maintenance"/>
           <ListBoxItem x:Name="NavApps" Tag="apps"/>
           <ListBoxItem x:Name="NavDrivers" Tag="drivers"/>
+          <ListBoxItem x:Name="NavRestore" Tag="restore"/>
+          <ListBoxItem x:Name="NavHistory" Tag="history"/>
           <ListBoxItem x:Name="NavAbout" Tag="about"/>
         </ListBox>
       </DockPanel>
@@ -183,13 +198,29 @@
         <TextBlock x:Name="BannerText" Foreground="#7A4800" TextWrapping="Wrap"/>
       </Border>
 
-      <ScrollViewer Grid.Row="2" x:Name="ListScroll" Padding="32,4,32,8" VerticalScrollBarVisibility="Auto">
-        <StackPanel>
-          <TextBlock x:Name="PageInfo" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,10" Visibility="Collapsed"/>
-          <ItemsControl x:Name="Items" ItemTemplate="{StaticResource ItemCard}"/>
-          <TextBlock x:Name="EmptyText" Foreground="{StaticResource Muted}" Margin="0,8,0,0" Visibility="Collapsed" TextWrapping="Wrap"/>
-        </StackPanel>
-      </ScrollViewer>
+      <Grid Grid.Row="2">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <!-- Search, filter, presets and profile: shown on long list pages only -->
+        <DockPanel x:Name="FilterBar" Grid.Row="0" Margin="32,0,32,10" LastChildFill="False" Visibility="Collapsed">
+          <Grid DockPanel.Dock="Left" Width="250">
+            <TextBox x:Name="SearchBox" Padding="8,5" VerticalContentAlignment="Center" BorderBrush="{StaticResource Line}"/>
+            <TextBlock x:Name="SearchHint" Margin="11,0,0,0" VerticalAlignment="Center" Foreground="#8A919C" IsHitTestVisible="False"/>
+          </Grid>
+          <CheckBox x:Name="HideUnavailable" DockPanel.Dock="Left" Margin="14,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Muted}"/>
+          <Button x:Name="ExportProfile" DockPanel.Dock="Right" Style="{StaticResource SecondaryButton}" Padding="12,6"/>
+          <ComboBox x:Name="PresetBox" DockPanel.Dock="Right" Width="200" Margin="14,0,0,0" VerticalContentAlignment="Center" Padding="8,5"/>
+        </DockPanel>
+        <ScrollViewer Grid.Row="1" x:Name="ListScroll" Padding="32,4,32,8" VerticalScrollBarVisibility="Auto">
+          <StackPanel>
+            <TextBlock x:Name="PageInfo" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,10" Visibility="Collapsed"/>
+            <ItemsControl x:Name="Items" ItemTemplate="{StaticResource ItemCard}"/>
+            <TextBlock x:Name="EmptyText" Foreground="{StaticResource Muted}" Margin="0,8,0,0" Visibility="Collapsed" TextWrapping="Wrap"/>
+          </StackPanel>
+        </ScrollViewer>
+      </Grid>
 
       <Border Grid.Row="3" Background="White" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="32,12">
         <DockPanel>

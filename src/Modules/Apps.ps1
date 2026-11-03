@@ -26,14 +26,18 @@ function Get-PcAppCatalog {
 }
 
 function Get-PcRemovableApps {
+    # One Get-AppxPackage call for all apps; one call per app is slow
+    $installed = @{}
+    foreach ($p in @(Get-AppxPackage -ErrorAction SilentlyContinue)) { $installed[$p.Name] = $p }
     foreach ($app in Get-PcAppCatalog) {
-        $installed = @(Get-AppxPackage -Name $app.package -ErrorAction SilentlyContinue)
+        $risk = if ($app.risk) { $app.risk } else { 'safe' }
         [pscustomobject]@{
             Package   = $app.package
             Name      = Resolve-PcLocalized $app.name
+            Note      = Resolve-PcLocalized $app.note
+            Risk      = $risk
             StoreId   = $app.storeId
-            Installed = $installed.Count -gt 0
-            Version   = ($installed | Select-Object -First 1).Version
+            Installed = $installed.ContainsKey($app.package)
         }
     }
 }

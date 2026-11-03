@@ -39,13 +39,42 @@ $testKey = 'HKCU:\Software\PitCrewTest\' + [guid]::NewGuid().ToString('N')
 $testData = Join-Path $env:TEMP ('PitCrewTest-' + [guid]::NewGuid().ToString('N'))
 Initialize-PcContext -Root $root -DataDir $testData -Language 'en' -RegistryRedirect $testKey
 
-function New-TestTweak([string]$Id, [object[]]$Actions, [string]$Scope = 'machine', $AppliesTo) {
+function New-TestTweak([string]$Id, [object[]]$Actions, [string]$Scope = 'machine', $AppliesTo, [string]$Refresh) {
     [pscustomobject]@{
-        id = $Id; risk = 'safe'; scope = $Scope; appliesTo = $AppliesTo
+        id = $Id; risk = 'safe'; scope = $Scope; appliesTo = $AppliesTo; refresh = $Refresh
         title = [pscustomobject]@{ en = $Id }; description = [pscustomobject]@{ en = $Id }
         actions = $Actions
     }
 }
+
+# --- Fakes for everything that would touch the real system -------------------------------------
+# Services and hibernation keep their state in the redirected registry, like the real ones do;
+# scheduled tasks, power plans and the mouse refresh keep it in memory.
+$script:FakeFailService = ''
+function Set-PcServiceStartup([string]$Name, [string]$StartupType) {
+    if ($Name -eq $script:FakeFailService) { throw "fake: access denied for $Name" }
+    $t = $script:PcStartTypes[$StartupType]
+    [void](Set-PcRegistryValue (Get-PcServiceKey $Name) 'Start' 'DWord' $t.Start)
+    [void](Set-PcRegistryValue (Get-PcServiceKey $Name) 'DelayedAutostart' 'DWord' $t.Delayed)
+}
+$script:FakeTasks = @{}
+function Get-PcScheduledTaskEnabled([string]$Path, [string]$Name) {
+    if (-not $script:FakeTasks.ContainsKey("$Path$Name")) { return $null }
+    return $script:FakeTasks["$Path$Name"]
+}
+function Set-PcScheduledTaskEnabled([string]$Path, [string]$Name, [bool]$Enabled) { $script:FakeTasks["$Path$Name"] = $Enabled }
+$script:FakePower = @{ Active = 'aaaaaaaa-0000-0000-0000-000000000001'; Schemes = @('aaaaaaaa-0000-0000-0000-000000000001'); FailSetActive = $false }
+function Get-PcActivePowerScheme { $script:FakePower.Active }
+function Get-PcPowerSchemes { $script:FakePower.Schemes }
+function Copy-PcPowerScheme([string]$Source, [string]$Destination) { $script:FakePower.Schemes += $Destination.ToLowerInvariant() }
+function Set-PcActivePowerScheme([string]$Guid) {
+    if ($script:FakePower.FailSetActive) { throw 'fake: Modern Standby' }
+    $script:FakePower.Active = $Guid.ToLowerInvariant()
+}
+function Remove-PcPowerScheme([string]$Guid) { $script:FakePower.Schemes = @($script:FakePower.Schemes | Where-Object { $_ -ne $Guid.ToLowerInvariant() }) }
+function Set-PcHibernation([bool]$Enabled) { [void](Set-PcRegistryValue $script:PcPowerKey 'HibernateEnabled' 'DWord' ([int]$Enabled)) }
+$script:FakeMouseRefreshes = 0
+function Update-PcMouseSettings { $script:FakeMouseRefreshes++ }
 
 function New-RegAction([string]$Path, [string]$Name, [string]$Kind = 'DWord', $Value = 1, [switch]$Absent) {
     $a = [pscustomobject]@{ type = 'registry'; path = $Path; name = $Name; kind = $Kind; value = $Value }
@@ -59,7 +88,7 @@ try {
     Test-Case 'apply on a missing value, then undo removes value and created keys' {
         $t = New-TestTweak 't.missing' @(New-RegAction 'HKLM:\SOFTWARE\Policies\PcA\Deep' 'V1' 'DWord' 1)
         Assert-Equal 'NotApplied' (Get-PcTweakState $t) 'state before'
-        Invoke-PcTweak $t
+        [void](Invoke-PcTweak $t)
         Assert-Equal 'Applied' (Get-PcTweakState $t) 'state after apply'
         Assert-True (Get-PcJournalEntry $t) 'journal entry exists'
         $r = Undo-PcTweak $t
@@ -75,7 +104,7 @@ try {
         $t = New-TestTweak 't.restore' @(
             (New-RegAction 'HKLM:\SOFTWARE\PcB' 'Num' 'DWord' 0),
             (New-RegAction 'HKLM:\SOFTWARE\PcB' 'Text' 'DWord' 7))
-        Invoke-PcTweak $t
+        [void](Invoke-PcTweak $t)
         Assert-Equal 'DWord' (Get-PcRegistryValue 'HKLM:\SOFTWARE\PcB' 'Text').Kind 'kind while applied'
         [void](Undo-PcTweak $t)
         $num = Get-PcRegistryValue 'HKLM:\SOFTWARE\PcB' 'Num'
@@ -88,7 +117,7 @@ try {
 
     Test-Case 'undo leaves alone a value changed by someone else' {
         $t = New-TestTweak 't.changed' @(New-RegAction 'HKCU:\Software\PcC' 'V' 'DWord' 1)
-        Invoke-PcTweak $t
+        [void](Invoke-PcTweak $t)
         [void](Set-PcRegistryValue 'HKCU:\Software\PcC' 'V' 'DWord' 42)
         $r = Undo-PcTweak $t
         Assert-Equal 1 $r.Skipped 'skipped'
@@ -98,8 +127,8 @@ try {
     Test-Case 'applying twice keeps the first snapshot' {
         [void](Set-PcRegistryValue 'HKLM:\SOFTWARE\PcD' 'V' 'DWord' 3)
         $t = New-TestTweak 't.twice' @(New-RegAction 'HKLM:\SOFTWARE\PcD' 'V' 'DWord' 9)
-        Invoke-PcTweak $t
-        Invoke-PcTweak $t
+        [void](Invoke-PcTweak $t)
+        [void](Invoke-PcTweak $t)
         [void](Undo-PcTweak $t)
         Assert-Equal 3 (Get-PcRegistryValue 'HKLM:\SOFTWARE\PcD' 'V').Data 'original value'
     }
@@ -109,7 +138,7 @@ try {
             (New-RegAction 'HKLM:\SOFTWARE\PcE' 'Good' 'DWord' 1),
             (New-RegAction 'HKLM:\SOFTWARE\PcE' 'Bad' 'NoSuchKind' 1))
         $threw = $false
-        try { Invoke-PcTweak $t } catch { $threw = $true }
+        try { [void](Invoke-PcTweak $t) } catch { $threw = $true }
         Assert-True $threw 'apply threw'
         Assert-True (-not (Get-PcRegistryValue 'HKLM:\SOFTWARE\PcE' 'Good').Exists) 'first action rolled back'
         Assert-True (-not (Get-PcJournalEntry $t)) 'no journal entry'
@@ -118,7 +147,7 @@ try {
     Test-Case 'an "absent" action deletes a value and undo brings it back' {
         [void](Set-PcRegistryValue 'HKLM:\SOFTWARE\PcF' 'Gone' 'String' 'keep me')
         $t = New-TestTweak 't.absent' @(New-RegAction 'HKLM:\SOFTWARE\PcF' 'Gone' -Absent)
-        Invoke-PcTweak $t
+        [void](Invoke-PcTweak $t)
         Assert-Equal 'Applied' (Get-PcTweakState $t) 'state'
         [void](Undo-PcTweak $t)
         Assert-Equal 'keep me' (Get-PcRegistryValue 'HKLM:\SOFTWARE\PcF' 'Gone').Data 'restored'
@@ -130,12 +159,20 @@ try {
         $t = New-TestTweak 't.edge' @(
             (New-RegAction 'HKLM:\SOFTWARE\PcG' 'Big' 'DWord' 0),
             (New-RegAction 'HKLM:\SOFTWARE\PcG' 'Multi' 'DWord' 0))
-        Invoke-PcTweak $t
+        [void](Invoke-PcTweak $t)
         [void](Undo-PcTweak $t)
         Assert-Equal ([uint32]4294967295) (Get-PcRegistryValue 'HKLM:\SOFTWARE\PcG' 'Big').Data 'big dword'
         $multi = Get-PcRegistryValue 'HKLM:\SOFTWARE\PcG' 'Multi'
         Assert-Equal 'MultiString' $multi.Kind 'multi kind'
         Assert-Equal @('only') $multi.Data 'multi data'
+    }
+
+    Test-Case 'a key default value (empty name) applies and undo removes the key it created' {
+        $t = New-TestTweak 't.default' @(New-RegAction 'HKCU:\Software\PcClasses\CLSID\{x}\InprocServer32' '' 'String' '') 'user'
+        [void](Invoke-PcTweak $t)
+        Assert-Equal 'Applied' (Get-PcTweakState $t) 'applied'
+        [void](Undo-PcTweak $t)
+        Assert-True (-not (Test-Path "$testKey\HKCU\Software\PcClasses")) 'created keys removed'
     }
 
     Test-Case 'user-scope journal entries are per user' {
@@ -147,14 +184,14 @@ try {
         $t = New-TestTweak 't.future' @(New-RegAction 'HKLM:\SOFTWARE\PcI' 'V') 'machine' ([pscustomobject]@{ minBuild = 999999 })
         Assert-Equal 'NotApplicable' (Get-PcTweakState $t) 'state'
         $threw = $false
-        try { Invoke-PcTweak $t } catch { $threw = $true }
+        try { [void](Invoke-PcTweak $t) } catch { $threw = $true }
         Assert-True $threw 'apply refused'
     }
 
     Test-Case 'applying a tweak that is already in place records nothing to undo' {
         [void](Set-PcRegistryValue 'HKLM:\SOFTWARE\PcK' 'V' 'DWord' 1)
         $t = New-TestTweak 't.already' @(New-RegAction 'HKLM:\SOFTWARE\PcK' 'V' 'DWord' 1)
-        Invoke-PcTweak $t
+        [void](Invoke-PcTweak $t)
         Assert-True (-not (Get-PcJournalEntry $t)) 'no journal entry'
     }
 
@@ -162,11 +199,12 @@ try {
         [void](Set-PcRegistryValue 'HKLM:\SOFTWARE\PcVictim' 'Keep' 'DWord' 1)
         New-Item -Path "$testKey\HKLM\SOFTWARE\PcVictimEmpty" -Force | Out-Null
         $t = New-TestTweak 't.tamper' @(New-RegAction 'HKLM:\SOFTWARE\PcJ' 'V' 'DWord' 1)
-        Invoke-PcTweak $t
+        [void](Invoke-PcTweak $t)
         $entries = @(Get-PcJournal)
         foreach ($e in $entries | Where-Object tweakId -eq 't.tamper') {
-            $e.actions[0].path = 'HKLM:\SOFTWARE\PcVictim'
-            $e.actions[0].name = 'Keep'
+            # The journal doesn't store targets any more; an attacker could still add them
+            $e.actions[0] | Add-Member -NotePropertyName path -NotePropertyValue 'HKLM:\SOFTWARE\PcVictim' -Force
+            $e.actions[0] | Add-Member -NotePropertyName name -NotePropertyValue 'Keep' -Force
             $e.actions[0].createdKeys = @("$testKey\HKLM\SOFTWARE\PcVictimEmpty")
         }
         Save-PcJournal $entries
@@ -186,6 +224,143 @@ try {
             [void](@(Get-PcJournal))
             Assert-True (-not (Test-Path $Pc.DataDir)) 'data folder not created'
         } finally { $Pc.DataDir = $saved }
+    }
+
+    Write-Host "`nOther action types (with fakes)" -ForegroundColor Cyan
+
+    Test-Case 'service: disable, then undo restores Manual' {
+        [void](Set-PcRegistryValue (Get-PcServiceKey 'PcFakeSvc') 'Start' 'DWord' 3)
+        $t = New-TestTweak 't.svc' @([pscustomobject]@{ type = 'service'; name = 'PcFakeSvc'; startupType = 'Disabled' })
+        [void](Invoke-PcTweak $t)
+        Assert-Equal 'Disabled' (Get-PcServiceStartup 'PcFakeSvc') 'disabled'
+        [void](Undo-PcTweak $t)
+        Assert-Equal 'Manual' (Get-PcServiceStartup 'PcFakeSvc') 'restored'
+    }
+
+    Test-Case 'service: delayed start is restored as delayed' {
+        [void](Set-PcRegistryValue (Get-PcServiceKey 'PcFakeSvc2') 'Start' 'DWord' 2)
+        [void](Set-PcRegistryValue (Get-PcServiceKey 'PcFakeSvc2') 'DelayedAutostart' 'DWord' 1)
+        $t = New-TestTweak 't.svc2' @([pscustomobject]@{ type = 'service'; name = 'PcFakeSvc2'; startupType = 'Manual' })
+        [void](Invoke-PcTweak $t)
+        [void](Undo-PcTweak $t)
+        Assert-Equal 'AutomaticDelayed' (Get-PcServiceStartup 'PcFakeSvc2') 'restored'
+    }
+
+    Test-Case 'service: a refused change rolls back the registry action before it' {
+        [void](Set-PcRegistryValue (Get-PcServiceKey 'PcFakeLocked') 'Start' 'DWord' 3)
+        $script:FakeFailService = 'PcFakeLocked'
+        try {
+            $t = New-TestTweak 't.svcfail' @(
+                (New-RegAction 'HKLM:\SOFTWARE\PcM' 'V' 'DWord' 1),
+                [pscustomobject]@{ type = 'service'; name = 'PcFakeLocked'; startupType = 'Disabled' })
+            $threw = $false
+            try { [void](Invoke-PcTweak $t) } catch { $threw = $true }
+            Assert-True $threw 'apply threw'
+            Assert-True (-not (Get-PcRegistryValue 'HKLM:\SOFTWARE\PcM' 'V').Exists) 'registry rolled back'
+        } finally { $script:FakeFailService = '' }
+    }
+
+    Test-Case 'scheduled tasks: a missing task is skipped, the others apply and undo' {
+        $script:FakeTasks['\Pc\TaskA'] = $true
+        $t = New-TestTweak 't.tasks' @(
+            [pscustomobject]@{ type = 'scheduledTask'; path = '\Pc\'; name = 'TaskA'; enabled = $false },
+            [pscustomobject]@{ type = 'scheduledTask'; path = '\Pc\'; name = 'Missing'; enabled = $false })
+        Assert-Equal 'NotApplied' (Get-PcTweakState $t) 'state before'
+        [void](Invoke-PcTweak $t)
+        Assert-Equal 'Applied' (Get-PcTweakState $t) 'applied although one task is missing'
+        Assert-Equal $false $script:FakeTasks['\Pc\TaskA'] 'task disabled'
+        Assert-Equal 1 @((Get-PcJournalEntry $t).actions).Count 'only the existing task recorded'
+        [void](Undo-PcTweak $t)
+        Assert-Equal $true $script:FakeTasks['\Pc\TaskA'] 'task enabled again'
+    }
+
+    Test-Case 'a tweak whose actions all target missing things is not applicable' {
+        $t = New-TestTweak 't.none' @([pscustomobject]@{ type = 'scheduledTask'; path = '\Pc\'; name = 'Nope'; enabled = $false })
+        Assert-Equal 'NotApplicable' (Get-PcTweakState $t) 'state'
+    }
+
+    Test-Case 'power plan: creates the plan, activates it, and undo removes it again' {
+        $plan = 'bbbbbbbb-0000-0000-0000-000000000002'
+        $t = New-TestTweak 't.power' @([pscustomobject]@{ type = 'powerPlan'; guid = $plan; source = 'cccccccc-0000-0000-0000-000000000003' })
+        [void](Invoke-PcTweak $t)
+        Assert-Equal $plan $script:FakePower.Active 'active'
+        [void](Undo-PcTweak $t)
+        Assert-Equal 'aaaaaaaa-0000-0000-0000-000000000001' $script:FakePower.Active 'previous plan active'
+        Assert-True ($script:FakePower.Schemes -notcontains $plan) 'created plan removed'
+    }
+
+    Test-Case 'power plan: when Windows refuses to switch, the copied plan is removed' {
+        $plan = 'dddddddd-0000-0000-0000-000000000004'
+        $script:FakePower.FailSetActive = $true
+        try {
+            $t = New-TestTweak 't.powerfail' @([pscustomobject]@{ type = 'powerPlan'; guid = $plan; source = 'cccccccc-0000-0000-0000-000000000003' })
+            $threw = $false
+            try { [void](Invoke-PcTweak $t) } catch { $threw = $true }
+            Assert-True $threw 'apply threw'
+            Assert-True ($script:FakePower.Schemes -notcontains $plan) 'no leftover plan'
+            Assert-True (-not (Get-PcJournalEntry $t)) 'nothing recorded'
+        } finally { $script:FakePower.FailSetActive = $false }
+    }
+
+    Test-Case 'hibernation: off, then undo turns it back on' {
+        [void](Set-PcRegistryValue $script:PcPowerKey 'HibernateEnabled' 'DWord' 1)
+        $t = New-TestTweak 't.hib' @([pscustomobject]@{ type = 'hibernation'; enabled = $false })
+        [void](Invoke-PcTweak $t)
+        Assert-Equal $false (Get-PcHibernationEnabled) 'off'
+        [void](Undo-PcTweak $t)
+        Assert-Equal $true (Get-PcHibernationEnabled) 'on again'
+    }
+
+    Test-Case 'DirectX setting: keeps the other options and their order' {
+        [void](Set-PcRegistryValue $script:PcDxPath $script:PcDxName 'String' 'VRROptimizeEnable=0;AutoHDREnable=1;')
+        $t = New-TestTweak 't.dx' @([pscustomobject]@{ type = 'dxSetting'; key = 'SwapEffectUpgradeEnable'; value = '1' }) 'user'
+        [void](Invoke-PcTweak $t)
+        Assert-Equal 'VRROptimizeEnable=0;AutoHDREnable=1;SwapEffectUpgradeEnable=1;' (Get-PcRegistryValue $script:PcDxPath $script:PcDxName).Data 'added'
+        [void](Undo-PcTweak $t)
+        Assert-Equal 'VRROptimizeEnable=0;AutoHDREnable=1;' (Get-PcRegistryValue $script:PcDxPath $script:PcDxName).Data 'restored'
+    }
+
+    Test-Case 'DirectX setting: undo removes a value that did not exist before' {
+        Remove-PcRegistryValue $script:PcDxPath $script:PcDxName
+        $t = New-TestTweak 't.dx2' @([pscustomobject]@{ type = 'dxSetting'; key = 'SwapEffectUpgradeEnable'; value = '1' }) 'user'
+        [void](Invoke-PcTweak $t)
+        [void](Undo-PcTweak $t)
+        Assert-True (-not (Get-PcRegistryValue $script:PcDxPath $script:PcDxName).Exists) 'value removed'
+    }
+
+    Test-Case 'the mouse refresh runs after apply and after undo' {
+        $before = $script:FakeMouseRefreshes
+        $t = New-TestTweak 't.mouse' @(New-RegAction 'HKCU:\Control Panel\Mouse' 'MouseSpeed' 'String' '0') 'user' $null 'mouse'
+        [void](Invoke-PcTweak $t)
+        [void](Undo-PcTweak $t)
+        Assert-Equal ($before + 2) $script:FakeMouseRefreshes 'refresh count'
+    }
+
+    Test-Case 'undo ignores a journal record whose type was changed' {
+        [void](Set-PcRegistryValue (Get-PcServiceKey 'PcFakeSvc3') 'Start' 'DWord' 3)
+        $t = New-TestTweak 't.typeswap' @(New-RegAction 'HKLM:\SOFTWARE\PcN' 'V' 'DWord' 1)
+        [void](Invoke-PcTweak $t)
+        $entries = @(Get-PcJournal)
+        foreach ($e in $entries | Where-Object tweakId -eq 't.typeswap') { $e.actions[0].type = 'service' }
+        Save-PcJournal $entries
+        $r = Undo-PcTweak $t
+        Assert-Equal 1 $r.Skipped 'skipped'
+        Assert-Equal 'Manual' (Get-PcServiceStartup 'PcFakeSvc3') 'unrelated service untouched'
+    }
+
+    Test-Case 'editions match by family and form factor gates desktop-only tweaks' {
+        $savedInfo = $Pc.WindowsInfo; $savedForm = $Pc.FormFactor
+        try {
+            $Pc.WindowsInfo = [pscustomobject]@{ Edition = 'CoreSingleLanguage'; Build = 26100 }
+            $Pc.FormFactor = 'laptop'
+            Assert-Equal 'home' (Get-PcEditionFamily) 'family'
+            $homeTweak = New-TestTweak 't.home' @(New-RegAction 'HKLM:\SOFTWARE\PcO' 'V') 'machine' ([pscustomobject]@{ editions = @('home', 'pro') })
+            $ent = New-TestTweak 't.ent' @(New-RegAction 'HKLM:\SOFTWARE\PcO' 'V') 'machine' ([pscustomobject]@{ editions = @('enterprise') })
+            $desk = New-TestTweak 't.desk' @(New-RegAction 'HKLM:\SOFTWARE\PcO' 'V') 'machine' ([pscustomobject]@{ formFactor = 'desktop' })
+            Assert-Equal 'NotApplied' (Get-PcTweakState $homeTweak) 'home edition tweak'
+            Assert-Equal 'NotApplicable' (Get-PcTweakState $ent) 'enterprise-only tweak'
+            Assert-Equal 'NotApplicable' (Get-PcTweakState $desk) 'desktop-only tweak on a laptop'
+        } finally { $Pc.WindowsInfo = $savedInfo; $Pc.FormFactor = $savedForm }
     }
 
     Write-Host "`nCleanup" -ForegroundColor Cyan
@@ -255,19 +430,39 @@ try {
             $expected += ([regex]::Matches((Get-Content $f.FullName -Raw), '"id"\s*:')).Count
         }
         Assert-Equal $expected $tweaks.Count 'one object per tweak entry'
+        $languages = @(Get-ChildItem (Join-Path $root 'locales') -Filter *.json | ForEach-Object BaseName)
         foreach ($t in $tweaks) {
-            Assert-True ($t.id -is [string]) 'tweak id is a single string'
-            Assert-True ($t.category -is [string]) "$($t.id) category"
-            Assert-True (@('safe', 'moderate', 'advanced') -contains $t.risk) "$($t.id) risk"
-            Assert-True (@('machine', 'user') -contains $t.scope) "$($t.id) scope"
-            Assert-True ($t.reference -match '^https://') "$($t.id) reference"
-            Assert-True ($t.title.en -and $t.title.'pt-BR' -and $t.description.en -and $t.description.'pt-BR') "$($t.id) en/pt-BR texts"
+            $id = $t.id
+            Assert-True ($id -is [string]) 'tweak id is a single string'
+            Assert-True ($t.category -is [string]) "$id category"
+            Assert-True (@('safe', 'moderate', 'advanced') -contains $t.risk) "$id risk"
+            Assert-True (@('machine', 'user') -contains $t.scope) "$id scope"
+            Assert-True ($script:PcEvidenceLevels -contains $t.evidence) "$id evidence (learn/vendor/community)"
+            Assert-True ($t.reference -match '^https://') "$id reference"
+            foreach ($lang in $languages) {
+                Assert-True ($t.title.$lang -and $t.description.$lang) "$id texts in $lang"
+            }
+            if ($t.appliesTo.editions) {
+                foreach ($e in @($t.appliesTo.editions)) { Assert-True ($script:PcEditionFamilies -contains $e) "$id edition family '$e'" }
+            }
+            if ($t.appliesTo.formFactor) { Assert-True ($script:PcFormFactors -contains $t.appliesTo.formFactor) "$id formFactor" }
+            if ($t.refresh) { Assert-True (@('mouse') -contains $t.refresh) "$id refresh" }
             foreach ($a in @($t.actions)) {
-                Assert-Equal 'registry' $a.type "$($t.id) action type"
-                Assert-True ($a.path -match '^HK(LM|CU):\\') "$($t.id) path"
-                if ($a.path -like 'HKCU:*') { Assert-Equal 'user' $t.scope "$($t.id) HKCU action needs user scope" }
-                else { Assert-Equal 'machine' $t.scope "$($t.id) HKLM action needs machine scope" }
-                if (-not $a.absent) { Assert-True ($script:PcRegistryKinds -contains $a.kind) "$($t.id) kind" }
+                Assert-True ($script:PcActionTypes.ContainsKey($a.type)) "$id action type '$($a.type)'"
+                if ($script:PcActionTypes[$a.type].MachineOnly) { Assert-Equal 'machine' $t.scope "$id $($a.type) needs machine scope" }
+                switch ($a.type) {
+                    'registry' {
+                        Assert-True ($a.path -match '^HK(LM|CU):\\') "$id path"
+                        if ($a.path -like 'HKCU:*') { Assert-Equal 'user' $t.scope "$id HKCU action needs user scope" }
+                        else { Assert-Equal 'machine' $t.scope "$id HKLM action needs machine scope" }
+                        if (-not $a.absent) { Assert-True ($script:PcRegistryKinds -contains $a.kind) "$id kind" }
+                    }
+                    'dxSetting' { Assert-Equal 'user' $t.scope "$id dxSetting needs user scope"; Assert-True ($a.key -and $a.key -notmatch '[;=]') "$id dx key" }
+                    'service' { Assert-True ($script:PcStartTypes.ContainsKey($a.startupType)) "$id startupType" }
+                    'scheduledTask' { Assert-True ($a.path -like '\*\') "$id task path must start and end with \"; Assert-True ($a.enabled -is [bool]) "$id enabled" }
+                    'powerPlan' { Assert-True ((Test-PcGuid $a.guid) -and (Test-PcGuid $a.source)) "$id plan GUIDs" }
+                    'hibernation' { Assert-True ($a.enabled -is [bool]) "$id enabled" }
+                }
             }
         }
     }
@@ -282,7 +477,19 @@ try {
         }
     }
 
+    Test-Case 'a data folder that standard users can write to is not trusted' {
+        $dir = Join-Path $testData 'acl-test'
+        New-Item -ItemType Directory -Force -Path $dir | Out-Null
+        $acl = Get-Acl -LiteralPath $dir
+        $acl.AddAccessRule((New-Object System.Security.AccessControl.FileSystemAccessRule(
+            (New-Object Security.Principal.SecurityIdentifier 'S-1-5-32-545'), 'Write', 'Allow')))
+        Set-Acl -LiteralPath $dir -AclObject $acl
+        Assert-Equal $false (Test-PcDataDirTrusted $dir) 'Users can write'
+    }
+
     Test-Case 'every text key used in the code exists in English' {
+        # The window's page table lives in Window.ps1, which the engine tests don't load
+        . (Join-Path $root 'src\UI\Window.ps1')
         $en = @((Read-PcJson (Join-Path $root 'locales\en.json')).PSObject.Properties.Name)
         $code = (Get-ChildItem (Join-Path $root 'src'), (Join-Path $root 'PitCrew.ps1') -Recurse -Filter *.ps1 | Get-Content -Raw) -join "`n"
         $used = [regex]::Matches($code, "Get-PcText '([^']+)'") | ForEach-Object { $_.Groups[1].Value }
@@ -293,8 +500,14 @@ try {
         foreach ($r in 'safe', 'moderate', 'advanced') { $used += "risk.$r" }
         foreach ($v in 'recommended', 'older', 'noDate', 'firmware', 'display', 'unknownDevice') { $used += "drivers.verdict.$v" }
         foreach ($v in 'installed', 'installedWithErrors', 'failed', 'aborted', 'downloadFailed') { $used += "drivers.result.$v" }
-        foreach ($p in 'performance', 'privacy', 'cleanup', 'apps', 'drivers', 'about') { $used += "page.$p.title", "page.$p.intro", "nav.$p" }
+        foreach ($p in 'performance', 'privacy', 'explorer', 'startup', 'cleanup', 'maintenance', 'apps', 'drivers', 'restore', 'history', 'about') { $used += "page.$p.title", "page.$p.intro", "nav.$p" }
+        foreach ($r in 'safe', 'caution') { $used += "apps.risk.$r" }
+        $used += 'link.vendor', 'link.community'
         foreach ($c in $script:PcCleanupTargets) { $used += "cleanup.$($c.Id).detail" }
+        foreach ($m in $script:PcMaintenanceTasks) { $used += "$($m.TextKey).detail" }
+        foreach ($h in 'Healthy', 'Warning', 'Unhealthy', 'Unknown') { $used += "disk.$h" }
+        foreach ($rt in '0', '1', '10', '12', '13', 'other') { $used += "restore.type.$rt" }
+        foreach ($pg in $script:PcPages.Values) { foreach ($b in $pg.Primary, $pg.Secondary) { if ($b) { $used += $b[0] } } }
         $missing = @($used | Sort-Object -Unique | Where-Object { $en -notcontains $_ })
         Assert-True ($missing.Count -eq 0) "missing in en.json: $($missing -join ', ')"
     }
@@ -303,14 +516,37 @@ try {
         $apps = @(Read-PcJson (Join-Path $root 'data\apps.json'))
         Assert-True ($apps.Count -gt 1) 'apps are read as separate items'
         Assert-Equal $apps.Count @(Get-PcAppCatalog).Count 'catalog keeps every app'
+        $languages = @(Get-ChildItem (Join-Path $root 'locales') -Filter *.json | ForEach-Object BaseName)
+        $packages = @{}
         foreach ($app in $apps) {
             Assert-True ($app.package -is [string]) 'package is a single string'
-            Assert-True ($app.storeId -match '^[0-9A-Z]{12}$') "$($app.package) store id"
+            Assert-True (-not $packages.ContainsKey($app.package)) "$($app.package) listed twice"
+            $packages[$app.package] = $true
+            Assert-True ($app.package -notmatch '[*?]') "$($app.package) must be an exact name, no wildcards"
+            if ($app.risk) { Assert-True (@('safe', 'caution') -contains $app.risk) "$($app.package) risk" }
+            if ($app.risk -eq 'caution') { Assert-True ($app.note.en -and $app.note.'pt-BR') "$($app.package) caution needs a note" }
+            foreach ($lang in $languages) { Assert-True ($app.name.$lang) "$($app.package) name in $lang" }
+            Assert-True ($app.storeId -match '^([0-9A-Z]{12}|XP[0-9A-Z]{12})$') "$($app.package) store id"
             Assert-True (-not (Test-PcProtectedPackage $app.package)) "$($app.package) is protected"
             Assert-True ($app.name.en -and $app.name.'pt-BR') "$($app.package) names"
         }
         Assert-True (Test-PcProtectedPackage 'Microsoft.DesktopAppInstaller') 'winget is protected'
         Assert-True (Test-PcProtectedPackage 'Microsoft.VCLibs.140.00') 'frameworks are protected'
+    }
+
+    Test-Case 'startup apps module tests pass (tests\Startup-Tests.ps1)' {
+        $out = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $root 'tests\Startup-Tests.ps1') 2>&1
+        Assert-Equal 0 $LASTEXITCODE ("startup tests failed:`n" + (($out | Select-String 'FAIL') -join "`n"))
+    }
+
+    Test-Case 'presets only name existing tweaks and have names in every language' {
+        $ids = @(Import-PcTweaks | ForEach-Object id)
+        $languages = @(Get-ChildItem (Join-Path $root 'locales') -Filter *.json | ForEach-Object BaseName)
+        foreach ($p in @(Read-PcJson (Join-Path $root 'data\presets.json'))) {
+            foreach ($lang in $languages) { Assert-True ($p.name.$lang) "preset $($p.id) name in $lang" }
+            $unknown = @(@($p.tweaks) | Where-Object { $ids -notcontains $_ })
+            Assert-True ($unknown.Count -eq 0) "preset $($p.id) unknown tweaks: $($unknown -join ', ')"
+        }
     }
 
     Test-Case 'every .ps1 file is saved as UTF-8 with BOM (needed by Windows PowerShell 5.1)' {

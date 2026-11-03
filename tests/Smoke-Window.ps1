@@ -23,6 +23,9 @@ function Wait-PcJob([int]$TimeoutSec = 300) {
     if ($script:PcJob) { throw 'job timed out' }
 }
 
+# The window opens on the first page, which loads in the background
+Wait-PcJob
+
 function Test-Page([string]$Name, [scriptblock]$Start, [scriptblock]$Check) {
     $sw = [Diagnostics.Stopwatch]::StartNew()
     & $Start
@@ -39,5 +42,21 @@ Test-Page 'apps' { Show-PcPage 'apps' } { param($items) $items.Count -eq @(Get-P
 Test-Page 'drivers summary' { Show-PcPage 'drivers' } { param($items) [bool]$Ui.PageInfo.Text }
 Test-Page 'driver search' { Invoke-PcSearchDrivers } { param($items) $Ui.EmptyText.Visibility -eq 'Visible' -or $items.Count -gt 0 }
 Test-Page 'performance' { Show-PcPage 'performance' } { param($items) $items.Count -eq @($script:PcTweaks | Where-Object category -eq 'performance').Count }
+Test-Page 'privacy' { Show-PcPage 'privacy' } { param($items) $items.Count -eq @($script:PcTweaks | Where-Object category -eq 'privacy').Count }
+Test-Page 'explorer' { Show-PcPage 'explorer' } { param($items) $items.Count -eq @($script:PcTweaks | Where-Object category -eq 'explorer').Count }
+Test-Page 'startup' { Show-PcPage 'startup' } { param($items) $Ui.EmptyText.Visibility -eq 'Visible' -or $items.Count -gt 0 }
+Test-Page 'search filter' { Show-PcPage 'privacy'; Wait-PcJob; $Ui.SearchBox.Text = 'Copilot' } {
+    param($items)
+    $visible = @($items | Where-Object { Test-PcItemVisible $_ }).Count
+    Write-Host "    'Copilot' shows $visible of $($items.Count)"
+    $visible -gt 0 -and $visible -lt $items.Count
+}
+Test-Page 'maintenance' { Show-PcPage 'maintenance' } { param($items) $items.Count -eq @($script:PcMaintenanceTasks).Count }
+Test-Page 'restore points' { Show-PcPage 'restore' } { param($items) $Ui.EmptyText.Visibility -eq 'Visible' -or $items.Count -gt 0 }
+Test-Page 'history' { Show-PcPage 'history' } { param($items) $Ui.EmptyText.Visibility -eq 'Visible' -or $items.Count -gt 0 }
+Test-Page 'disk health' {
+    $script:SmokeDisk = @()
+    Start-PcJob -Work { param($Sync) @(Get-PcDiskHealth) } -OnDone { param($r) $script:SmokeDisk = @($r) }
+} { param($items) Write-Host ('    ' + ($script:SmokeDisk -join ' | ')); $script:SmokeDisk.Count -gt 0 }
 
 exit $failures

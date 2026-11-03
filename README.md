@@ -21,17 +21,24 @@ disk cleanup, removal of preinstalled apps and driver updates from Windows Updat
 - **Plain language.** Each item says what it does and what you lose.
 - **No telemetry, no ads, no downloads of unknown code.**
 
-## What's in this first version
+## What it does
 
 | Area | What it does |
 |---|---|
-| Performance | Turn off game recording; stop Store apps running in the background |
-| Privacy | Advertising ID, activity history, tailored experiences, feedback requests |
-| Cleanup | Temp files (yours and Windows'), Recycle Bin, with sizes shown before deleting |
-| Built-in apps | Remove or reinstall a curated list of preinstalled apps, for your user only |
-| Drivers | Driver updates from Windows Update, with a check that each one is really newer, and a backup of the drivers being replaced |
+| Performance | Power plans (desktops), hibernation and Fast Startup, game recording, mouse acceleration, windowed games, GPU scheduling, background apps and more |
+| Privacy | Diagnostic data, telemetry service and tasks, ads and suggestions, Copilot, Recall, Widgets, location, Edge/Firefox/Brave data collection and more |
+| Explorer & taskbar | File extensions, classic context menu, taskbar alignment and buttons, End Task, dark mode and more |
+| Startup apps | Turn programs that open with Windows on or off, the same way Task Manager does |
+| Presets and profiles | "Essentials", "Gaming" and "More privacy" only tick boxes for you to review; export what's applied on one PC and import it on another |
+| Cleanup | Temp files, Windows Update downloads, Delivery Optimization cache, error reports, crash dumps, Recycle Bin, with sizes shown first |
+| Maintenance | Repair system files (DISM + SFC), remove old update files, disk health report, back up all drivers |
+| Built-in apps | Remove or reinstall 30 preinstalled apps, each labelled "safe" or "read before removing" |
+| Drivers | Windows Update drivers, with a check that each one is really newer, a backup of the ones replaced, and a link to your motherboard maker |
+| Restore points | See existing points, create one now, open System Restore; before applying, PitCrew offers to create one (checked by default) |
+| History | Everything PitCrew changed, with Undo |
 
-The full list being planned is in [docs/TWEAKS.md](docs/TWEAKS.md).
+Every setting with its source is listed in [docs/CATALOG.md](docs/CATALOG.md) (generated from the
+code); what comes next is in [docs/TWEAKS.md](docs/TWEAKS.md).
 
 ## Running it
 

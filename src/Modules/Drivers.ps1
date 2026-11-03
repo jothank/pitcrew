@@ -56,6 +56,29 @@ function Get-PcDriverVendorTips($Inventory) {
     }
 }
 
+$script:PcBoardSupport = [ordered]@{
+    'ASUS'                 = 'https://www.asus.com/support/'
+    'Gigabyte'             = 'https://www.gigabyte.com/Support'
+    'Micro-Star|MSI'       = 'https://www.msi.com/support'
+    'ASRock'               = 'https://www.asrock.com/support/'
+    'Dell'                 = 'https://www.dell.com/support'
+    'Lenovo'               = 'https://pcsupport.lenovo.com'
+    'HP|Hewlett'           = 'https://support.hp.com'
+    'Acer'                 = 'https://www.acer.com/support'
+    'Samsung'              = 'https://www.samsung.com/support/'
+    'Biostar'              = 'https://www.biostar.com.tw/app/en/support/'
+}
+
+function Get-PcBoardInfo {
+    $board = Get-CimInstance Win32_BaseBoard -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $board) { return $null }
+    $url = $null
+    foreach ($pattern in $script:PcBoardSupport.Keys) {
+        if ($board.Manufacturer -match $pattern) { $url = $script:PcBoardSupport[$pattern]; break }
+    }
+    [pscustomobject]@{ Maker = ($board.Manufacturer -replace '\s*(Technology|Co\.,?|Ltd\.?|Inc\.?|Corporation|Computer)\b', '').Trim(' ,'); Model = $board.Product; SupportUrl = $url }
+}
+
 function Test-PcDriverPolicyBlocksUpdates {
     $policy = Get-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -ErrorAction SilentlyContinue
     return [bool]($policy -and $policy.ExcludeWUDriversInQualityUpdate -eq 1)

@@ -1,20 +1,25 @@
 ﻿# Declarative tweaks: tweaks/<category>.json holds an array of entries such as
 #
-#   { "id": "privacy.advertising-id", "risk": "safe", "scope": "machine",
+#   { "id": "privacy.advertising-id", "risk": "safe", "scope": "machine", "evidence": "learn",
 #     "reference": "https://learn.microsoft.com/...",
 #     "title": { "en": "...", "pt-BR": "..." }, "description": { ... },
 #     "actions": [ { "type": "registry", "path": "HKLM:\\...", "name": "X", "kind": "DWord", "value": 1 } ] }
 #
-# Before an action runs, its previous state goes to the undo journal. Undo restores that state, but
-# only where the current value is still the one PitCrew wrote; anything changed later is left alone.
+# Action types live in Actions.ps1. Before an action runs, its previous state goes to the undo
+# journal. Undo restores that state, but only where the current state is still the one PitCrew
+# set; anything changed later is left alone. Actions whose target doesn't exist on this PC (a
+# removed service or task) are skipped everywhere.
 
 $script:PcTweakStates = @('Applied', 'NotApplied', 'Partial', 'NotApplicable', 'Error')
+$script:PcEvidenceLevels = @('learn', 'vendor', 'community')
+$script:PcEditionFamilies = @('home', 'pro', 'enterprise', 'education')
+$script:PcFormFactors = @('desktop', 'laptop')
 
 function Import-PcTweaks {
     $ids = @{}
     foreach ($file in Get-ChildItem -LiteralPath (Join-Path $Pc.Root 'tweaks') -Filter '*.json' | Sort-Object Name) {
         foreach ($t in @(Read-PcJson $file.FullName)) {
-            foreach ($field in 'id', 'risk', 'scope', 'title', 'description', 'actions') {
+            foreach ($field in 'id', 'risk', 'scope', 'evidence', 'reference', 'title', 'description', 'actions') {
                 if (-not $t.$field) { throw "$($file.Name): tweak '$($t.id)' has no '$field'" }
             }
             if ($ids.ContainsKey($t.id)) { throw "$($file.Name): duplicate tweak id '$($t.id)'" }
@@ -27,82 +32,77 @@ function Import-PcTweaks {
     }
 }
 
+# --- Where a tweak applies ------------------------------------------------------------------------
+
+function Get-PcEditionFamily {
+    # Exact EditionIDs vary (CoreSingleLanguage, ProfessionalN, EnterpriseS...); tweaks use families
+    $id = (Get-PcWindowsInfo).Edition
+    if ($id -like 'Core*') { return 'home' }
+    if ($id -like 'Education*') { return 'education' }
+    if ($id -like 'Enterprise*' -or $id -like 'IoTEnterprise*') { return 'enterprise' }
+    if ($id -like 'Professional*') { return 'pro' }
+    return 'other'
+}
+
+function Get-PcFormFactor {
+    if ($Pc.FormFactor) { return $Pc.FormFactor }
+    # Chassis type decides; a battery alone could be a USB UPS on a desktop
+    $laptopChassis = @(8, 9, 10, 11, 12, 14, 18, 21, 30, 31, 32)
+    $chassis = @(Get-CimInstance Win32_SystemEnclosure -ErrorAction SilentlyContinue | ForEach-Object { $_.ChassisTypes } | Where-Object { $_ })
+    $isLaptop = @($chassis | Where-Object { $laptopChassis -contains [int]$_ }).Count -gt 0
+    if (-not $isLaptop -and @($chassis | Where-Object { @(1, 2) -notcontains [int]$_ }).Count -eq 0) {
+        # Unknown chassis: fall back to "has a battery"
+        $isLaptop = @(Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue).Count -gt 0
+    }
+    $Pc.FormFactor = if ($isLaptop) { 'laptop' } else { 'desktop' }
+    return $Pc.FormFactor
+}
+
 function Test-PcTweakApplicable($Tweak) {
     $rules = $Tweak.appliesTo
     if (-not $rules) { return $true }
     $win = Get-PcWindowsInfo
     if ($rules.minBuild -and $win.Build -lt [int]$rules.minBuild) { return $false }
     if ($rules.maxBuild -and $win.Build -gt [int]$rules.maxBuild) { return $false }
-    if ($rules.editions -and @($rules.editions) -notcontains $win.Edition) { return $false }
+    if ($rules.editions -and @($rules.editions) -notcontains (Get-PcEditionFamily)) { return $false }
+    if ($rules.formFactor -and $rules.formFactor -ne (Get-PcFormFactor)) { return $false }
     return $true
 }
 
-# --- Actions ------------------------------------------------------------------------------------
+# --- Action dispatch ------------------------------------------------------------------------------
+
+function Test-PcActionAvailable($Action) {
+    $fn = "Test-Pc$(Get-PcActionNoun $Action.type)ActionAvailable"
+    if (Get-Command $fn -ErrorAction SilentlyContinue) { return [bool](& $fn $Action) }
+    return $true
+}
 
 function Test-PcActionApplied($Action) {
-    switch ($Action.type) {
-        'registry' {
-            $current = Get-PcRegistryValue $Action.path $Action.name
-            if ($Action.absent) { return -not $current.Exists }
-            return $current.Exists -and $current.Kind -eq $Action.kind -and
-                (Test-PcRegistryDataEqual $Action.kind $current.Data $Action.value)
-        }
-        default { throw "Unsupported action type: $($Action.type)" }
-    }
+    return [bool](& "Test-Pc$(Get-PcActionNoun $Action.type)ActionApplied" $Action)
 }
 
 function Invoke-PcAction($Action) {
-    switch ($Action.type) {
-        'registry' {
-            $before = Get-PcRegistryValue $Action.path $Action.name
-            $createdKeys = @()
-            if ($Action.absent) {
-                Remove-PcRegistryValue $Action.path $Action.name
-            } else {
-                $createdKeys = Set-PcRegistryValue $Action.path $Action.name $Action.kind $Action.value
-            }
-            return [pscustomobject]@{
-                type        = 'registry'
-                path        = $Action.path
-                name        = $Action.name
-                before      = [pscustomobject]@{ exists = $before.Exists; kind = $before.Kind; data = $before.Data }
-                createdKeys = @($createdKeys)
-            }
-        }
-        default { throw "Unsupported action type: $($Action.type)" }
-    }
-}
-
-function Get-PcAllowedCreatedKeys($Action, $Record) {
-    # The journal sits in a folder other accounts may be able to write to, so a recorded key is only
-    # removed if it is this action's own key or one of its parents
-    $allowed = @()
-    $probe = Resolve-PcRegistryPath $Action.path
-    while ($probe) { $allowed += $probe; $probe = Split-Path $probe -Parent }
-    @($Record.createdKeys) | Where-Object { $_ -and ($allowed -contains $_) }
+    $record = & "Invoke-Pc$(Get-PcActionNoun $Action.type)Action" $Action
+    $record | Add-Member -NotePropertyName type -NotePropertyValue $Action.type -Force
+    return $record
 }
 
 function Undo-PcAction($Action, $Record, [switch]$Force) {
-    # Returns $true when restored, $false when skipped because someone changed the value since.
-    # Where to write always comes from the catalog ($Action); the journal only supplies the old value.
+    # Returns $true when restored, $false when skipped because something changed it since
     if (-not $Force -and -not (Test-PcActionApplied $Action)) { return $false }
-    switch ($Action.type) {
-        'registry' {
-            if ($Record.before.exists) {
-                if ($script:PcRegistryKinds -notcontains $Record.before.kind) { throw "Journal has an invalid registry kind: $($Record.before.kind)" }
-                [void](Set-PcRegistryValue $Action.path $Action.name $Record.before.kind $Record.before.data)
-            } else {
-                Remove-PcRegistryValue $Action.path $Action.name
-            }
-            $keys = @(Get-PcAllowedCreatedKeys $Action $Record)
-            if ($keys.Count -gt 0) { Remove-PcEmptyKeys $keys }
-            return $true
-        }
-        default { throw "Unsupported action type: $($Action.type)" }
+    & "Undo-Pc$(Get-PcActionNoun $Action.type)Action" $Action $Record
+    return $true
+}
+
+function Get-PcAvailableActions($Tweak) {
+    # Index matters: journal records point at the action's position in the catalog
+    $actions = @($Tweak.actions)
+    for ($i = 0; $i -lt $actions.Count; $i++) {
+        if (Test-PcActionAvailable $actions[$i]) { [pscustomobject]@{ Index = $i; Action = $actions[$i] } }
     }
 }
 
-# --- Journal ------------------------------------------------------------------------------------
+# --- Journal --------------------------------------------------------------------------------------
 
 # Reading must not create the data folder: a folder first created by a standard user would be
 # owned by that user, who could then edit what an administrator's Undo reads
@@ -130,18 +130,26 @@ function Get-PcJournalEntry($Tweak) {
     Get-PcJournal | Where-Object { $_.key -eq $key } | Select-Object -First 1
 }
 
+function Get-PcMyJournalEntries {
+    # Machine entries plus this user's own; other users' HKCU entries aren't theirs to undo
+    $sid = Get-PcCurrentUserSid
+    Get-PcJournal | Where-Object { $_.key -notlike '*@*' -or $_.key -like "*@$sid" }
+}
+
 # --- Tweak operations -----------------------------------------------------------------------------
 
 function Get-PcTweakState($Tweak) {
     if (-not (Test-PcTweakApplicable $Tweak)) { return 'NotApplicable' }
     try {
-        $applied = @(@($Tweak.actions) | Where-Object { Test-PcActionApplied $_ }).Count
+        $available = @(Get-PcAvailableActions $Tweak)
+        if ($available.Count -eq 0) { return 'NotApplicable' }
+        $applied = @($available | Where-Object { Test-PcActionApplied $_.Action }).Count
     } catch {
         Write-PcLog "State of $($Tweak.id): $($_.Exception.Message)" 'Warn'
         return 'Error'
     }
     if ($applied -eq 0) { return 'NotApplied' }
-    if ($applied -eq @($Tweak.actions).Count) { return 'Applied' }
+    if ($applied -eq $available.Count) { return 'Applied' }
     return 'Partial'
 }
 
@@ -153,27 +161,35 @@ function Assert-PcCanChange($Tweak) {
 }
 
 function Invoke-PcTweak($Tweak) {
+    # Returns $true when something changed, $false when it was already in place
     Assert-PcCanChange $Tweak
     $entries = @(Get-PcJournal)
     $key = Get-PcJournalKey $Tweak
     $existing = $entries | Where-Object { $_.key -eq $key } | Select-Object -First 1
-    if (-not $existing -and (Get-PcTweakState $Tweak) -eq 'Applied') {
+    $state = Get-PcTweakState $Tweak
+    if ($state -eq 'NotApplicable') { throw (Get-PcText 'error.notApplicable') }
+    if (-not $existing -and $state -eq 'Applied') {
         # Already set by Windows, a policy or another tool: recording it would offer an Undo
         # that can only put back the same values
         Write-PcLog "Apply $($Tweak.id): already applied, nothing recorded"
-        return
+        return $false
     }
 
     $records = New-Object System.Collections.Generic.List[object]
     $actions = @($Tweak.actions)
     try {
-        for ($i = 0; $i -lt $actions.Count; $i++) {
+        foreach ($item in @(Get-PcAvailableActions $Tweak)) {
             $previous = $null
-            if ($existing) { $previous = @($existing.actions) | Where-Object { $_.index -eq $i } | Select-Object -First 1 }
-            $record = Invoke-PcAction $actions[$i]
-            # Applying twice must not lose the original value: keep the first snapshot taken
-            if ($previous) { $record.before = $previous.before; $record.createdKeys = @($previous.createdKeys) }
-            $record | Add-Member -NotePropertyName index -NotePropertyValue $i
+            if ($existing) { $previous = @($existing.actions) | Where-Object { $_.index -eq $item.Index } | Select-Object -First 1 }
+            $record = Invoke-PcAction $item.Action
+            # Applying twice must not lose the original state: keep the first snapshot taken
+            if ($previous) {
+                $record.before = $previous.before
+                if ($previous.PSObject.Properties['createdKeys']) {
+                    $record | Add-Member -NotePropertyName createdKeys -NotePropertyValue @($previous.createdKeys) -Force
+                }
+            }
+            $record | Add-Member -NotePropertyName index -NotePropertyValue $item.Index -Force
             $records.Add($record)
         }
     } catch {
@@ -182,6 +198,7 @@ function Invoke-PcTweak($Tweak) {
         for ($j = $records.Count - 1; $j -ge 0; $j--) {
             try { [void](Undo-PcAction $actions[$records[$j].index] $records[$j] -Force) } catch { }
         }
+        if ($Tweak.refresh) { try { Invoke-PcRefresh $Tweak.refresh } catch { } }
         Write-PcLog "Apply $($Tweak.id) failed and was rolled back: $($err.Exception.Message)" 'Error'
         throw $err
     }
@@ -194,7 +211,9 @@ function Invoke-PcTweak($Tweak) {
         actions   = $records.ToArray()
     }
     Save-PcJournal (@($entries | Where-Object { $_.key -ne $key }) + $entry)
+    if ($Tweak.refresh) { Invoke-PcRefresh $Tweak.refresh }
     Write-PcLog "Applied $($Tweak.id)"
+    return $true
 }
 
 function Undo-PcTweak($Tweak, [switch]$Force) {
@@ -208,13 +227,17 @@ function Undo-PcTweak($Tweak, [switch]$Force) {
     $skipped = 0
     foreach ($record in @($entry.actions) | Sort-Object index -Descending) {
         $index = [int]$record.index
-        if ($index -lt 0 -or $index -ge $actions.Count) { $skipped++; continue }
-        if (-not (Undo-PcAction $actions[$index] $record -Force:$Force)) {
+        $action = $null
+        if ($index -ge 0 -and $index -lt $actions.Count) { $action = $actions[$index] }
+        # The catalog decides what an action is; a record whose type no longer matches is ignored
+        if (-not $action -or $action.type -ne $record.type -or -not (Test-PcActionAvailable $action)) { $skipped++; continue }
+        if (-not (Undo-PcAction $action $record -Force:$Force)) {
             $skipped++
-            Write-PcLog "Undo $($Tweak.id): action $($record.index) changed since PitCrew applied it; left as is" 'Warn'
+            Write-PcLog "Undo $($Tweak.id): action $index changed since PitCrew applied it; left as is" 'Warn'
         }
     }
     Save-PcJournal @($entries | Where-Object { $_.key -ne $key })
+    if ($Tweak.refresh) { Invoke-PcRefresh $Tweak.refresh }
     Write-PcLog "Undid $($Tweak.id) (skipped $skipped)"
     return [pscustomobject]@{ TweakId = $Tweak.id; Skipped = $skipped }
 }

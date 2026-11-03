@@ -20,6 +20,7 @@ function Initialize-PcContext {
         Language         = 'en'
         Texts            = @{}
         WindowsInfo      = $null
+        FormFactor       = $null
     }
     if (-not $Language) { $Language = Get-PcDefaultLanguage }
     Import-PcLocale $Language
@@ -79,6 +80,55 @@ function Get-PcDataPath([string]$Child) {
     $path = Join-Path $Pc.DataDir $Child
     if (-not (Test-Path -LiteralPath $path)) { New-Item -ItemType Directory -Force -Path $path | Out-Null }
     return $path
+}
+
+# The undo journal decides what an administrator's Undo writes, so its folder must not be
+# writable by standard users. %ProgramData% lets any user create subfolders, hence the reset.
+$script:PcTrustedOwners = @('S-1-5-32-544', 'S-1-5-18')                         # Administrators, SYSTEM
+$script:PcUntrustedSids = @('S-1-5-32-545', 'S-1-5-11', 'S-1-1-0', 'S-1-5-4')    # Users, Authenticated Users, Everyone, Interactive
+# WriteData, AppendData, WriteExtendedAttributes, DeleteSubdirectoriesAndFiles, WriteAttributes,
+# Delete, ChangePermissions, TakeOwnership
+$script:PcWriteRightsMask = 2 + 4 + 16 + 64 + 256 + 65536 + 262144 + 524288
+
+function Test-PcDataDirTrusted([string]$Path) {
+    $acl = Get-Acl -LiteralPath $Path
+    $owner = $acl.GetOwner([Security.Principal.SecurityIdentifier]).Value
+    if ($script:PcTrustedOwners -notcontains $owner) { return $false }
+    foreach ($rule in $acl.GetAccessRules($true, $true, [Security.Principal.SecurityIdentifier])) {
+        if ($rule.AccessControlType -ne 'Allow') { continue }
+        if ($script:PcUntrustedSids -contains $rule.IdentityReference.Value -and ([int]$rule.FileSystemRights -band $script:PcWriteRightsMask)) {
+            return $false
+        }
+    }
+    return $true
+}
+
+function Protect-PcDataDir {
+    # Admin only. Creates the data folder, or resets its permissions if anyone else could have
+    # written to it; a journal found in an untrusted folder is set aside, never trusted.
+    $path = $Pc.DataDir
+    if (-not (Test-Path -LiteralPath $path)) { New-Item -ItemType Directory -Force -Path $path | Out-Null }
+    if (Test-PcDataDirTrusted $path) { return }
+    $journal = Join-Path $path 'journal.json'
+    if (Test-Path -LiteralPath $journal) {
+        $aside = Join-Path $path ('journal.untrusted-{0:yyyyMMdd-HHmmss}.json' -f (Get-Date))
+        Move-Item -LiteralPath $journal -Destination $aside
+        Write-PcLog "Journal in a folder with unsafe permissions moved to $aside" 'Warn'
+    }
+    $acl = New-Object System.Security.AccessControl.DirectorySecurity
+    $acl.SetOwner((New-Object Security.Principal.SecurityIdentifier 'S-1-5-32-544'))
+    $acl.SetAccessRuleProtection($true, $false)
+    foreach ($rule in @(@('S-1-5-18', 'FullControl'), @('S-1-5-32-544', 'FullControl'), @('S-1-5-32-545', 'ReadAndExecute'))) {
+        $acl.AddAccessRule((New-Object System.Security.AccessControl.FileSystemAccessRule(
+            (New-Object Security.Principal.SecurityIdentifier $rule[0]), $rule[1], 'ContainerInherit, ObjectInherit', 'None', 'Allow')))
+    }
+    Set-Acl -LiteralPath $path -AclObject $acl
+    Write-PcLog 'Data folder permissions set: Administrators and SYSTEM full control, Users read'
+}
+
+function Get-PcUntrustedJournals {
+    if (-not (Test-Path -LiteralPath $Pc.DataDir)) { return }
+    Get-ChildItem -LiteralPath $Pc.DataDir -Filter 'journal.untrusted-*.json' -ErrorAction SilentlyContinue | ForEach-Object FullName
 }
 
 function Get-PcLogDir {

@@ -3,6 +3,12 @@
 
 $script:PcRegistryKinds = @('DWord', 'QWord', 'String', 'ExpandString', 'MultiString', 'Binary')
 
+function Get-PcRegistryCmdletName([string]$Name) {
+    # A key's default value has an empty name in the registry API, "(default)" for the cmdlets
+    if ($Name -eq '') { return '(default)' }
+    return $Name
+}
+
 function Resolve-PcRegistryPath([string]$Path) {
     if ($Path -notmatch '^(HKLM|HKCU):\\(.+)$') { throw "Unsupported registry path: $Path" }
     if (-not $Pc.RegistryRedirect) { return $Path }
@@ -73,15 +79,23 @@ function Set-PcRegistryValue([string]$Path, [string]$Name, [string]$Kind, $Data)
         New-Item -Path $k -Force | Out-Null
         $created.Add($k)
     }
-    New-ItemProperty -LiteralPath $real -Name $Name -PropertyType $Kind -Value (ConvertTo-PcNativeData $Kind $Data) -Force | Out-Null
+    New-ItemProperty -LiteralPath $real -Name (Get-PcRegistryCmdletName $Name) -PropertyType $Kind -Value (ConvertTo-PcNativeData $Kind $Data) -Force | Out-Null
     return , $created.ToArray()
 }
 
 function Remove-PcRegistryValue([string]$Path, [string]$Name) {
     $real = Resolve-PcRegistryPath $Path
-    if (Test-Path -LiteralPath $real) {
+    if (-not (Test-Path -LiteralPath $real)) { return }
+    if ($Name -ne '') {
         Remove-ItemProperty -LiteralPath $real -Name $Name -ErrorAction SilentlyContinue
+        return
     }
+    # Remove-ItemProperty can't delete an empty default value ("property does not exist"); the
+    # registry API can
+    if ($real -notmatch '^(HKLM|HKCU):\\(.+)$') { throw "Unsupported registry path: $real" }
+    $hive = if ($Matches[1] -eq 'HKLM') { [Microsoft.Win32.Registry]::LocalMachine } else { [Microsoft.Win32.Registry]::CurrentUser }
+    $key = $hive.OpenSubKey($Matches[2], $true)
+    if ($key) { try { $key.DeleteValue('', $false) } finally { $key.Close() } }
 }
 
 function Remove-PcEmptyKeys([string[]]$Keys) {

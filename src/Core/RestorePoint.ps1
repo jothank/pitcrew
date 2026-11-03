@@ -43,6 +43,18 @@ function New-PcRestorePoint {
     return [bool]($created.Count -gt 0)
 }
 
+function Test-PcRestorePolicyBlocked {
+    # Set by Group Policy (or a tweak tool): PitCrew never overrides it
+    $p = Get-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\SystemRestore' -ErrorAction SilentlyContinue
+    return [bool]($p -and ($p.DisableSR -eq 1 -or $p.DisableConfig -eq 1))
+}
+
+function Get-PcLastRestorePoint {
+    Get-PcRestorePointList | Sort-Object SequenceNumber -Descending | Select-Object -First 1 | ForEach-Object {
+        [pscustomobject]@{ Description = $_.Description; Created = [Management.ManagementDateTimeConverter]::ToDateTime($_.CreationTime) }
+    }
+}
+
 function Enable-PcSystemProtection {
     # Only called after the user agrees: it reserves disk space for restore points
     Enable-ComputerRestore -Drive "$env:SystemDrive\"

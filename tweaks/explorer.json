@@ -1,0 +1,521 @@
+[
+  {
+    "id": "explorer.show-file-extensions",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/farag2/Sophia-Script-for-Windows/blob/master/src/Sophia_Script_for_Windows_11/Module/Sophia.psm1",
+    "requires": { "restartExplorer": true },
+    "title": {
+      "en": "Show file extensions",
+      "pt-BR": "Mostrar extensões de arquivo",
+      "es": "Mostrar las extensiones de archivo",
+      "fr": "Afficher les extensions de fichier",
+      "de": "Dateinamenerweiterungen anzeigen",
+      "ru": "Показывать расширения файлов",
+      "tr": "Dosya uzantılarını göster",
+      "zh-CN": "显示文件扩展名"
+    },
+    "description": {
+      "en": "File Explorer shows the full file name, such as .pdf or .exe. It helps you spot a trick like \"invoice.pdf.exe\" before opening it.",
+      "pt-BR": "O Explorador de Arquivos mostra o nome completo do arquivo, com .pdf ou .exe. Ajuda a perceber truques como \"fatura.pdf.exe\" antes de abrir.",
+      "es": "El Explorador de archivos muestra el nombre completo, con .pdf o .exe. Ayuda a detectar trucos como \"factura.pdf.exe\" antes de abrir el archivo.",
+      "fr": "L'Explorateur de fichiers affiche le nom complet, avec .pdf ou .exe. Cela aide à repérer une ruse comme « facture.pdf.exe » avant de l'ouvrir.",
+      "de": "Der Datei-Explorer zeigt den vollständigen Dateinamen samt .pdf oder .exe. So erkennst du Tricks wie \"rechnung.pdf.exe\", bevor du die Datei öffnest.",
+      "ru": "Проводник показывает полное имя файла, включая .pdf или .exe. Так проще заметить уловку вроде «счёт.pdf.exe» до открытия файла.",
+      "tr": "Dosya Gezgini tam dosya adını .pdf veya .exe ile birlikte gösterir. \"fatura.pdf.exe\" gibi hileleri dosyayı açmadan önce fark etmene yardım eder.",
+      "zh-CN": "文件资源管理器会显示完整文件名，包括 .pdf 或 .exe。这有助于在打开前识别“invoice.pdf.exe”之类的伪装文件。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "HideFileExt", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "explorer.show-hidden-files",
+    "risk": "moderate",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/farag2/Sophia-Script-for-Windows/blob/master/src/Sophia_Script_for_Windows_11/Module/Sophia.psm1",
+    "requires": { "restartExplorer": true },
+    "title": {
+      "en": "Show hidden files and folders",
+      "pt-BR": "Mostrar arquivos e pastas ocultos",
+      "es": "Mostrar archivos y carpetas ocultos",
+      "fr": "Afficher les fichiers et dossiers cachés",
+      "de": "Versteckte Dateien und Ordner anzeigen",
+      "ru": "Показывать скрытые файлы и папки",
+      "tr": "Gizli dosya ve klasörleri göster",
+      "zh-CN": "显示隐藏的文件和文件夹"
+    },
+    "description": {
+      "en": "File Explorer lists files and folders marked as hidden. It is also easier to delete or change something Windows or apps rely on.",
+      "pt-BR": "O Explorador de Arquivos passa a listar arquivos e pastas marcados como ocultos. Também fica mais fácil apagar ou alterar algo de que o Windows ou os apps dependem.",
+      "es": "El Explorador de archivos muestra los archivos y carpetas marcados como ocultos. También es más fácil borrar o cambiar algo de lo que dependen Windows o las apps.",
+      "fr": "L'Explorateur de fichiers affiche les fichiers et dossiers marqués comme cachés. Il devient aussi plus facile de supprimer ou modifier un élément dont Windows ou des applications dépendent.",
+      "de": "Der Datei-Explorer zeigt als versteckt markierte Dateien und Ordner an. Es ist dann auch leichter, etwas zu löschen oder zu ändern, das Windows oder Apps benötigen.",
+      "ru": "Проводник показывает файлы и папки со свойством «скрытый». Также легче случайно удалить или изменить то, что нужно Windows или приложениям.",
+      "tr": "Dosya Gezgini gizli olarak işaretlenmiş dosya ve klasörleri listeler. Windows'un veya uygulamaların ihtiyaç duyduğu bir şeyi silmek ya da değiştirmek de kolaylaşır.",
+      "zh-CN": "文件资源管理器会列出标记为隐藏的文件和文件夹。同时也更容易误删或修改 Windows 或应用所依赖的内容。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "Hidden", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "explorer.classic-context-menu",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Disable_Show_More_Options_Context_Menu.reg",
+    "appliesTo": { "minBuild": 22000 },
+    "requires": { "restartExplorer": true },
+    "title": {
+      "en": "Classic right-click menu",
+      "pt-BR": "Menu de clique direito clássico",
+      "es": "Menú contextual clásico",
+      "fr": "Menu contextuel classique",
+      "de": "Klassisches Kontextmenü",
+      "ru": "Классическое контекстное меню",
+      "tr": "Klasik sağ tık menüsü",
+      "zh-CN": "经典右键菜单"
+    },
+    "description": {
+      "en": "Right-click shows the full classic menu at once, without \"Show more options\". You lose the compact Windows 11 menu.",
+      "pt-BR": "O clique direito mostra logo o menu clássico completo, sem \"Mostrar mais opções\". Você perde o menu compacto do Windows 11.",
+      "es": "El clic derecho muestra directamente el menú clásico completo, sin \"Mostrar más opciones\". Pierdes el menú compacto de Windows 11.",
+      "fr": "Le clic droit affiche directement le menu classique complet, sans « Afficher plus d'options ». Vous perdez le menu compact de Windows 11.",
+      "de": "Rechtsklick zeigt sofort das vollständige klassische Menü, ohne \"Weitere Optionen anzeigen\". Das kompakte Windows-11-Menü entfällt.",
+      "ru": "Правый щелчок сразу открывает полное классическое меню, без пункта «Показать дополнительные параметры». Компактное меню Windows 11 пропадёт.",
+      "tr": "Sağ tık, \"Daha fazla seçenek göster\" adımı olmadan tam klasik menüyü hemen açar. Windows 11'in kompakt menüsünü kaybedersin.",
+      "zh-CN": "右键直接显示完整的经典菜单，无需点击“显示更多选项”。你将不再使用 Windows 11 的精简菜单。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32", "name": "", "kind": "String", "value": "" }
+    ]
+  },
+  {
+    "id": "explorer.open-to-this-pc",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Launch_File_Explorer_To_This_PC.reg",
+    "title": {
+      "en": "Open File Explorer to \"This PC\"",
+      "pt-BR": "Abrir o Explorador de Arquivos em \"Este Computador\"",
+      "es": "Abrir el Explorador de archivos en \"Este equipo\"",
+      "fr": "Ouvrir l'Explorateur de fichiers sur « Ce PC »",
+      "de": "Datei-Explorer mit \"Dieser PC\" öffnen",
+      "ru": "Открывать Проводник на «Этот компьютер»",
+      "tr": "Dosya Gezgini'ni \"Bu bilgisayar\" ile aç",
+      "zh-CN": "文件资源管理器打开到“此电脑”"
+    },
+    "description": {
+      "en": "File Explorer opens on your drives and folders instead of Home (or Quick access). You no longer see recent files first.",
+      "pt-BR": "O Explorador de Arquivos abre nas suas unidades e pastas em vez de Início (ou Acesso rápido). Os arquivos recentes deixam de aparecer primeiro.",
+      "es": "El Explorador de archivos se abre en tus unidades y carpetas en lugar de Inicio (o Acceso rápido). Ya no ves primero los archivos recientes.",
+      "fr": "L'Explorateur de fichiers s'ouvre sur vos lecteurs et dossiers au lieu d'Accueil (ou Accès rapide). Les fichiers récents n'apparaissent plus en premier.",
+      "de": "Der Datei-Explorer öffnet sich mit deinen Laufwerken und Ordnern statt mit Start (oder Schnellzugriff). Zuletzt verwendete Dateien siehst du nicht mehr zuerst.",
+      "ru": "Проводник открывается на дисках и папках вместо «Главная» (или «Быстрый доступ»). Недавние файлы больше не показываются первыми.",
+      "tr": "Dosya Gezgini, Ana Sayfa (veya Hızlı erişim) yerine sürücülerin ve klasörlerinle açılır. Son dosyaları artık ilk olarak görmezsin.",
+      "zh-CN": "文件资源管理器打开时显示你的驱动器和文件夹，而不是“主页”（或“快速访问”）。你将不再首先看到最近的文件。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "LaunchTo", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "explorer.taskbar-end-task",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Enable_End_Task.reg",
+    "appliesTo": { "minBuild": 22631 },
+    "requires": { "restartExplorer": true },
+    "title": {
+      "en": "\"End task\" in the taskbar right-click menu",
+      "pt-BR": "\"Finalizar tarefa\" no menu de clique direito da barra de tarefas",
+      "es": "\"Finalizar tarea\" en el menú contextual de la barra de tareas",
+      "fr": "« Fin de tâche » dans le menu contextuel de la barre des tâches",
+      "de": "\"Task beenden\" im Kontextmenü der Taskleiste",
+      "ru": "«Завершить задачу» в контекстном меню панели задач",
+      "tr": "Görev çubuğu sağ tık menüsünde \"Görevi sonlandır\"",
+      "zh-CN": "任务栏右键菜单中的“结束任务”"
+    },
+    "description": {
+      "en": "Right-clicking an app on the taskbar adds \"End task\" to close a frozen program. Unsaved data in that program is lost.",
+      "pt-BR": "Clicar com o botão direito em um app na barra de tarefas adiciona \"Finalizar tarefa\" para fechar um programa travado. Dados não salvos nesse programa são perdidos.",
+      "es": "Al hacer clic derecho en una app de la barra de tareas aparece \"Finalizar tarea\" para cerrar un programa bloqueado. Se pierden los datos sin guardar de ese programa.",
+      "fr": "Un clic droit sur une application de la barre des tâches ajoute « Fin de tâche » pour fermer un programme figé. Les données non enregistrées de ce programme sont perdues.",
+      "de": "Ein Rechtsklick auf eine App in der Taskleiste zeigt \"Task beenden\", um ein hängendes Programm zu schließen. Nicht gespeicherte Daten dieses Programms gehen verloren.",
+      "ru": "Правый щелчок по приложению на панели задач добавляет пункт «Завершить задачу» для закрытия зависшей программы. Несохранённые данные этой программы будут потеряны.",
+      "tr": "Görev çubuğundaki bir uygulamaya sağ tıklayınca donmuş programı kapatmak için \"Görevi sonlandır\" eklenir. O programdaki kaydedilmemiş veriler kaybolur.",
+      "zh-CN": "在任务栏上右键单击应用时会多出“结束任务”，可用来关闭卡死的程序。该程序中未保存的数据将丢失。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\TaskbarDeveloperSettings", "name": "TaskbarEndTask", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "explorer.taskbar-align-left",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Align_Taskbar_Left.reg",
+    "appliesTo": { "minBuild": 22000 },
+    "requires": { "restartExplorer": true },
+    "title": {
+      "en": "Taskbar icons on the left",
+      "pt-BR": "Ícones da barra de tarefas à esquerda",
+      "es": "Iconos de la barra de tareas a la izquierda",
+      "fr": "Icônes de la barre des tâches à gauche",
+      "de": "Taskleistensymbole links ausrichten",
+      "ru": "Значки панели задач слева",
+      "tr": "Görev çubuğu simgeleri solda",
+      "zh-CN": "任务栏图标靠左"
+    },
+    "description": {
+      "en": "The Start button and app icons move to the left edge, like in Windows 10. They are no longer centered.",
+      "pt-BR": "O botão Iniciar e os ícones dos apps vão para a borda esquerda, como no Windows 10. Deixam de ficar centralizados.",
+      "es": "El botón Inicio y los iconos de las apps pasan al borde izquierdo, como en Windows 10. Dejan de estar centrados.",
+      "fr": "Le bouton Démarrer et les icônes d'applications passent au bord gauche, comme dans Windows 10. Ils ne sont plus centrés.",
+      "de": "Die Start-Schaltfläche und die App-Symbole wandern wie in Windows 10 an den linken Rand. Sie sind nicht mehr zentriert.",
+      "ru": "Кнопка «Пуск» и значки приложений сдвигаются к левому краю, как в Windows 10. Они больше не расположены по центру.",
+      "tr": "Başlat düğmesi ve uygulama simgeleri Windows 10'daki gibi sol kenara taşınır. Artık ortalanmış olmazlar.",
+      "zh-CN": "“开始”按钮和应用图标会像 Windows 10 一样移到左侧，不再居中显示。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "TaskbarAl", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "explorer.taskbar-never-combine",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Combine_Taskbar_Never.reg",
+    "appliesTo": { "minBuild": 22000 },
+    "requires": { "restartExplorer": true },
+    "title": {
+      "en": "Never combine taskbar buttons",
+      "pt-BR": "Nunca agrupar botões da barra de tarefas",
+      "es": "No agrupar nunca los botones de la barra de tareas",
+      "fr": "Ne jamais regrouper les boutons de la barre des tâches",
+      "de": "Taskleistenschaltflächen nie zusammenfassen",
+      "ru": "Никогда не объединять кнопки панели задач",
+      "tr": "Görev çubuğu düğmelerini hiçbir zaman birleştirme",
+      "zh-CN": "从不合并任务栏按钮"
+    },
+    "description": {
+      "en": "Every open window gets its own labeled button on the taskbar. With many windows open, the taskbar fills up faster.",
+      "pt-BR": "Cada janela aberta ganha seu próprio botão com rótulo na barra de tarefas. Com muitas janelas abertas, a barra enche mais rápido.",
+      "es": "Cada ventana abierta tiene su propio botón con etiqueta en la barra de tareas. Con muchas ventanas abiertas, la barra se llena antes.",
+      "fr": "Chaque fenêtre ouverte a son propre bouton avec étiquette dans la barre des tâches. Avec beaucoup de fenêtres, la barre se remplit plus vite.",
+      "de": "Jedes geöffnete Fenster erhält eine eigene beschriftete Schaltfläche in der Taskleiste. Bei vielen Fenstern ist die Leiste schneller voll.",
+      "ru": "Каждое открытое окно получает на панели задач отдельную кнопку с подписью. При большом числе окон панель заполняется быстрее.",
+      "tr": "Açık her pencere görev çubuğunda kendi etiketli düğmesini alır. Çok pencere açıkken çubuk daha çabuk dolar.",
+      "zh-CN": "每个打开的窗口在任务栏上都有自己带标签的按钮。窗口很多时，任务栏会更快被占满。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "TaskbarGlomLevel", "kind": "DWord", "value": 2 }
+    ]
+  },
+  {
+    "id": "explorer.taskbar-search-icon",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/farag2/Sophia-Script-for-Windows/blob/master/src/Sophia_Script_for_Windows_11/Module/Sophia.psm1",
+    "appliesTo": { "minBuild": 22000 },
+    "requires": { "restartExplorer": true },
+    "title": {
+      "en": "Search as an icon only",
+      "pt-BR": "Pesquisa só como ícone",
+      "es": "Búsqueda solo como icono",
+      "fr": "Recherche en icône uniquement",
+      "de": "Suche nur als Symbol",
+      "ru": "Поиск только значком",
+      "tr": "Aramayı yalnızca simge olarak göster",
+      "zh-CN": "搜索仅显示图标"
+    },
+    "description": {
+      "en": "The taskbar search box shrinks to a single magnifier icon and frees up space. Search still works from the icon or the Start menu.",
+      "pt-BR": "A caixa de pesquisa da barra de tarefas vira só uma lupa e libera espaço. A pesquisa continua funcionando pelo ícone ou pelo menu Iniciar.",
+      "es": "El cuadro de búsqueda de la barra de tareas se reduce a una lupa y libera espacio. La búsqueda sigue funcionando desde el icono o el menú Inicio.",
+      "fr": "La zone de recherche de la barre des tâches se réduit à une loupe et libère de la place. La recherche reste disponible depuis l'icône ou le menu Démarrer.",
+      "de": "Das Suchfeld der Taskleiste schrumpft zu einem Lupensymbol und gibt Platz frei. Die Suche funktioniert weiterhin über das Symbol oder das Startmenü.",
+      "ru": "Поле поиска на панели задач сокращается до значка лупы и освобождает место. Поиск по-прежнему доступен через значок или меню «Пуск».",
+      "tr": "Görev çubuğundaki arama kutusu tek bir büyüteç simgesine küçülür ve yer açar. Arama yine simgeden veya Başlat menüsünden çalışır.",
+      "zh-CN": "任务栏搜索框缩小为一个放大镜图标，腾出空间。仍可通过该图标或“开始”菜单搜索。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search", "name": "SearchboxTaskbarMode", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "explorer.hide-task-view",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Hide_Taskview_Taskbar.reg",
+    "requires": { "restartExplorer": true },
+    "title": {
+      "en": "Hide the Task View button",
+      "pt-BR": "Ocultar o botão Visão de Tarefas",
+      "es": "Ocultar el botón Vista de tareas",
+      "fr": "Masquer le bouton Vue des tâches",
+      "de": "Schaltfläche Aufgabenansicht ausblenden",
+      "ru": "Скрыть кнопку «Представление задач»",
+      "tr": "Görev Görünümü düğmesini gizle",
+      "zh-CN": "隐藏“任务视图”按钮"
+    },
+    "description": {
+      "en": "The Task View button disappears from the taskbar. The Win+Tab shortcut still opens it.",
+      "pt-BR": "O botão Visão de Tarefas some da barra de tarefas. O atalho Win+Tab continua abrindo a Visão de Tarefas.",
+      "es": "El botón Vista de tareas desaparece de la barra de tareas. El atajo Win+Tab sigue abriéndola.",
+      "fr": "Le bouton Vue des tâches disparaît de la barre des tâches. Le raccourci Win+Tab continue de l'ouvrir.",
+      "de": "Die Schaltfläche Aufgabenansicht verschwindet aus der Taskleiste. Mit Win+Tab öffnest du sie weiterhin.",
+      "ru": "Кнопка «Представление задач» исчезает с панели задач. Сочетание Win+Tab по-прежнему её открывает.",
+      "tr": "Görev Görünümü düğmesi görev çubuğundan kaybolur. Win+Tab kısayolu onu yine açar.",
+      "zh-CN": "“任务视图”按钮会从任务栏消失。仍可用 Win+Tab 快捷键打开它。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "ShowTaskViewButton", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "explorer.sticky-keys-shortcut-off",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-stickykeys",
+    "requires": { "signOut": true },
+    "title": {
+      "en": "Turn off the Sticky Keys shortcut (5× Shift)",
+      "pt-BR": "Desligar o atalho das Teclas de Aderência (5× Shift)",
+      "es": "Desactivar el atajo de Teclas especiales (5× Mayús)",
+      "fr": "Désactiver le raccourci des Touches rémanentes (5× Maj)",
+      "de": "Tastenkombination für Einrastfunktion ausschalten (5× Umschalt)",
+      "ru": "Отключить сочетание залипания клавиш (5× Shift)",
+      "tr": "Yapışkan Tuşlar kısayolunu kapat (5× Shift)",
+      "zh-CN": "关闭粘滞键快捷方式（连按 5 次 Shift）"
+    },
+    "description": {
+      "en": "Pressing Shift five times no longer pops up the Sticky Keys prompt, which often appears in games. Sticky Keys can still be turned on in Settings.",
+      "pt-BR": "Apertar Shift cinco vezes não abre mais o aviso das Teclas de Aderência, que costuma aparecer em jogos. Você ainda pode ativá-las em Configurações.",
+      "es": "Pulsar Mayús cinco veces ya no abre el aviso de Teclas especiales, que suele aparecer en los juegos. Aún puedes activarlas en Configuración.",
+      "fr": "Appuyer cinq fois sur Maj n'ouvre plus l'invite des Touches rémanentes, qui surgit souvent dans les jeux. Vous pouvez toujours les activer dans Paramètres.",
+      "de": "Fünfmal Umschalt öffnet die Abfrage der Einrastfunktion nicht mehr, die oft in Spielen erscheint. In den Einstellungen lässt sie sich weiterhin einschalten.",
+      "ru": "Пятикратное нажатие Shift больше не вызывает запрос о залипании клавиш, который часто появляется в играх. Залипание можно по-прежнему включить в «Параметрах».",
+      "tr": "Shift'e beş kez basmak artık sık sık oyunlarda çıkan Yapışkan Tuşlar uyarısını açmaz. Yapışkan Tuşlar'ı Ayarlar'dan yine açabilirsin.",
+      "zh-CN": "连按五次 Shift 不再弹出常在游戏中出现的粘滞键提示。仍可在“设置”中手动开启粘滞键。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Control Panel\\Accessibility\\StickyKeys", "name": "Flags", "kind": "String", "value": "506" }
+    ]
+  },
+  {
+    "id": "explorer.no-snap-assist",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Disable_Snap_Assist.reg",
+    "appliesTo": { "minBuild": 22000 },
+    "title": {
+      "en": "No Snap Assist suggestions",
+      "pt-BR": "Sem sugestões do Assistente de Ancoragem",
+      "es": "Sin sugerencias de Ayuda para ajustar",
+      "fr": "Pas de suggestions de l'Assistance d'ancrage",
+      "de": "Keine Vorschläge der Andock-Unterstützung",
+      "ru": "Без подсказок помощи при прикреплении",
+      "tr": "Ekleme Yardımı önerileri olmasın",
+      "zh-CN": "关闭贴靠助手建议"
+    },
+    "description": {
+      "en": "After you snap a window to one side, Windows stops offering the other open windows for the remaining space. Snapping itself still works.",
+      "pt-BR": "Depois de encaixar uma janela em um lado, o Windows deixa de oferecer as outras janelas abertas para o espaço restante. O encaixe em si continua funcionando.",
+      "es": "Tras ajustar una ventana a un lado, Windows deja de ofrecer las demás ventanas abiertas para el espacio restante. El ajuste en sí sigue funcionando.",
+      "fr": "Après avoir ancré une fenêtre sur un côté, Windows ne propose plus les autres fenêtres ouvertes pour l'espace restant. L'ancrage lui-même continue de fonctionner.",
+      "de": "Nachdem du ein Fenster an eine Seite angedockt hast, schlägt Windows keine anderen offenen Fenster mehr für den freien Platz vor. Das Andocken selbst funktioniert weiterhin.",
+      "ru": "После прикрепления окна к краю Windows больше не предлагает другие открытые окна для оставшегося места. Само прикрепление продолжает работать.",
+      "tr": "Bir pencereyi kenara ekledikten sonra Windows kalan alan için diğer açık pencereleri önermeyi bırakır. Pencere ekleme özelliği çalışmaya devam eder.",
+      "zh-CN": "将窗口贴靠到一侧后，Windows 不再为剩余空间推荐其他已打开的窗口。贴靠功能本身仍可使用。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "SnapAssist", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "explorer.alt-tab-no-browser-tabs",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Hide_Tabs_In_Alt_Tab.reg",
+    "appliesTo": { "minBuild": 22000 },
+    "title": {
+      "en": "Alt+Tab without browser tabs",
+      "pt-BR": "Alt+Tab sem abas do navegador",
+      "es": "Alt+Tab sin pestañas del navegador",
+      "fr": "Alt+Tab sans onglets du navigateur",
+      "de": "Alt+Tab ohne Browser-Tabs",
+      "ru": "Alt+Tab без вкладок браузера",
+      "tr": "Tarayıcı sekmeleri olmadan Alt+Tab",
+      "zh-CN": "Alt+Tab 不显示浏览器标签页"
+    },
+    "description": {
+      "en": "Alt+Tab shows only open windows, not each tab of Edge. The list stays shorter, but you can't jump straight to a tab.",
+      "pt-BR": "O Alt+Tab mostra apenas as janelas abertas, não cada aba do Edge. A lista fica mais curta, mas você não vai direto a uma aba.",
+      "es": "Alt+Tab muestra solo las ventanas abiertas, no cada pestaña de Edge. La lista es más corta, pero no puedes saltar directamente a una pestaña.",
+      "fr": "Alt+Tab n'affiche que les fenêtres ouvertes, pas chaque onglet d'Edge. La liste est plus courte, mais vous ne pouvez plus passer directement à un onglet.",
+      "de": "Alt+Tab zeigt nur geöffnete Fenster, nicht jeden Tab von Edge. Die Liste wird kürzer, aber du kannst nicht direkt zu einem Tab springen.",
+      "ru": "Alt+Tab показывает только открытые окна, а не каждую вкладку Edge. Список короче, но перейти сразу к вкладке нельзя.",
+      "tr": "Alt+Tab yalnızca açık pencereleri gösterir, Edge'in her sekmesini göstermez. Liste kısalır ama doğrudan bir sekmeye geçemezsin.",
+      "zh-CN": "Alt+Tab 只显示已打开的窗口，不再列出 Edge 的每个标签页。列表更短，但无法直接跳到某个标签页。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "MultiTaskingAltTabFilter", "kind": "DWord", "value": 3 }
+    ]
+  },
+  {
+    "id": "explorer.hide-gallery",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Hide_Gallery_from_Explorer.reg",
+    "appliesTo": { "minBuild": 22621 },
+    "requires": { "restartExplorer": true },
+    "title": {
+      "en": "Hide Gallery in the navigation pane",
+      "pt-BR": "Ocultar a Galeria no painel de navegação",
+      "es": "Ocultar Galería en el panel de navegación",
+      "fr": "Masquer Galerie dans le volet de navigation",
+      "de": "Galerie im Navigationsbereich ausblenden",
+      "ru": "Скрыть «Коллекция» в области навигации",
+      "tr": "Gezinti bölmesinde Galeri'yi gizle",
+      "zh-CN": "在导航窗格中隐藏“图库”"
+    },
+    "description": {
+      "en": "The Gallery entry disappears from the File Explorer sidebar. Your photos stay where they are.",
+      "pt-BR": "A entrada Galeria some da barra lateral do Explorador de Arquivos. Suas fotos continuam onde estão.",
+      "es": "La entrada Galería desaparece de la barra lateral del Explorador de archivos. Tus fotos siguen donde están.",
+      "fr": "L'entrée Galerie disparaît du volet latéral de l'Explorateur de fichiers. Vos photos restent où elles sont.",
+      "de": "Der Eintrag Galerie verschwindet aus der Seitenleiste des Datei-Explorers. Deine Fotos bleiben, wo sie sind.",
+      "ru": "Пункт «Коллекция» исчезает из боковой панели Проводника. Ваши фотографии остаются на месте.",
+      "tr": "Galeri girişi Dosya Gezgini kenar çubuğundan kaybolur. Fotoğrafların olduğu yerde kalır.",
+      "zh-CN": "“图库”条目会从文件资源管理器侧边栏消失。你的照片仍保留在原处。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Classes\\CLSID\\{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}", "name": "System.IsPinnedToNameSpaceTree", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "explorer.hide-home",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Hide_Home_from_Explorer.reg",
+    "appliesTo": { "minBuild": 22000 },
+    "requires": { "restartExplorer": true },
+    "title": {
+      "en": "Hide Home in the navigation pane",
+      "pt-BR": "Ocultar o Início no painel de navegação",
+      "es": "Ocultar Inicio en el panel de navegación",
+      "fr": "Masquer Accueil dans le volet de navigation",
+      "de": "Start im Navigationsbereich ausblenden",
+      "ru": "Скрыть «Главная» в области навигации",
+      "tr": "Gezinti bölmesinde Ana Sayfa'yı gizle",
+      "zh-CN": "在导航窗格中隐藏“主页”"
+    },
+    "description": {
+      "en": "The Home entry disappears from the File Explorer sidebar. Combine it with opening to \"This PC\" so Explorer doesn't start on a hidden page.",
+      "pt-BR": "A entrada Início some da barra lateral do Explorador de Arquivos. Combine com abrir em \"Este Computador\" para o Explorador não iniciar em uma página oculta.",
+      "es": "La entrada Inicio desaparece de la barra lateral del Explorador de archivos. Combínala con abrir en \"Este equipo\" para que el Explorador no empiece en una página oculta.",
+      "fr": "L'entrée Accueil disparaît du volet latéral de l'Explorateur de fichiers. Associez-la à l'ouverture sur « Ce PC » pour que l'Explorateur ne démarre pas sur une page masquée.",
+      "de": "Der Eintrag Start verschwindet aus der Seitenleiste des Datei-Explorers. Kombiniere dies mit dem Öffnen auf \"Dieser PC\", damit der Explorer nicht auf einer ausgeblendeten Seite startet.",
+      "ru": "Пункт «Главная» исчезает из боковой панели Проводника. Сочетайте с открытием на «Этот компьютер», чтобы Проводник не запускался на скрытой странице.",
+      "tr": "Ana Sayfa girişi Dosya Gezgini kenar çubuğundan kaybolur. Gezgin'in gizli bir sayfada açılmaması için \"Bu bilgisayar\" ile açmayla birlikte kullan.",
+      "zh-CN": "“主页”条目会从文件资源管理器侧边栏消失。建议同时设置打开到“此电脑”，以免资源管理器从被隐藏的页面启动。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Classes\\CLSID\\{f874310e-b6b7-47dc-bc84-b9e6b38f5903}", "name": "System.IsPinnedToNameSpaceTree", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "explorer.clock-seconds",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/farag2/Sophia-Script-for-Windows/blob/master/src/Sophia_Script_for_Windows_11/Module/Sophia.psm1",
+    "appliesTo": { "minBuild": 22000 },
+    "requires": { "restartExplorer": true },
+    "title": {
+      "en": "Seconds on the taskbar clock",
+      "pt-BR": "Segundos no relógio da barra de tarefas",
+      "es": "Segundos en el reloj de la barra de tareas",
+      "fr": "Secondes sur l'horloge de la barre des tâches",
+      "de": "Sekunden in der Taskleistenuhr",
+      "ru": "Секунды в часах на панели задач",
+      "tr": "Görev çubuğu saatinde saniyeler",
+      "zh-CN": "任务栏时钟显示秒"
+    },
+    "description": {
+      "en": "The taskbar clock also shows seconds. The clock redraws every second, which costs a little battery on laptops.",
+      "pt-BR": "O relógio da barra de tarefas passa a mostrar também os segundos. Ele é redesenhado a cada segundo, o que gasta um pouco de bateria em notebooks.",
+      "es": "El reloj de la barra de tareas también muestra los segundos. Se redibuja cada segundo, lo que consume un poco de batería en portátiles.",
+      "fr": "L'horloge de la barre des tâches affiche aussi les secondes. Elle est redessinée chaque seconde, ce qui consomme un peu de batterie sur un portable.",
+      "de": "Die Uhr in der Taskleiste zeigt auch Sekunden an. Sie wird jede Sekunde neu gezeichnet, was bei Notebooks etwas Akku kostet.",
+      "ru": "Часы на панели задач показывают и секунды. Они перерисовываются каждую секунду, что немного расходует заряд батареи ноутбука.",
+      "tr": "Görev çubuğu saati saniyeleri de gösterir. Saat her saniye yeniden çizilir, bu da dizüstü bilgisayarlarda biraz pil harcar.",
+      "zh-CN": "任务栏时钟同时显示秒。时钟每秒重绘一次，笔记本电脑会多消耗少量电量。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "ShowSecondsInSystemClock", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "explorer.dark-mode",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Enable_Dark_Mode.reg",
+    "title": {
+      "en": "Dark mode for apps and Windows",
+      "pt-BR": "Modo escuro para apps e Windows",
+      "es": "Modo oscuro para apps y Windows",
+      "fr": "Mode sombre pour les applications et Windows",
+      "de": "Dunkler Modus für Apps und Windows",
+      "ru": "Тёмный режим для приложений и Windows",
+      "tr": "Uygulamalar ve Windows için koyu mod",
+      "zh-CN": "应用和 Windows 使用深色模式"
+    },
+    "description": {
+      "en": "Windows (taskbar, Start menu) and apps that follow the system theme switch to dark colors. Some older apps ignore it.",
+      "pt-BR": "O Windows (barra de tarefas, menu Iniciar) e os apps que seguem o tema do sistema passam para cores escuras. Alguns apps antigos o ignoram.",
+      "es": "Windows (barra de tareas, menú Inicio) y las apps que siguen el tema del sistema pasan a colores oscuros. Algunas apps antiguas lo ignoran.",
+      "fr": "Windows (barre des tâches, menu Démarrer) et les applications qui suivent le thème du système passent en couleurs sombres. Certaines anciennes applications l'ignorent.",
+      "de": "Windows (Taskleiste, Startmenü) und Apps, die dem Systemdesign folgen, wechseln zu dunklen Farben. Manche ältere Apps ignorieren das.",
+      "ru": "Windows (панель задач, меню «Пуск») и приложения, которые следуют системной теме, переходят на тёмные цвета. Некоторые старые приложения это игнорируют.",
+      "tr": "Windows (görev çubuğu, Başlat menüsü) ve sistem temasını izleyen uygulamalar koyu renklere geçer. Bazı eski uygulamalar bunu yok sayar.",
+      "zh-CN": "Windows（任务栏、“开始”菜单）和跟随系统主题的应用会切换为深色。部分旧应用不会遵循该设置。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "name": "AppsUseLightTheme", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "name": "SystemUsesLightTheme", "kind": "DWord", "value": 0 }
+    ]
+  }
+]

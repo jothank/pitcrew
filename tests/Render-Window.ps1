@@ -7,7 +7,7 @@
 param(
     [Parameter(Mandatory)][string]$Out,
     [string]$Language = 'en',
-    [ValidateSet('performance', 'privacy', 'about')][string]$Page = 'performance',
+    [ValidateSet('performance', 'privacy', 'explorer', 'startup', 'maintenance', 'history', 'about', 'apply-dialog')][string]$Page = 'performance',
     [int]$Width = 1120,
     [int]$Height = 740,
     # Draw it as an administrator would see it (no read-only banner); nothing can run anyway
@@ -19,20 +19,41 @@ $root = Split-Path $PSScriptRoot -Parent
 Initialize-PcContext -Root $root -Language $Language
 . (Join-Path $root 'src\UI\Window.ps1')
 
+function Wait-PcJob {
+    # Pages load in background jobs; finish them here since the timer isn't running
+    $deadline = (Get-Date).AddMinutes(3)
+    while ($script:PcJob -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 200; Complete-PcJob }
+}
+
 $window = New-PcWindow
 $Ui.Timer.Stop()
+Wait-PcJob
 if ($AsAdmin) {
     $script:PcIsAdmin = $true
     Set-PcStaticTexts
 }
-$Ui.Nav.SelectedItem = $Ui["Nav$((Get-Culture).TextInfo.ToTitleCase($Page))"]
-if ($AsAdmin) { Show-PcPage $Page }
+if ($Page -eq 'apply-dialog') {
+    # The confirmation shown before applying, filled with every tweak of the catalog
+    $source = New-PcApplyDialog @($script:PcTweaks | Select-Object -First 4)
+    $Height = 0
+} else {
+    $Ui.Nav.SelectedItem = $Ui["Nav$((Get-Culture).TextInfo.ToTitleCase($Page))"]
+    Wait-PcJob
+    if ($AsAdmin) { Show-PcPage $Page; Wait-PcJob }
+    $source = $window
+}
 
 # Lay out the window's content offscreen, without ever showing the window
-$content = $window.Content
-$window.Content = $null
+$content = $source.Content
+$source.Content = $null
 $content.Resources.MergedDictionaries.Add($window.Resources)
-$content.Background = $window.Background
+$content.Background = $source.Background
+if ($Height -eq 0) {
+    # Dialogs size to their content
+    $content.Measure((New-Object System.Windows.Size($source.Width, [double]::PositiveInfinity)))
+    $Width = [int]$source.Width
+    $Height = [int][Math]::Ceiling($content.DesiredSize.Height)
+}
 $size = New-Object System.Windows.Size($Width, $Height)
 $content.Measure($size)
 $content.Arrange((New-Object System.Windows.Rect($size)))

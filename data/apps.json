@@ -22,7 +22,9 @@
   {
     "package": "Microsoft.GetHelp",
     "storeId": "9PKDZBMV1H3T",
-    "name": { "en": "Get Help", "pt-BR": "Obter Ajuda", "es": "Obtener ayuda", "fr": "Obtenir de l'aide", "de": "Hilfe anfordern", "ru": "Техническая поддержка", "tr": "Yardım Al", "zh-CN": "获取帮助" }
+    "name": { "en": "Get Help", "pt-BR": "Obter Ajuda", "es": "Obtener ayuda", "fr": "Obtenir de l'aide", "de": "Hilfe anfordern", "ru": "Техническая поддержка", "tr": "Yardım Al", "zh-CN": "获取帮助" },
+    "risk": "caution",
+    "note": { "en": "Troubleshooters and \"Get help\" links in Windows and Settings need this app.", "pt-BR": "Os solucionadores de problemas e os links \"Obter Ajuda\" do Windows e das Configurações precisam deste app.", "es": "Los solucionadores de problemas y los vínculos \"Obtener ayuda\" de Windows y Configuración necesitan esta aplicación.", "fr": "Les utilitaires de résolution des problèmes et les liens \"Obtenir de l'aide\" de Windows et des Paramètres ont besoin de cette application.", "de": "Die Problembehandlungen und die Links \"Hilfe anfordern\" in Windows und den Einstellungen benötigen diese App.", "ru": "Средства устранения неполадок и ссылки «Техническая поддержка» в Windows и параметрах требуют это приложение.", "tr": "Windows ve Ayarlar'daki sorun gidericiler ile \"Yardım Al\" bağlantıları bu uygulamaya ihtiyaç duyar.", "zh-CN": "Windows 和设置中的疑难解答以及“获取帮助”链接需要此应用。" }
   },
   {
     "package": "Microsoft.Todos",
@@ -48,5 +50,129 @@
     "package": "Microsoft.MicrosoftOfficeHub",
     "storeId": "9WZDNCRD29V9",
     "name": { "en": "Microsoft 365 Copilot", "pt-BR": "Microsoft 365 Copilot", "es": "Microsoft 365 Copilot", "fr": "Microsoft 365 Copilot", "de": "Microsoft 365 Copilot", "ru": "Microsoft 365 Copilot", "tr": "Microsoft 365 Copilot", "zh-CN": "Microsoft 365 Copilot" }
+  },
+  {
+    "package": "Microsoft.MicrosoftStickyNotes",
+    "storeId": "9NBLGGH4QGHW",
+    "name": { "en": "Microsoft Sticky Notes", "pt-BR": "Microsoft Sticky Notes", "es": "Microsoft Sticky Notes", "fr": "Microsoft Sticky Notes", "de": "Microsoft Sticky Notes", "ru": "Microsoft Sticky Notes", "tr": "Microsoft Sticky Notes", "zh-CN": "Microsoft Sticky Notes" },
+    "risk": "safe",
+    "note": { "en": "Your sticky notes sync to your Microsoft account, so removing the app does not delete them online.", "pt-BR": "Suas notas adesivas sincronizam com a conta Microsoft, então remover o app não as apaga online.", "es": "Tus notas rápidas se sincronizan con tu cuenta de Microsoft, así que quitar la aplicación no las borra en línea.", "fr": "Vos notes Sticky Notes sont synchronisées avec votre compte Microsoft ; supprimer l'application ne les efface pas en ligne.", "de": "Ihre Haftnotizen werden mit Ihrem Microsoft-Konto synchronisiert; das Entfernen der App löscht sie online nicht.", "ru": "Ваши заметки синхронизируются с учётной записью Microsoft, поэтому удаление приложения не стирает их в сети.", "tr": "Yapışkan notlarınız Microsoft hesabınızla eşitlenir; uygulamayı kaldırmak onları çevrimiçi silmez.", "zh-CN": "便笺会同步到你的 Microsoft 账户，卸载应用不会删除云端的便笺。" }
+  },
+  {
+    "package": "Microsoft.WindowsSoundRecorder",
+    "storeId": "9WZDNCRFHWKN",
+    "name": { "en": "Sound Recorder", "pt-BR": "Gravador de Voz do Windows", "es": "Grabadora de sonidos de Windows", "fr": "Magnétophone Windows", "de": "Windows-Sprachrekorder", "ru": "Звукозапись", "tr": "Ses Kaydedici", "zh-CN": "录音机" }
+  },
+  {
+    "package": "Microsoft.WindowsAlarms",
+    "storeId": "9WZDNCRFJ3PR",
+    "name": { "en": "Alarms & Clock", "pt-BR": "Alarmes e Relógio do Windows", "es": "Alarmas y reloj de Windows", "fr": "Alarmes et horloge Windows", "de": "Windows Wecker & Uhr", "ru": "Часы", "tr": "Alarmlar ve Saat", "zh-CN": "闹钟和时钟" }
+  },
+  {
+    "package": "Microsoft.ZuneVideo",
+    "storeId": "9WZDNCRFJ3P2",
+    "name": { "en": "Movies & TV", "pt-BR": "Filmes e TV", "es": "Películas y TV", "fr": "Films et TV", "de": "Filme & TV", "ru": "Кино и ТВ", "tr": "Filmler ve TV", "zh-CN": "电影和电视" }
+  },
+  {
+    "package": "Microsoft.MixedReality.Portal",
+    "storeId": "9NG1H8B3ZC7M",
+    "name": { "en": "Mixed Reality Portal", "pt-BR": "Portal de Realidade Misturada", "es": "Portal de realidad mixta", "fr": "Portail de réalité mixte", "de": "Mixed Reality-Portal", "ru": "Портал смешанной реальности", "tr": "Karma Gerçeklik Portalı", "zh-CN": "混合现实门户" }
+  },
+  {
+    "package": "Microsoft.MicrosoftJournal",
+    "storeId": "9N318R854RHH",
+    "name": { "en": "Microsoft Journal", "pt-BR": "Microsoft Journal", "es": "Microsoft Journal", "fr": "Microsoft Journal", "de": "Microsoft Journal", "ru": "Microsoft Journal", "tr": "Microsoft Journal", "zh-CN": "Microsoft Journal" }
+  },
+  {
+    "package": "MicrosoftCorporationII.MicrosoftFamily",
+    "storeId": "9PDJDJS743XF",
+    "name": { "en": "Microsoft Family Safety", "pt-BR": "Microsoft Family Safety", "es": "Microsoft Family Safety", "fr": "Microsoft Family Safety", "de": "Microsoft Family Safety", "ru": "Microsoft Family Safety", "tr": "Microsoft Family Safety", "zh-CN": "Microsoft Family Safety" }
+  },
+  {
+    "package": "Microsoft.MicrosoftPowerBIForWindows",
+    "storeId": "9NTXR16HNW1T",
+    "name": { "en": "Power BI Desktop", "pt-BR": "Power BI Desktop", "es": "Power BI Desktop", "fr": "Power BI Desktop", "de": "Power BI Desktop", "ru": "Power BI Desktop", "tr": "Power BI Desktop", "zh-CN": "Power BI Desktop" }
+  },
+  {
+    "package": "Microsoft.ZuneMusic",
+    "storeId": "9WZDNCRFJ3PT",
+    "name": { "en": "Media Player", "pt-BR": "Reprodutor de Mídia", "es": "Reproductor multimedia", "fr": "Lecteur multimédia", "de": "Medienwiedergabe", "ru": "Проигрыватель мультимедиа", "tr": "Medya Oynatıcı", "zh-CN": "媒体播放器" },
+    "risk": "caution",
+    "note": { "en": "You lose the default music and audio player, and audio files will have no app to open them until you pick another.", "pt-BR": "Você perde o player de música e áudio padrão, e os arquivos de áudio ficam sem app para abrir até você escolher outro.", "es": "Pierdes el reproductor de música y audio predeterminado, y los archivos de audio no tendrán aplicación para abrirse hasta que elijas otra.", "fr": "Vous perdez le lecteur de musique et d'audio par défaut, et les fichiers audio n'auront plus d'application pour s'ouvrir tant que vous n'en choisissez pas une autre.", "de": "Sie verlieren den Standard-Musik- und Audioplayer, und Audiodateien haben keine App zum Öffnen, bis Sie eine andere wählen.", "ru": "Вы потеряете проигрыватель музыки и аудио по умолчанию, и аудиофайлы не будут открываться, пока вы не выберете другое приложение.", "tr": "Varsayılan müzik ve ses oynatıcısını kaybedersiniz; başka bir uygulama seçene kadar ses dosyalarını açacak uygulama olmaz.", "zh-CN": "你将失去默认的音乐和音频播放器，在选择其他应用之前音频文件将无法打开。" }
+  },
+  {
+    "package": "Microsoft.YourPhone",
+    "storeId": "9NMPJ99VJBWV",
+    "name": { "en": "Phone Link", "pt-BR": "Vínculo com o Celular", "es": "Vincular con el móvil", "fr": "Lien avec le téléphone", "de": "Handy-Link", "ru": "Связь с телефоном", "tr": "Telefon Bağlantısı", "zh-CN": "手机连接" },
+    "risk": "caution",
+    "note": { "en": "You lose Phone Link: phone notifications, messages, calls and photos on this PC stop working.", "pt-BR": "Você perde o Vínculo com o Celular: notificações, mensagens, chamadas e fotos do celular neste PC deixam de funcionar.", "es": "Pierdes Vincular con el móvil: las notificaciones, mensajes, llamadas y fotos del teléfono dejan de funcionar en este PC.", "fr": "Vous perdez Lien avec le téléphone : les notifications, messages, appels et photos du téléphone ne fonctionnent plus sur ce PC.", "de": "Sie verlieren Handy-Link: Benachrichtigungen, Nachrichten, Anrufe und Fotos des Telefons funktionieren auf diesem PC nicht mehr.", "ru": "Вы потеряете «Связь с телефоном»: уведомления, сообщения, звонки и фото с телефона перестанут работать на этом ПК.", "tr": "Telefon Bağlantısı'nı kaybedersiniz; telefon bildirimleri, mesajlar, aramalar ve fotoğraflar bu bilgisayarda çalışmaz.", "zh-CN": "你将失去手机连接，手机通知、短信、通话和照片将无法在此电脑上使用。" }
+  },
+  {
+    "package": "Microsoft.GamingApp",
+    "storeId": "9MV0B5HZVK9Z",
+    "name": { "en": "Xbox", "pt-BR": "Xbox", "es": "Xbox", "fr": "Xbox", "de": "Xbox", "ru": "Xbox", "tr": "Xbox", "zh-CN": "Xbox" },
+    "risk": "caution",
+    "note": { "en": "You lose the Xbox app: Game Pass, the Xbox game library and installing Game Pass games depend on it.", "pt-BR": "Você perde o app Xbox: Game Pass, a biblioteca de jogos Xbox e a instalação de jogos do Game Pass dependem dele.", "es": "Pierdes la aplicación Xbox: Game Pass, la biblioteca de juegos de Xbox y la instalación de juegos de Game Pass dependen de ella.", "fr": "Vous perdez l'application Xbox : le Game Pass, la bibliothèque de jeux Xbox et l'installation des jeux Game Pass en dépendent.", "de": "Sie verlieren die Xbox-App: Game Pass, die Xbox-Spielebibliothek und die Installation von Game-Pass-Spielen hängen davon ab.", "ru": "Вы потеряете приложение Xbox: от него зависят Game Pass, библиотека игр Xbox и установка игр Game Pass.", "tr": "Xbox uygulamasını kaybedersiniz; Game Pass, Xbox oyun kitaplığı ve Game Pass oyunlarının yüklenmesi buna bağlıdır.", "zh-CN": "你将失去 Xbox 应用，Game Pass、Xbox 游戏库以及 Game Pass 游戏的安装都依赖它。" }
+  },
+  {
+    "package": "Microsoft.XboxGamingOverlay",
+    "storeId": "9NZKPSTSNW4P",
+    "name": { "en": "Xbox Game Bar", "pt-BR": "Xbox Game Bar", "es": "Xbox Game Bar", "fr": "Xbox Game Bar", "de": "Xbox Game Bar", "ru": "Xbox Game Bar", "tr": "Xbox Game Bar", "zh-CN": "Xbox Game Bar" },
+    "risk": "caution",
+    "note": { "en": "You lose Game Bar: in-game screenshots, game clips, recording and the Win+G overlay stop working.", "pt-BR": "Você perde a Game Bar: capturas, clipes, gravação em jogo e a sobreposição Win+G deixam de funcionar.", "es": "Pierdes la Game Bar: las capturas, clips y grabaciones en juego y la superposición Win+G dejan de funcionar.", "fr": "Vous perdez la Game Bar : les captures, clips et enregistrements en jeu et la superposition Win+G ne fonctionnent plus.", "de": "Sie verlieren die Game Bar: Screenshots, Clips und Aufnahmen im Spiel sowie das Win+G-Overlay funktionieren nicht mehr.", "ru": "Вы потеряете Game Bar: снимки, клипы и запись в играх, а также оверлей Win+G перестанут работать.", "tr": "Game Bar'ı kaybedersiniz; oyun içi ekran görüntüsü, klip, kayıt ve Win+G paneli çalışmaz.", "zh-CN": "你将失去 Game Bar，游戏内截图、剪辑、录制以及 Win+G 浮层将无法使用。" }
+  },
+  {
+    "package": "MicrosoftCorporationII.QuickAssist",
+    "storeId": "9P7BP5VNWKX5",
+    "name": { "en": "Quick Assist", "pt-BR": "Assistência Rápida", "es": "Asistencia rápida", "fr": "Assistance rapide", "de": "Schnellhilfe", "ru": "Быстрая помощь", "tr": "Hızlı Yardım", "zh-CN": "快速助手" },
+    "risk": "caution",
+    "note": { "en": "You lose Quick Assist: you can no longer give or receive remote help with it.", "pt-BR": "Você perde a Assistência Rápida: não será mais possível dar nem receber ajuda remota com ela.", "es": "Pierdes Asistencia rápida: ya no podrás dar ni recibir ayuda remota con ella.", "fr": "Vous perdez Assistance rapide : vous ne pourrez plus donner ni recevoir d'aide à distance avec elle.", "de": "Sie verlieren die Schnellhilfe: Sie können damit keine Remotehilfe mehr geben oder erhalten.", "ru": "Вы потеряете «Быструю помощь»: с её помощью нельзя будет оказывать и получать удалённую помощь.", "tr": "Hızlı Yardım'ı kaybedersiniz; artık onunla uzaktan yardım veremez veya alamazsınız.", "zh-CN": "你将失去快速助手，无法再用它提供或接受远程协助。" }
+  },
+  {
+    "package": "Microsoft.Windows.Photos",
+    "storeId": "9WZDNCRFJBH4",
+    "name": { "en": "Microsoft Photos", "pt-BR": "Microsoft Fotos", "es": "Microsoft Fotos", "fr": "Microsoft Photos", "de": "Microsoft Fotos", "ru": "Microsoft Фотографии", "tr": "Microsoft Fotoğraflar", "zh-CN": "Microsoft 照片" },
+    "risk": "caution",
+    "note": { "en": "You lose the default photo viewer: images will have no app to open them until you pick another.", "pt-BR": "Você perde o visualizador de fotos padrão: as imagens ficam sem app para abrir até você escolher outro.", "es": "Pierdes el visor de fotos predeterminado: las imágenes no tendrán aplicación para abrirse hasta que elijas otra.", "fr": "Vous perdez la visionneuse de photos par défaut : les images n'auront plus d'application pour s'ouvrir tant que vous n'en choisissez pas une autre.", "de": "Sie verlieren den Standard-Fotobetrachter: Bilder haben keine App zum Öffnen, bis Sie eine andere wählen.", "ru": "Вы потеряете средство просмотра фото по умолчанию: изображения не будут открываться, пока вы не выберете другое приложение.", "tr": "Varsayılan fotoğraf görüntüleyiciyi kaybedersiniz; başka bir uygulama seçene kadar resimleri açacak uygulama olmaz.", "zh-CN": "你将失去默认的图片查看器，在选择其他应用之前图片将无法打开。" }
+  },
+  {
+    "package": "Microsoft.WindowsCamera",
+    "storeId": "9WZDNCRFJBBG",
+    "name": { "en": "Camera", "pt-BR": "Câmera", "es": "Cámara", "fr": "Caméra", "de": "Kamera", "ru": "Камера", "tr": "Kamera", "zh-CN": "相机" },
+    "risk": "caution",
+    "note": { "en": "You lose the Camera app: taking photos and video with the webcam from Windows stops working.", "pt-BR": "Você perde o app Câmera: tirar fotos e gravar vídeo com a webcam pelo Windows deixa de funcionar.", "es": "Pierdes la aplicación Cámara: hacer fotos y vídeo con la cámara web desde Windows deja de funcionar.", "fr": "Vous perdez l'application Caméra : prendre des photos et des vidéos avec la webcam depuis Windows ne fonctionne plus.", "de": "Sie verlieren die Kamera-App: Fotos und Videos mit der Webcam über Windows aufzunehmen funktioniert nicht mehr.", "ru": "Вы потеряете приложение «Камера»: съёмка фото и видео с веб-камеры из Windows перестанет работать.", "tr": "Kamera uygulamasını kaybedersiniz; Windows'tan web kamerasıyla fotoğraf ve video çekmek çalışmaz.", "zh-CN": "你将失去相机应用，无法再通过 Windows 使用网络摄像头拍照和录像。" }
+  },
+  {
+    "package": "Microsoft.ScreenSketch",
+    "storeId": "9MZ95KL8MR0L",
+    "name": { "en": "Snipping Tool", "pt-BR": "Ferramenta de Recorte", "es": "Herramienta de recorte", "fr": "Outil Capture d'écran", "de": "Snipping Tool", "ru": "Ножницы", "tr": "Ekran Alıntısı Aracı", "zh-CN": "截图工具" },
+    "risk": "caution",
+    "note": { "en": "You lose the Snipping Tool: Print Screen and Win+Shift+S screenshots stop opening it.", "pt-BR": "Você perde a Ferramenta de Recorte: Print Screen e Win+Shift+S deixam de abri-la.", "es": "Pierdes la Herramienta de recorte: Impr Pant y Win+Mayús+S dejan de abrirla.", "fr": "Vous perdez l'Outil Capture d'écran : Impr écran et Win+Maj+S ne l'ouvrent plus.", "de": "Sie verlieren das Snipping Tool: Druck und Win+Umschalt+S öffnen es nicht mehr.", "ru": "Вы потеряете «Ножницы»: клавиши Print Screen и Win+Shift+S больше не будут их открывать.", "tr": "Ekran Alıntısı Aracı'nı kaybedersiniz; Print Screen ve Win+Shift+S artık onu açmaz.", "zh-CN": "你将失去截图工具，Print Screen 和 Win+Shift+S 将不再打开它。" }
+  },
+  {
+    "package": "Microsoft.WindowsCalculator",
+    "storeId": "9WZDNCRFHVN5",
+    "name": { "en": "Calculator", "pt-BR": "Calculadora", "es": "Calculadora", "fr": "Calculatrice", "de": "Rechner", "ru": "Калькулятор", "tr": "Hesap Makinesi", "zh-CN": "计算器" },
+    "risk": "caution",
+    "note": { "en": "You lose the Calculator: you will need another calculator app, and the calculator key will do nothing.", "pt-BR": "Você perde a Calculadora: será preciso outro app de calculadora, e a tecla de calculadora não fará nada.", "es": "Pierdes la Calculadora: necesitarás otra aplicación de calculadora y la tecla de calculadora no hará nada.", "fr": "Vous perdez la Calculatrice : il vous faudra une autre application de calcul et la touche calculatrice ne fera rien.", "de": "Sie verlieren den Rechner: Sie brauchen eine andere Rechner-App, und die Rechnertaste tut nichts.", "ru": "Вы потеряете «Калькулятор»: понадобится другое приложение, а клавиша калькулятора перестанет работать.", "tr": "Hesap Makinesi'ni kaybedersiniz; başka bir hesap makinesi uygulamasına ihtiyacınız olur ve hesap makinesi tuşu işe yaramaz.", "zh-CN": "你将失去计算器，需要另一个计算器应用，计算器快捷键也将无效。" }
+  },
+  {
+    "package": "Microsoft.WindowsNotepad",
+    "storeId": "9MSMLRH6LZF3",
+    "name": { "en": "Notepad", "pt-BR": "Bloco de Notas", "es": "Bloc de notas", "fr": "Bloc-notes", "de": "Editor", "ru": "Блокнот", "tr": "Not Defteri", "zh-CN": "记事本" },
+    "risk": "caution",
+    "note": { "en": "You lose Notepad: text files will have no app to open them until you pick another editor.", "pt-BR": "Você perde o Bloco de Notas: os arquivos de texto ficam sem app para abrir até você escolher outro editor.", "es": "Pierdes el Bloc de notas: los archivos de texto no tendrán aplicación para abrirse hasta que elijas otro editor.", "fr": "Vous perdez le Bloc-notes : les fichiers texte n'auront plus d'application pour s'ouvrir tant que vous n'en choisissez pas une autre.", "de": "Sie verlieren den Editor: Textdateien haben keine App zum Öffnen, bis Sie einen anderen Editor wählen.", "ru": "Вы потеряете «Блокнот»: текстовые файлы не будут открываться, пока вы не выберете другой редактор.", "tr": "Not Defteri'ni kaybedersiniz; başka bir düzenleyici seçene kadar metin dosyalarını açacak uygulama olmaz.", "zh-CN": "你将失去记事本，在选择其他编辑器之前文本文件将无法打开。" }
+  },
+  {
+    "package": "Microsoft.Paint",
+    "storeId": "9PCFS5B6T72H",
+    "name": { "en": "Paint", "pt-BR": "Paint", "es": "Paint", "fr": "Paint", "de": "Paint", "ru": "Paint", "tr": "Paint", "zh-CN": "画图" },
+    "risk": "caution",
+    "note": { "en": "You lose Paint: the quick built-in image editor and the Paint shortcuts stop working.", "pt-BR": "Você perde o Paint: o editor de imagens rápido embutido e os atalhos do Paint deixam de funcionar.", "es": "Pierdes Paint: el editor de imágenes rápido integrado y los accesos a Paint dejan de funcionar.", "fr": "Vous perdez Paint : l'éditeur d'images rapide intégré et les raccourcis vers Paint ne fonctionnent plus.", "de": "Sie verlieren Paint: der integrierte Bildeditor und die Paint-Verknüpfungen funktionieren nicht mehr.", "ru": "Вы потеряете Paint: встроенный быстрый графический редактор и ярлыки Paint перестанут работать.", "tr": "Paint'i kaybedersiniz; yerleşik hızlı görüntü düzenleyici ve Paint kısayolları çalışmaz.", "zh-CN": "你将失去画图，内置的快速图片编辑器及其快捷方式将无法使用。" }
+  },
+  {
+    "package": "MSTeams",
+    "storeId": "XP8BT8DW290MPQ",
+    "name": { "en": "Microsoft Teams", "pt-BR": "Microsoft Teams", "es": "Microsoft Teams", "fr": "Microsoft Teams", "de": "Microsoft Teams", "ru": "Microsoft Teams", "tr": "Microsoft Teams", "zh-CN": "Microsoft Teams" }
   }
 ]

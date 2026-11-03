@@ -3,6 +3,7 @@
     "id": "privacy.advertising-id",
     "risk": "safe",
     "scope": "machine",
+    "evidence": "learn",
     "reversible": true,
     "reference": "https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#181-general",
     "title": {
@@ -33,6 +34,7 @@
     "id": "privacy.activity-history",
     "risk": "safe",
     "scope": "machine",
+    "evidence": "learn",
     "reversible": true,
     "reference": "https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#1822-activity-history",
     "title": {
@@ -65,6 +67,7 @@
     "id": "privacy.tailored-experiences",
     "risk": "safe",
     "scope": "user",
+    "evidence": "learn",
     "reversible": true,
     "reference": "https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#1816-feedback--diagnostics",
     "title": {
@@ -95,6 +98,7 @@
     "id": "privacy.feedback-notifications",
     "risk": "safe",
     "scope": "machine",
+    "evidence": "learn",
     "reversible": true,
     "reference": "https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#1816-feedback--diagnostics",
     "title": {
@@ -119,6 +123,1110 @@
     },
     "actions": [
       { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection", "name": "DoNotShowFeedbackNotifications", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "privacy.diagnostic-data-minimum",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-system#allowtelemetry",
+    "appliesTo": { "editions": ["home", "pro"] },
+    "title": {
+      "en": "Limit diagnostic data to the minimum",
+      "pt-BR": "Limitar os dados de diagnóstico ao mínimo",
+      "es": "Limitar los datos de diagnóstico al mínimo",
+      "fr": "Limiter les données de diagnostic au minimum",
+      "de": "Diagnosedaten auf das Minimum beschränken",
+      "ru": "Ограничить диагностические данные минимумом",
+      "tr": "Tanılama verilerini en aza indir",
+      "zh-CN": "将诊断数据限制为最低"
+    },
+    "description": {
+      "en": "Windows sends only the required diagnostic data, and the optional diagnostic data switch in Settings is locked off. Home and Pro can't go lower: there Windows treats 0 as 1. Settings may show \"Some settings are managed by your organization\".",
+      "pt-BR": "O Windows envia só os dados de diagnóstico obrigatórios, e a chave de dados de diagnóstico opcionais em Configurações fica travada em desligado. No Home e no Pro não dá para ir além disso: nessas edições o Windows trata 0 como 1. As Configurações podem mostrar \"Algumas configurações são gerenciadas pela sua organização\".",
+      "es": "Windows envía solo los datos de diagnóstico requeridos y el interruptor de datos de diagnóstico opcionales de Configuración queda bloqueado en desactivado. En Home y Pro no se puede bajar más: en esas ediciones Windows trata 0 como 1. Configuración puede mostrar \"Tu organización administra algunas configuraciones\".",
+      "fr": "Windows n'envoie que les données de diagnostic requises, et l'option des données de diagnostic facultatives dans Paramètres reste verrouillée sur désactivé. Sous Famille et Pro, on ne peut pas descendre plus bas : Windows y traite 0 comme 1. Paramètres peut afficher « Certains paramètres sont gérés par votre organisation ».",
+      "de": "Windows sendet nur die erforderlichen Diagnosedaten, und der Schalter für optionale Diagnosedaten in den Einstellungen bleibt gesperrt auf „Aus“. Unter Home und Pro geht es nicht weiter nach unten: Dort behandelt Windows 0 wie 1. In den Einstellungen kann „Einige Einstellungen werden von Ihrer Organisation verwaltet“ erscheinen.",
+      "ru": "Windows отправляет только необходимые диагностические данные, а переключатель необязательных диагностических данных в «Параметрах» заблокирован в выключенном положении. В Home и Pro ниже нельзя: там Windows считает 0 равным 1. В «Параметрах» может появиться сообщение «Некоторыми параметрами управляет ваша организация».",
+      "tr": "Windows yalnızca gerekli tanılama verilerini gönderir; Ayarlar'daki isteğe bağlı tanılama verileri anahtarı kapalı konumda kilitlenir. Home ve Pro'da bunun altına inilemez: bu sürümlerde Windows 0'ı 1 olarak işler. Ayarlar \"Bazı ayarlar kuruluşunuz tarafından yönetiliyor\" mesajını gösterebilir.",
+      "zh-CN": "Windows 只发送必需的诊断数据，“设置”中的可选诊断数据开关会被锁定为关闭。Home 和 Pro 版本无法再降低：这些版本上 Windows 会把 0 当作 1。 “设置”中可能显示“某些设置由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection", "name": "AllowTelemetry", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "privacy.diagnostic-data-off",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-system#allowtelemetry",
+    "appliesTo": { "editions": ["enterprise", "education"] },
+    "title": {
+      "en": "Turn off diagnostic data (Enterprise and Education)",
+      "pt-BR": "Desligar os dados de diagnóstico (Enterprise e Education)",
+      "es": "Desactivar los datos de diagnóstico (Enterprise y Education)",
+      "fr": "Désactiver les données de diagnostic (Entreprise et Éducation)",
+      "de": "Diagnosedaten ausschalten (Enterprise und Education)",
+      "ru": "Отключить диагностические данные (Enterprise и Education)",
+      "tr": "Tanılama verilerini kapat (Enterprise ve Education)",
+      "zh-CN": "关闭诊断数据（企业版和教育版）"
+    },
+    "description": {
+      "en": "Windows sends no diagnostic data. Only Enterprise and Education honor this, and Microsoft advises against it because update failures are no longer reported. Settings may show \"Some settings are managed by your organization\".",
+      "pt-BR": "O Windows não envia nenhum dado de diagnóstico. Só as edições Enterprise e Education respeitam essa opção, e a Microsoft desaconselha porque as falhas de atualização deixam de ser relatadas. As Configurações podem mostrar \"Algumas configurações são gerenciadas pela sua organização\".",
+      "es": "Windows no envía ningún dato de diagnóstico. Solo Enterprise y Education respetan este valor, y Microsoft lo desaconseja porque los fallos de actualización dejan de notificarse. Configuración puede mostrar \"Tu organización administra algunas configuraciones\".",
+      "fr": "Windows n'envoie aucune donnée de diagnostic. Seules les éditions Entreprise et Éducation respectent ce réglage, et Microsoft le déconseille car les échecs de mise à jour ne sont plus signalés. Paramètres peut afficher « Certains paramètres sont gérés par votre organisation ».",
+      "de": "Windows sendet keine Diagnosedaten. Nur Enterprise und Education beachten diese Einstellung, und Microsoft rät davon ab, weil Updatefehler nicht mehr gemeldet werden. In den Einstellungen kann „Einige Einstellungen werden von Ihrer Organisation verwaltet“ erscheinen.",
+      "ru": "Windows не отправляет диагностические данные. Это учитывают только Enterprise и Education, а Microsoft не рекомендует так делать: сбои обновлений перестают передаваться. В «Параметрах» может появиться сообщение «Некоторыми параметрами управляет ваша организация».",
+      "tr": "Windows hiçbir tanılama verisi göndermez. Bunu yalnızca Enterprise ve Education sürümleri dikkate alır; güncelleme hataları artık bildirilmediği için Microsoft önermez. Ayarlar \"Bazı ayarlar kuruluşunuz tarafından yönetiliyor\" mesajını gösterebilir.",
+      "zh-CN": "Windows 不发送任何诊断数据。只有企业版和教育版会遵循此设置，Microsoft 不建议这样做，因为更新失败将不再被报告。 “设置”中可能显示“某些设置由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection", "name": "AllowTelemetry", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "privacy.diagnostic-service",
+    "risk": "moderate",
+    "scope": "machine",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/farag2/Sophia-Script-for-Windows/blob/master/src/Sophia_Script_for_Windows_11/Module/Sophia.psm1",
+    "requires": { "restart": true },
+    "title": {
+      "en": "Turn off the telemetry service",
+      "pt-BR": "Desligar o serviço de telemetria",
+      "es": "Desactivar el servicio de telemetría",
+      "fr": "Désactiver le service de télémétrie",
+      "de": "Telemetriedienst ausschalten",
+      "ru": "Отключить службу телеметрии",
+      "tr": "Telemetri hizmetini kapat",
+      "zh-CN": "关闭遥测服务"
+    },
+    "description": {
+      "en": "The Connected User Experiences and Telemetry service (DiagTrack) no longer starts, so it stops collecting and sending diagnostic data. Feedback Hub and some diagnostics stop working, and Xbox achievements may be affected.",
+      "pt-BR": "O serviço Experiências do Usuário Conectado e Telemetria (DiagTrack) deixa de iniciar e para de coletar e enviar dados de diagnóstico. O Hub de Comentários e alguns diagnósticos deixam de funcionar, e as conquistas do Xbox podem ser afetadas.",
+      "es": "El servicio Experiencias del usuario conectado y telemetría (DiagTrack) deja de iniciarse y ya no recopila ni envía datos de diagnóstico. El Centro de opiniones y algunos diagnósticos dejan de funcionar, y los logros de Xbox pueden verse afectados.",
+      "fr": "Le service Expériences des utilisateurs connectés et télémétrie (DiagTrack) ne démarre plus et cesse de collecter et d'envoyer des données de diagnostic. Le Hub de commentaires et certains diagnostics ne fonctionnent plus, et les succès Xbox peuvent être touchés.",
+      "de": "Der Dienst „Benutzerfunktionen und Telemetrie“ (DiagTrack) startet nicht mehr und sammelt und sendet keine Diagnosedaten mehr. Der Feedback-Hub und einige Diagnosen funktionieren nicht mehr, und Xbox-Erfolge können betroffen sein.",
+      "ru": "Служба «Функциональные возможности для подключённых пользователей и телеметрия» (DiagTrack) больше не запускается и перестаёт собирать и отправлять диагностические данные. Центр отзывов и часть диагностики перестают работать, возможны проблемы с достижениями Xbox.",
+      "tr": "Bağlı Kullanıcı Deneyimleri ve Telemetri hizmeti (DiagTrack) artık başlamaz; tanılama verilerini toplamayı ve göndermeyi bırakır. Geri Bildirim Merkezi ve bazı tanılamalar çalışmaz, Xbox başarımları etkilenebilir.",
+      "zh-CN": "“已连接的用户体验和遥测”服务 (DiagTrack) 将不再启动，也就不再收集和发送诊断数据。反馈中心和部分诊断功能将无法使用，Xbox 成就也可能受影响。"
+    },
+    "actions": [
+      { "type": "service", "name": "DiagTrack", "startupType": "Disabled" }
+    ]
+  },
+  {
+    "id": "privacy.telemetry-tasks-appraiser",
+    "risk": "moderate",
+    "scope": "machine",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/farag2/Sophia-Script-for-Windows/blob/master/src/Sophia_Script_for_Windows_11/Module/Sophia.psm1",
+    "title": {
+      "en": "Turn off the compatibility telemetry tasks",
+      "pt-BR": "Desligar as tarefas de telemetria de compatibilidade",
+      "es": "Desactivar las tareas de telemetría de compatibilidad",
+      "fr": "Désactiver les tâches de télémétrie de compatibilité",
+      "de": "Kompatibilitäts-Telemetrieaufgaben ausschalten",
+      "ru": "Отключить задачи телеметрии совместимости",
+      "tr": "Uyumluluk telemetri görevlerini kapat",
+      "zh-CN": "关闭兼容性遥测计划任务"
+    },
+    "description": {
+      "en": "Turns off the Application Experience tasks that collect program and compatibility data (Compatibility Appraiser, ProgramDataUpdater, MareBackup). The Appraiser also feeds Windows upgrade compatibility checks, so those may be less accurate.",
+      "pt-BR": "Desliga as tarefas de Experiência de Aplicativo que coletam dados de programas e de compatibilidade (Compatibility Appraiser, ProgramDataUpdater, MareBackup). O Appraiser também alimenta as verificações de compatibilidade para atualizar o Windows, que podem ficar menos precisas.",
+      "es": "Desactiva las tareas de Experiencia de aplicaciones que recopilan datos de programas y de compatibilidad (Compatibility Appraiser, ProgramDataUpdater, MareBackup). Appraiser también alimenta las comprobaciones de compatibilidad para actualizar Windows, que pueden ser menos precisas.",
+      "fr": "Désactive les tâches Expérience des applications qui collectent des données sur les programmes et la compatibilité (Compatibility Appraiser, ProgramDataUpdater, MareBackup). Appraiser alimente aussi les vérifications de compatibilité pour les mises à niveau de Windows, qui peuvent devenir moins précises.",
+      "de": "Schaltet die Aufgaben der Anwendungserfahrung aus, die Programm- und Kompatibilitätsdaten sammeln (Compatibility Appraiser, ProgramDataUpdater, MareBackup). Der Appraiser speist auch die Kompatibilitätsprüfungen für Windows-Upgrades, die dadurch ungenauer werden können.",
+      "ru": "Отключает задачи Application Experience, которые собирают данные о программах и совместимости (Compatibility Appraiser, ProgramDataUpdater, MareBackup). Appraiser также участвует в проверках совместимости при обновлении Windows, поэтому они могут стать менее точными.",
+      "tr": "Program ve uyumluluk verilerini toplayan Uygulama Deneyimi görevlerini kapatır (Compatibility Appraiser, ProgramDataUpdater, MareBackup). Appraiser Windows yükseltme uyumluluk denetimlerini de besler; bu denetimler daha az doğru olabilir.",
+      "zh-CN": "关闭收集程序和兼容性数据的应用程序体验计划任务（Compatibility Appraiser、ProgramDataUpdater、MareBackup）。Appraiser 也用于 Windows 升级兼容性检查，关闭后这些检查可能不够准确。"
+    },
+    "actions": [
+      { "type": "scheduledTask", "path": "\\Microsoft\\Windows\\Application Experience\\", "name": "Microsoft Compatibility Appraiser", "enabled": false },
+      { "type": "scheduledTask", "path": "\\Microsoft\\Windows\\Application Experience\\", "name": "Microsoft Compatibility Appraiser Exp", "enabled": false },
+      { "type": "scheduledTask", "path": "\\Microsoft\\Windows\\Application Experience\\", "name": "ProgramDataUpdater", "enabled": false },
+      { "type": "scheduledTask", "path": "\\Microsoft\\Windows\\Application Experience\\", "name": "MareBackup", "enabled": false }
+    ]
+  },
+  {
+    "id": "privacy.telemetry-tasks-ceip",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/farag2/Sophia-Script-for-Windows/blob/master/src/Sophia_Script_for_Windows_11/Module/Sophia.psm1",
+    "title": {
+      "en": "Turn off the Customer Experience Improvement tasks",
+      "pt-BR": "Desligar as tarefas do Programa de Melhoria da Experiência",
+      "es": "Desactivar las tareas del Programa para la mejora de la experiencia del cliente",
+      "fr": "Désactiver les tâches du Programme d'amélioration de l'expérience utilisateur",
+      "de": "Aufgaben zur Verbesserung der Benutzerfreundlichkeit ausschalten",
+      "ru": "Отключить задачи программы улучшения качества ПО",
+      "tr": "Müşteri Deneyimi İyileştirme görevlerini kapat",
+      "zh-CN": "关闭客户体验改善计划任务"
+    },
+    "description": {
+      "en": "Turns off the Consolidator and USB CEIP tasks that collect usage and USB statistics for Microsoft's Customer Experience Improvement Program. Nothing you use is lost.",
+      "pt-BR": "Desliga as tarefas Consolidator e USB CEIP, que coletam estatísticas de uso e de USB para o Programa de Melhoria da Experiência do Cliente da Microsoft. Você não perde nada que use.",
+      "es": "Desactiva las tareas Consolidator y USB CEIP, que recopilan estadísticas de uso y de USB para el Programa para la mejora de la experiencia del cliente de Microsoft. No pierdes nada que uses.",
+      "fr": "Désactive les tâches Consolidator et USB CEIP, qui collectent des statistiques d'utilisation et USB pour le Programme d'amélioration de l'expérience utilisateur de Microsoft. Vous ne perdez rien de ce que vous utilisez.",
+      "de": "Schaltet die Aufgaben Consolidator und USB CEIP aus, die Nutzungs- und USB-Statistiken für das Programm zur Verbesserung der Benutzerfreundlichkeit von Microsoft sammeln. Du verlierst nichts, was du nutzt.",
+      "ru": "Отключает задачи Consolidator и USB CEIP, которые собирают статистику использования и USB для программы улучшения качества ПО Microsoft. Ничего из используемого вами не теряется.",
+      "tr": "Microsoft'un Müşteri Deneyimi İyileştirme Programı için kullanım ve USB istatistiklerini toplayan Consolidator ve USB CEIP görevlerini kapatır. Kullandığın hiçbir şeyi kaybetmezsin.",
+      "zh-CN": "关闭为 Microsoft 客户体验改善计划收集使用情况和 USB 统计信息的 Consolidator 和 USB CEIP 任务。你正在使用的功能不会受影响。"
+    },
+    "actions": [
+      { "type": "scheduledTask", "path": "\\Microsoft\\Windows\\Customer Experience Improvement Program\\", "name": "Consolidator", "enabled": false },
+      { "type": "scheduledTask", "path": "\\Microsoft\\Windows\\Customer Experience Improvement Program\\", "name": "UsbCeip", "enabled": false }
+    ]
+  },
+  {
+    "id": "privacy.telemetry-tasks-autochk",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/farag2/Sophia-Script-for-Windows/blob/master/src/Sophia_Script_for_Windows_11/Module/Sophia.psm1",
+    "title": {
+      "en": "Turn off the disk check telemetry task",
+      "pt-BR": "Desligar a tarefa de telemetria da verificação de disco",
+      "es": "Desactivar la tarea de telemetría de la comprobación de disco",
+      "fr": "Désactiver la tâche de télémétrie de la vérification de disque",
+      "de": "Telemetrieaufgabe der Datenträgerprüfung ausschalten",
+      "ru": "Отключить задачу телеметрии проверки диска",
+      "tr": "Disk denetimi telemetri görevini kapat",
+      "zh-CN": "关闭磁盘检查遥测任务"
+    },
+    "description": {
+      "en": "Turns off the Autochk Proxy task, which collects and uploads disk-check (autochk) data for the Customer Experience Improvement Program. Disk checks themselves still run.",
+      "pt-BR": "Desliga a tarefa Autochk Proxy, que coleta e envia dados da verificação de disco (autochk) para o Programa de Melhoria da Experiência do Cliente. As verificações de disco continuam funcionando.",
+      "es": "Desactiva la tarea Autochk Proxy, que recopila y envía datos de la comprobación de disco (autochk) al Programa para la mejora de la experiencia del cliente. Las comprobaciones de disco siguen funcionando.",
+      "fr": "Désactive la tâche Autochk Proxy, qui collecte et envoie des données de la vérification de disque (autochk) au Programme d'amélioration de l'expérience utilisateur. Les vérifications de disque continuent de fonctionner.",
+      "de": "Schaltet die Aufgabe Autochk Proxy aus, die Daten der Datenträgerprüfung (Autochk) für das Programm zur Verbesserung der Benutzerfreundlichkeit sammelt und hochlädt. Die Datenträgerprüfungen selbst laufen weiter.",
+      "ru": "Отключает задачу Autochk Proxy, которая собирает и отправляет данные проверки диска (autochk) для программы улучшения качества ПО. Сами проверки диска продолжают работать.",
+      "tr": "Müşteri Deneyimi İyileştirme Programı için disk denetimi (autochk) verilerini toplayıp yükleyen Autochk Proxy görevini kapatır. Disk denetimlerinin kendisi çalışmaya devam eder.",
+      "zh-CN": "关闭 Autochk Proxy 任务，该任务会为客户体验改善计划收集并上传磁盘检查 (autochk) 数据。磁盘检查本身仍会正常运行。"
+    },
+    "actions": [
+      { "type": "scheduledTask", "path": "\\Microsoft\\Windows\\Autochk\\", "name": "Proxy", "enabled": false }
+    ]
+  },
+  {
+    "id": "privacy.start-settings-suggestions",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Disable_Windows_Suggestions.reg",
+    "title": {
+      "en": "Turn off suggestions and tips in Start and Settings",
+      "pt-BR": "Desligar sugestões e dicas no Iniciar e nas Configurações",
+      "es": "Desactivar sugerencias y consejos en Inicio y Configuración",
+      "fr": "Désactiver les suggestions et astuces dans Démarrer et Paramètres",
+      "de": "Vorschläge und Tipps in Start und Einstellungen ausschalten",
+      "ru": "Отключить рекомендации и советы в «Пуске» и «Параметрах»",
+      "tr": "Başlat ve Ayarlar'daki önerileri ve ipuçlarını kapat",
+      "zh-CN": "关闭开始菜单和设置中的建议与提示"
+    },
+    "description": {
+      "en": "Windows stops showing suggested apps, tips, promotions and sync-provider ads in Start and Settings. You still find apps and tips yourself. Applies to the current user.",
+      "pt-BR": "O Windows deixa de mostrar apps sugeridos, dicas, promoções e anúncios de provedores de sincronização no Menu Iniciar e nas Configurações. Você continua encontrando apps e dicas por conta própria. Vale para o usuário atual.",
+      "es": "Windows deja de mostrar apps sugeridas, consejos, promociones y anuncios de proveedores de sincronización en Inicio y Configuración. Sigues pudiendo buscar apps y consejos tú mismo. Se aplica al usuario actual.",
+      "fr": "Windows cesse d'afficher des applications suggérées, des astuces, des promotions et des publicités de fournisseurs de synchronisation dans Démarrer et Paramètres. Vous pouvez toujours chercher applications et astuces vous-même. S'applique à l'utilisateur actuel.",
+      "de": "Windows zeigt in Start und Einstellungen keine vorgeschlagenen Apps, Tipps, Werbeaktionen und Werbung von Synchronisierungsanbietern mehr an. Apps und Tipps findest du weiterhin selbst. Gilt für den aktuellen Benutzer.",
+      "ru": "Windows перестаёт показывать в «Пуске» и «Параметрах» рекомендуемые приложения, советы, рекламные предложения и рекламу поставщиков синхронизации. Приложения и советы по-прежнему можно найти самостоятельно. Действует для текущего пользователя.",
+      "tr": "Windows, Başlat ve Ayarlar'da önerilen uygulamaları, ipuçlarını, promosyonları ve eşitleme sağlayıcısı reklamlarını göstermeyi bırakır. Uygulamaları ve ipuçlarını yine kendin bulabilirsin. Geçerli kullanıcı için geçerlidir.",
+      "zh-CN": "Windows 将不再在开始菜单和设置中显示推荐应用、提示、促销以及同步提供程序广告。你仍可自行查找应用和提示。适用于当前用户。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-310093Enabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-338388Enabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-338389Enabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-338393Enabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-353694Enabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-353696Enabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-353698Enabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SystemPaneSuggestionsEnabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SoftLandingEnabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "Start_IrisRecommendations", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "ShowSyncProviderNotifications", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "Start_AccountNotifications", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "privacy.silent-app-installs",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Disable_Windows_Suggestions.reg",
+    "title": {
+      "en": "Stop Windows installing apps silently",
+      "pt-BR": "Impedir que o Windows instale apps em segundo plano",
+      "es": "Impedir que Windows instale apps en segundo plano",
+      "fr": "Empêcher Windows d'installer des applications en silence",
+      "de": "Stille App-Installation durch Windows verhindern",
+      "ru": "Запретить Windows устанавливать приложения без уведомления",
+      "tr": "Windows'un uygulamaları sessizce yüklemesini durdur",
+      "zh-CN": "阻止 Windows 静默安装应用"
+    },
+    "description": {
+      "en": "Windows stops installing sponsored apps and games on its own after you sign in. Apps already installed stay until you remove them. Applies to the current user.",
+      "pt-BR": "O Windows deixa de instalar por conta própria apps e jogos patrocinados depois que você entra. Os apps já instalados continuam até você removê-los. Vale para o usuário atual.",
+      "es": "Windows deja de instalar por su cuenta apps y juegos patrocinados cuando inicias sesión. Las apps ya instaladas permanecen hasta que las quites. Se aplica al usuario actual.",
+      "fr": "Windows cesse d'installer de lui-même des applications et jeux sponsorisés après votre connexion. Les applications déjà installées restent jusqu'à ce que vous les supprimiez. S'applique à l'utilisateur actuel.",
+      "de": "Windows installiert nach der Anmeldung nicht mehr von selbst gesponserte Apps und Spiele. Bereits installierte Apps bleiben, bis du sie entfernst. Gilt für den aktuellen Benutzer.",
+      "ru": "Windows перестаёт сам устанавливать после входа спонсорские приложения и игры. Уже установленные приложения остаются, пока вы их не удалите. Действует для текущего пользователя.",
+      "tr": "Windows, oturum açtıktan sonra sponsorlu uygulamaları ve oyunları kendiliğinden yüklemeyi bırakır. Yüklü uygulamalar sen kaldırana kadar kalır. Geçerli kullanıcı için geçerlidir.",
+      "zh-CN": "Windows 将不再在你登录后自行安装赞助的应用和游戏。已安装的应用会保留，直到你将其卸载。适用于当前用户。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SilentInstalledAppsEnabled", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "privacy.lockscreen-tips",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Disable_Lockscreen_Tips.reg",
+    "title": {
+      "en": "Turn off tips on the lock screen",
+      "pt-BR": "Desligar as dicas na tela de bloqueio",
+      "es": "Desactivar los consejos en la pantalla de bloqueo",
+      "fr": "Désactiver les astuces sur l'écran de verrouillage",
+      "de": "Tipps auf dem Sperrbildschirm ausschalten",
+      "ru": "Отключить советы на экране блокировки",
+      "tr": "Kilit ekranındaki ipuçlarını kapat",
+      "zh-CN": "关闭锁屏上的提示"
+    },
+    "description": {
+      "en": "The lock screen stops showing fun facts, tips and tricks over the picture. The background image itself is not changed. Applies to the current user.",
+      "pt-BR": "A tela de bloqueio deixa de mostrar curiosidades, dicas e truques sobre a imagem. A imagem de fundo em si não muda. Vale para o usuário atual.",
+      "es": "La pantalla de bloqueo deja de mostrar datos curiosos, consejos y trucos sobre la imagen. La imagen de fondo no cambia. Se aplica al usuario actual.",
+      "fr": "L'écran de verrouillage cesse d'afficher des anecdotes, astuces et conseils sur l'image. L'image d'arrière-plan elle-même ne change pas. S'applique à l'utilisateur actuel.",
+      "de": "Der Sperrbildschirm zeigt keine Wissenswertes, Tipps und Tricks mehr über dem Bild an. Das Hintergrundbild selbst bleibt unverändert. Gilt für den aktuellen Benutzer.",
+      "ru": "На экране блокировки перестают показываться интересные факты и советы поверх картинки. Само фоновое изображение не меняется. Действует для текущего пользователя.",
+      "tr": "Kilit ekranı, resmin üzerinde ilginç bilgileri ve ipuçlarını göstermeyi bırakır. Arka plan resminin kendisi değişmez. Geçerli kullanıcı için geçerlidir.",
+      "zh-CN": "锁屏将不再在图片上显示趣闻和提示技巧。背景图片本身不会改变。适用于当前用户。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-338387Enabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "RotatingLockScreenOverlayEnabled", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "privacy.start-web-search",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Disable_Bing_Cortana_In_Search.reg",
+    "title": {
+      "en": "Turn off web results in Start search",
+      "pt-BR": "Desligar os resultados da web na pesquisa do Iniciar",
+      "es": "Desactivar los resultados web en la búsqueda de Inicio",
+      "fr": "Désactiver les résultats web dans la recherche Démarrer",
+      "de": "Webergebnisse in der Startsuche ausschalten",
+      "ru": "Отключить результаты из интернета в поиске «Пуска»",
+      "tr": "Başlat aramasındaki web sonuçlarını kapat",
+      "zh-CN": "关闭开始菜单搜索中的网络结果"
+    },
+    "description": {
+      "en": "What you type in Start search is no longer sent to Bing, and web suggestions disappear. Local apps, files and settings are still found. Applies to the current user. Settings may show \"Some settings are managed by your organization\".",
+      "pt-BR": "O que você digita na pesquisa do Menu Iniciar deixa de ser enviado ao Bing, e as sugestões da web somem. Apps, arquivos e configurações locais continuam sendo encontrados. Vale para o usuário atual. As Configurações podem mostrar \"Algumas configurações são gerenciadas pela sua organização\".",
+      "es": "Lo que escribes en la búsqueda de Inicio ya no se envía a Bing y desaparecen las sugerencias web. Las apps, archivos y configuraciones locales se siguen encontrando. Se aplica al usuario actual. Configuración puede mostrar \"Tu organización administra algunas configuraciones\".",
+      "fr": "Ce que vous tapez dans la recherche Démarrer n'est plus envoyé à Bing, et les suggestions web disparaissent. Les applications, fichiers et paramètres locaux restent trouvables. S'applique à l'utilisateur actuel. Paramètres peut afficher « Certains paramètres sont gérés par votre organisation ».",
+      "de": "Was du in der Startsuche eingibst, wird nicht mehr an Bing gesendet, und Webvorschläge verschwinden. Lokale Apps, Dateien und Einstellungen werden weiterhin gefunden. Gilt für den aktuellen Benutzer. In den Einstellungen kann „Einige Einstellungen werden von Ihrer Organisation verwaltet“ erscheinen.",
+      "ru": "Текст, который вы вводите в поиске «Пуска», больше не отправляется в Bing, а подсказки из интернета исчезают. Локальные приложения, файлы и параметры по-прежнему находятся. Действует для текущего пользователя. В «Параметрах» может появиться сообщение «Некоторыми параметрами управляет ваша организация».",
+      "tr": "Başlat aramasına yazdıkların artık Bing'e gönderilmez ve web önerileri kaybolur. Yerel uygulamalar, dosyalar ve ayarlar yine bulunur. Geçerli kullanıcı için geçerlidir. Ayarlar \"Bazı ayarlar kuruluşunuz tarafından yönetiliyor\" mesajını gösterebilir.",
+      "zh-CN": "你在开始菜单搜索中输入的内容将不再发送到 Bing，网络建议也会消失。本地应用、文件和设置仍可搜到。适用于当前用户。 “设置”中可能显示“某些设置由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Policies\\Microsoft\\Windows\\Explorer", "name": "DisableSearchBoxSuggestions", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "privacy.online-speech-recognition",
+    "risk": "moderate",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-privacy#allowinputpersonalization",
+    "title": {
+      "en": "Turn off online speech recognition",
+      "pt-BR": "Desligar o reconhecimento de fala online",
+      "es": "Desactivar el reconocimiento de voz en línea",
+      "fr": "Désactiver la reconnaissance vocale en ligne",
+      "de": "Online-Spracherkennung ausschalten",
+      "ru": "Отключить распознавание речи в сети",
+      "tr": "Çevrimiçi konuşma tanımayı kapat",
+      "zh-CN": "关闭联机语音识别"
+    },
+    "description": {
+      "en": "Your voice is no longer sent to Microsoft speech services, and users can't turn this back on in Settings. Voice typing and dictation that rely on the cloud stop working. Settings may show \"Some settings are managed by your organization\".",
+      "pt-BR": "Sua voz deixa de ser enviada aos serviços de fala da Microsoft, e os usuários não conseguem reativar isso nas Configurações. A digitação por voz e o ditado que dependem da nuvem deixam de funcionar. As Configurações podem mostrar \"Algumas configurações são gerenciadas pela sua organização\".",
+      "es": "Tu voz deja de enviarse a los servicios de voz de Microsoft y los usuarios no pueden volver a activarlo en Configuración. El dictado y la escritura por voz que dependen de la nube dejan de funcionar. Configuración puede mostrar \"Tu organización administra algunas configuraciones\".",
+      "fr": "Votre voix n'est plus envoyée aux services vocaux de Microsoft, et les utilisateurs ne peuvent pas le réactiver dans Paramètres. La saisie vocale et la dictée qui dépendent du cloud ne fonctionnent plus. Paramètres peut afficher « Certains paramètres sont gérés par votre organisation ».",
+      "de": "Deine Stimme wird nicht mehr an die Sprachdienste von Microsoft gesendet, und Benutzer können dies in den Einstellungen nicht wieder einschalten. Spracheingabe und Diktat, die auf der Cloud beruhen, funktionieren nicht mehr. In den Einstellungen kann „Einige Einstellungen werden von Ihrer Organisation verwaltet“ erscheinen.",
+      "ru": "Ваш голос больше не отправляется в службы речи Microsoft, а пользователи не могут снова включить это в «Параметрах». Голосовой ввод и диктовка, зависящие от облака, перестают работать. В «Параметрах» может появиться сообщение «Некоторыми параметрами управляет ваша организация».",
+      "tr": "Sesin artık Microsoft konuşma hizmetlerine gönderilmez ve kullanıcılar bunu Ayarlar'dan yeniden açamaz. Buluta dayanan sesle yazma ve dikte çalışmaz. Ayarlar \"Bazı ayarlar kuruluşunuz tarafından yönetiliyor\" mesajını gösterebilir.",
+      "zh-CN": "你的语音将不再发送到 Microsoft 语音服务，用户也无法在“设置”中重新打开。依赖云端的语音输入和听写将无法使用。 “设置”中可能显示“某些设置由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\InputPersonalization", "name": "AllowInputPersonalization", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "privacy.typing-inking-collection",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#1821-inking--typing",
+    "title": {
+      "en": "Turn off typing and inking personalization",
+      "pt-BR": "Desligar a personalização de digitação e escrita à mão",
+      "es": "Desactivar la personalización de escritura y entrada manuscrita",
+      "fr": "Désactiver la personnalisation de la saisie et de l'écriture manuscrite",
+      "de": "Personalisierung von Eingabe und Freihandschrift ausschalten",
+      "ru": "Отключить персонализацию ввода и рукописного ввода",
+      "tr": "Yazma ve mürekkep kişiselleştirmesini kapat",
+      "zh-CN": "关闭键入和墨迹个性化"
+    },
+    "description": {
+      "en": "Windows stops learning from what you type and write by hand to personalize suggestions. Autocorrect and handwriting still work, just without learning your vocabulary. Applies to the current user.",
+      "pt-BR": "O Windows deixa de aprender com o que você digita e escreve à mão para personalizar sugestões. A correção automática e a escrita à mão continuam funcionando, só que sem aprender seu vocabulário. Vale para o usuário atual.",
+      "es": "Windows deja de aprender de lo que escribes y de lo que escribes a mano para personalizar las sugerencias. La corrección automática y la escritura manuscrita siguen funcionando, solo que sin aprender tu vocabulario. Se aplica al usuario actual.",
+      "fr": "Windows cesse d'apprendre de ce que vous tapez et écrivez à la main pour personnaliser les suggestions. La correction automatique et l'écriture manuscrite fonctionnent toujours, mais sans apprendre votre vocabulaire. S'applique à l'utilisateur actuel.",
+      "de": "Windows lernt nicht mehr aus dem, was du tippst und handschriftlich schreibst, um Vorschläge zu personalisieren. Autokorrektur und Handschrift funktionieren weiter, lernen aber deinen Wortschatz nicht mehr. Gilt für den aktuellen Benutzer.",
+      "ru": "Windows перестаёт учиться на том, что вы печатаете и пишете от руки, для персонализации подсказок. Автозамена и рукописный ввод работают, но не запоминают ваш словарь. Действует для текущего пользователя.",
+      "tr": "Windows, önerileri kişiselleştirmek için yazdıklarından ve elle yazdıklarından öğrenmeyi bırakır. Otomatik düzeltme ve el yazısı çalışmaya devam eder, yalnızca kelime dağarcığını öğrenmez. Geçerli kullanıcı için geçerlidir.",
+      "zh-CN": "Windows 将不再从你键入和手写的内容中学习来个性化建议。自动更正和手写仍可使用，只是不再学习你的词汇。适用于当前用户。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\InputPersonalization", "name": "RestrictImplicitTextCollection", "kind": "DWord", "value": 1 },
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\InputPersonalization", "name": "RestrictImplicitInkCollection", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "privacy.cloud-clipboard",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#30-cloud-clipboard",
+    "title": {
+      "en": "Turn off the cloud clipboard",
+      "pt-BR": "Desligar a área de transferência na nuvem",
+      "es": "Desactivar el portapapeles en la nube",
+      "fr": "Désactiver le presse-papiers cloud",
+      "de": "Cloud-Zwischenablage ausschalten",
+      "ru": "Отключить облачный буфер обмена",
+      "tr": "Bulut panosunu kapat",
+      "zh-CN": "关闭云剪贴板"
+    },
+    "description": {
+      "en": "Copied items are no longer uploaded to the cloud or synced to your other Windows devices. Clipboard history on this PC keeps working. Settings may show \"Some settings are managed by your organization\".",
+      "pt-BR": "Os itens copiados deixam de ser enviados para a nuvem e sincronizados com seus outros dispositivos Windows. O histórico da área de transferência neste PC continua funcionando. As Configurações podem mostrar \"Algumas configurações são gerenciadas pela sua organização\".",
+      "es": "Los elementos copiados dejan de subirse a la nube y de sincronizarse con tus otros dispositivos Windows. El historial del portapapeles de este PC sigue funcionando. Configuración puede mostrar \"Tu organización administra algunas configuraciones\".",
+      "fr": "Les éléments copiés ne sont plus envoyés dans le cloud ni synchronisés avec vos autres appareils Windows. L'historique du presse-papiers de ce PC continue de fonctionner. Paramètres peut afficher « Certains paramètres sont gérés par votre organisation ».",
+      "de": "Kopierte Elemente werden nicht mehr in die Cloud hochgeladen oder mit deinen anderen Windows-Geräten synchronisiert. Der Zwischenablageverlauf auf diesem PC funktioniert weiter. In den Einstellungen kann „Einige Einstellungen werden von Ihrer Organisation verwaltet“ erscheinen.",
+      "ru": "Скопированные элементы больше не загружаются в облако и не синхронизируются с другими вашими устройствами Windows. Журнал буфера обмена на этом ПК продолжает работать. В «Параметрах» может появиться сообщение «Некоторыми параметрами управляет ваша организация».",
+      "tr": "Kopyalanan öğeler artık buluta yüklenmez ve diğer Windows cihazlarınla eşitlenmez. Bu bilgisayardaki pano geçmişi çalışmaya devam eder. Ayarlar \"Bazı ayarlar kuruluşunuz tarafından yönetiliyor\" mesajını gösterebilir.",
+      "zh-CN": "复制的内容将不再上传到云端，也不会同步到你的其他 Windows 设备。此电脑上的剪贴板历史记录仍可使用。 “设置”中可能显示“某些设置由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System", "name": "AllowCrossDeviceClipboard", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "privacy.recall-click-to-do",
+    "risk": "moderate",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-windowsai#allowrecallenablement",
+    "appliesTo": { "minBuild": 26100 },
+    "requires": { "restart": true },
+    "title": {
+      "en": "Turn off Recall and Click to Do",
+      "pt-BR": "Desligar o Recall e o Click to Do",
+      "es": "Desactivar Recall y Click to Do",
+      "fr": "Désactiver Recall et Click to Do",
+      "de": "Recall und Click to Do ausschalten",
+      "ru": "Отключить Recall и Click to Do",
+      "tr": "Recall ve Click to Do'yu kapat",
+      "zh-CN": "关闭 Recall 和 Click to Do"
+    },
+    "description": {
+      "en": "Windows stops saving screen snapshots, removes the Recall component and hides Click to Do. Snapshots already saved are deleted and can't be recovered. Settings may show \"Some settings are managed by your organization\".",
+      "pt-BR": "O Windows para de salvar capturas da tela, remove o componente Recall e oculta o Click to Do. As capturas já salvas são excluídas e não podem ser recuperadas. As Configurações podem mostrar \"Algumas configurações são gerenciadas pela sua organização\".",
+      "es": "Windows deja de guardar instantáneas de la pantalla, quita el componente Recall y oculta Click to Do. Las instantáneas ya guardadas se eliminan y no se pueden recuperar. Configuración puede mostrar \"Tu organización administra algunas configuraciones\".",
+      "fr": "Windows cesse d'enregistrer des instantanés de l'écran, supprime le composant Recall et masque Click to Do. Les instantanés déjà enregistrés sont supprimés et irrécupérables. Paramètres peut afficher « Certains paramètres sont gérés par votre organisation ».",
+      "de": "Windows speichert keine Bildschirm-Snapshots mehr, entfernt die Recall-Komponente und blendet Click to Do aus. Bereits gespeicherte Snapshots werden gelöscht und lassen sich nicht wiederherstellen. In den Einstellungen kann „Einige Einstellungen werden von Ihrer Organisation verwaltet“ erscheinen.",
+      "ru": "Windows перестаёт сохранять снимки экрана, удаляет компонент Recall и скрывает Click to Do. Уже сохранённые снимки удаляются без возможности восстановления. В «Параметрах» может появиться сообщение «Некоторыми параметрами управляет ваша организация».",
+      "tr": "Windows ekran görüntülerini kaydetmeyi bırakır, Recall bileşenini kaldırır ve Click to Do'yu gizler. Önceden kaydedilen görüntüler silinir ve geri alınamaz. Ayarlar \"Bazı ayarlar kuruluşunuz tarafından yönetiliyor\" mesajını gösterebilir.",
+      "zh-CN": "Windows 将停止保存屏幕快照，移除 Recall 组件并隐藏 Click to Do。已保存的快照将被删除且无法恢复。 “设置”中可能显示“某些设置由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsAI", "name": "DisableAIDataAnalysis", "kind": "DWord", "value": 1 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsAI", "name": "AllowRecallEnablement", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsAI", "name": "DisableClickToDo", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "privacy.copilot-policy",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-windowsai#turnoffwindowscopilot",
+    "title": {
+      "en": "Turn off Windows Copilot",
+      "pt-BR": "Desligar o Windows Copilot",
+      "es": "Desactivar Windows Copilot",
+      "fr": "Désactiver Windows Copilot",
+      "de": "Windows Copilot ausschalten",
+      "ru": "Отключить Windows Copilot",
+      "tr": "Windows Copilot'u kapat",
+      "zh-CN": "关闭 Windows Copilot"
+    },
+    "description": {
+      "en": "Turns off the original Copilot in Windows pane and its taskbar icon for the current user. Microsoft marks this policy deprecated, and on 24H2 and later Copilot is a separate app that you can remove on the Built-in apps page. Settings may show \"Some settings are managed by your organization\".",
+      "pt-BR": "Desliga o painel original do Copilot no Windows e o ícone dele na barra de tarefas para o usuário atual. A Microsoft marca esta política como obsoleta, e no 24H2 e posteriores o Copilot é um app separado que você pode remover na página Apps integrados. As Configurações podem mostrar \"Algumas configurações são gerenciadas pela sua organização\".",
+      "es": "Desactiva el panel original de Copilot en Windows y su icono de la barra de tareas para el usuario actual. Microsoft marca esta directiva como obsoleta, y en 24H2 y posteriores Copilot es una app aparte que puedes quitar en la página Apps integradas. Configuración puede mostrar \"Tu organización administra algunas configuraciones\".",
+      "fr": "Désactive le volet Copilot dans Windows d'origine et son icône de la barre des tâches pour l'utilisateur actuel. Microsoft déclare cette stratégie obsolète, et à partir de la 24H2 Copilot est une application distincte que vous pouvez supprimer dans la page Applications intégrées. Paramètres peut afficher « Certains paramètres sont gérés par votre organisation ».",
+      "de": "Schaltet den ursprünglichen Bereich „Copilot in Windows“ und sein Taskleistensymbol für den aktuellen Benutzer aus. Microsoft stuft diese Richtlinie als veraltet ein, und ab 24H2 ist Copilot eine eigene App, die du auf der Seite „Integrierte Apps“ entfernen kannst. In den Einstellungen kann „Einige Einstellungen werden von Ihrer Organisation verwaltet“ erscheinen.",
+      "ru": "Отключает исходную панель Copilot в Windows и её значок на панели задач для текущего пользователя. Microsoft считает эту политику устаревшей, а в 24H2 и новее Copilot — отдельное приложение, которое можно удалить на странице «Встроенные приложения». В «Параметрах» может появиться сообщение «Некоторыми параметрами управляет ваша организация».",
+      "tr": "Geçerli kullanıcı için özgün Windows'ta Copilot bölmesini ve görev çubuğu simgesini kapatır. Microsoft bu ilkeyi kullanımdan kaldırılmış olarak işaretler; 24H2 ve sonrasında Copilot, Yerleşik uygulamalar sayfasından kaldırabileceğin ayrı bir uygulamadır. Ayarlar \"Bazı ayarlar kuruluşunuz tarafından yönetiliyor\" mesajını gösterebilir.",
+      "zh-CN": "为当前用户关闭最初的“Windows 中的 Copilot”窗格及其任务栏图标。Microsoft 已将此策略标记为已弃用；在 24H2 及更高版本中，Copilot 是一个独立的应用，你可以在“内置应用”页面中将其移除。 “设置”中可能显示“某些设置由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsCopilot", "name": "TurnOffWindowsCopilot", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "privacy.copilot-button",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Disable_Copilot.reg",
+    "requires": { "restartExplorer": true },
+    "title": {
+      "en": "Hide the Copilot button on the taskbar",
+      "pt-BR": "Ocultar o botão do Copilot na barra de tarefas",
+      "es": "Ocultar el botón de Copilot de la barra de tareas",
+      "fr": "Masquer le bouton Copilot de la barre des tâches",
+      "de": "Copilot-Schaltfläche in der Taskleiste ausblenden",
+      "ru": "Скрыть кнопку Copilot на панели задач",
+      "tr": "Görev çubuğundaki Copilot düğmesini gizle",
+      "zh-CN": "隐藏任务栏上的 Copilot 按钮"
+    },
+    "description": {
+      "en": "The Copilot button disappears from the taskbar for the current user. Copilot isn't removed: you can still open it from Start or with its keyboard shortcut.",
+      "pt-BR": "O botão do Copilot some da barra de tarefas para o usuário atual. O Copilot não é removido: você ainda pode abri-lo pelo Menu Iniciar ou pelo atalho de teclado.",
+      "es": "El botón de Copilot desaparece de la barra de tareas para el usuario actual. Copilot no se quita: aún puedes abrirlo desde Inicio o con su atajo de teclado.",
+      "fr": "Le bouton Copilot disparaît de la barre des tâches pour l'utilisateur actuel. Copilot n'est pas supprimé : vous pouvez toujours l'ouvrir depuis Démarrer ou avec son raccourci clavier.",
+      "de": "Die Copilot-Schaltfläche verschwindet für den aktuellen Benutzer aus der Taskleiste. Copilot wird nicht entfernt: Du kannst es weiterhin über Start oder per Tastenkombination öffnen.",
+      "ru": "Кнопка Copilot исчезает с панели задач для текущего пользователя. Сам Copilot не удаляется: его по-прежнему можно открыть из «Пуска» или сочетанием клавиш.",
+      "tr": "Copilot düğmesi geçerli kullanıcı için görev çubuğundan kaybolur. Copilot kaldırılmaz: Başlat'tan veya klavye kısayoluyla yine açabilirsin.",
+      "zh-CN": "当前用户的任务栏上将不再显示 Copilot 按钮。Copilot 不会被卸载：你仍可从开始菜单或键盘快捷方式打开它。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "ShowCopilotButton", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "privacy.widgets",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-newsandinterests#allownewsandinterests",
+    "appliesTo": { "minBuild": 22000 },
+    "requires": { "restartExplorer": true },
+    "title": {
+      "en": "Turn off Widgets",
+      "pt-BR": "Desligar os Widgets",
+      "es": "Desactivar los Widgets",
+      "fr": "Désactiver les Widgets",
+      "de": "Widgets ausschalten",
+      "ru": "Отключить «Виджеты»",
+      "tr": "Pano'yu (Widget'lar) kapat",
+      "zh-CN": "关闭小组件"
+    },
+    "description": {
+      "en": "The Widgets button and panel, including the news feed, are no longer available. You lose the quick weather and news glance on the taskbar. Settings may show \"Some settings are managed by your organization\".",
+      "pt-BR": "O botão e o painel de Widgets, incluindo o feed de notícias, deixam de estar disponíveis. Você perde a visão rápida de clima e notícias na barra de tarefas. As Configurações podem mostrar \"Algumas configurações são gerenciadas pela sua organização\".",
+      "es": "El botón y el panel de Widgets, incluida la sección de noticias, dejan de estar disponibles. Pierdes el vistazo rápido al tiempo y las noticias en la barra de tareas. Configuración puede mostrar \"Tu organización administra algunas configuraciones\".",
+      "fr": "Le bouton et le volet Widgets, y compris le fil d'actualités, ne sont plus disponibles. Vous perdez l'aperçu rapide de la météo et des actualités dans la barre des tâches. Paramètres peut afficher « Certains paramètres sont gérés par votre organisation ».",
+      "de": "Die Widgets-Schaltfläche und das Widgets-Panel samt Nachrichtenfeed stehen nicht mehr zur Verfügung. Der schnelle Blick auf Wetter und Nachrichten in der Taskleiste entfällt. In den Einstellungen kann „Einige Einstellungen werden von Ihrer Organisation verwaltet“ erscheinen.",
+      "ru": "Кнопка и панель «Виджеты», включая ленту новостей, больше недоступны. Вы теряете быстрый просмотр погоды и новостей на панели задач. В «Параметрах» может появиться сообщение «Некоторыми параметрами управляет ваша организация».",
+      "tr": "Pano düğmesi ve haber akışı dahil paneli artık kullanılamaz. Görev çubuğundaki hızlı hava durumu ve haber görünümünü kaybedersin. Ayarlar \"Bazı ayarlar kuruluşunuz tarafından yönetiliyor\" mesajını gösterebilir.",
+      "zh-CN": "小组件按钮和面板（包括新闻源）将不再可用。你将失去任务栏上快速查看天气和新闻的功能。 “设置”中可能显示“某些设置由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Dsh", "name": "AllowNewsAndInterests", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "privacy.location",
+    "risk": "moderate",
+    "scope": "machine",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/farag2/Sophia-Script-for-Windows/blob/master/src/Sophia_Script_for_Windows_11/Module/Sophia.psm1",
+    "title": {
+      "en": "Turn off location services",
+      "pt-BR": "Desligar os serviços de localização",
+      "es": "Desactivar los servicios de ubicación",
+      "fr": "Désactiver les services de localisation",
+      "de": "Standortdienste ausschalten",
+      "ru": "Отключить службы определения местоположения",
+      "tr": "Konum hizmetlerini kapat",
+      "zh-CN": "关闭位置服务"
+    },
+    "description": {
+      "en": "Sets the same switch as Settings > Privacy > Location to off for the whole PC, so no app can read your location. You lose Find my device, local weather and automatic time zone.",
+      "pt-BR": "Define como desligada a mesma chave de Configurações > Privacidade > Localização para o PC inteiro, e nenhum app consegue ler sua localização. Você perde o Localizar meu dispositivo, o clima local e o fuso horário automático.",
+      "es": "Pone en desactivado el mismo interruptor de Configuración > Privacidad > Ubicación para todo el PC, y ninguna app puede leer tu ubicación. Pierdes Encontrar mi dispositivo, el tiempo local y la zona horaria automática.",
+      "fr": "Désactive pour tout le PC le même commutateur que Paramètres > Confidentialité > Localisation, si bien qu'aucune application ne peut lire votre position. Vous perdez Localiser mon appareil, la météo locale et le fuseau horaire automatique.",
+      "de": "Schaltet denselben Schalter wie Einstellungen > Datenschutz > Standort für den ganzen PC aus, sodass keine App deinen Standort lesen kann. Du verlierst „Mein Gerät suchen“, das lokale Wetter und die automatische Zeitzone.",
+      "ru": "Выключает для всего ПК тот же переключатель, что и «Параметры» > «Конфиденциальность» > «Расположение», поэтому ни одно приложение не узнает ваше местоположение. Вы теряете «Поиск устройства», местную погоду и автоматический часовой пояс.",
+      "tr": "Ayarlar > Gizlilik > Konum'daki anahtarın aynısını tüm bilgisayar için kapatır; hiçbir uygulama konumunu okuyamaz. Cihazımı bul, yerel hava durumu ve otomatik saat dilimini kaybedersin.",
+      "zh-CN": "为整台电脑关闭与“设置”>“隐私”>“位置”相同的开关，任何应用都无法读取你的位置。你将失去“查找我的设备”、本地天气和自动时区。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\CapabilityAccessManager\\ConsentStore\\location", "name": "Value", "kind": "String", "value": "Deny" }
+    ]
+  },
+  {
+    "id": "privacy.location-user",
+    "risk": "moderate",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/farag2/Sophia-Script-for-Windows/blob/master/src/Sophia_Script_for_Windows_11/Module/Sophia.psm1",
+    "title": {
+      "en": "Turn off location for my account",
+      "pt-BR": "Desligar a localização para a minha conta",
+      "es": "Desactivar la ubicación para mi cuenta",
+      "fr": "Désactiver la localisation pour mon compte",
+      "de": "Standort für mein Konto ausschalten",
+      "ru": "Отключить определение местоположения для моей учётной записи",
+      "tr": "Hesabım için konumu kapat",
+      "zh-CN": "为我的账户关闭位置"
+    },
+    "description": {
+      "en": "Turns off location access for the current user only, with the same switch Settings uses. Apps can't read your location, and you lose local weather and automatic time zone for this account.",
+      "pt-BR": "Desliga o acesso à localização apenas para o usuário atual, com a mesma chave que as Configurações usam. Os apps não conseguem ler sua localização, e você perde o clima local e o fuso horário automático nesta conta.",
+      "es": "Desactiva el acceso a la ubicación solo para el usuario actual, con el mismo interruptor que usa Configuración. Las apps no pueden leer tu ubicación y pierdes el tiempo local y la zona horaria automática en esta cuenta.",
+      "fr": "Désactive l'accès à la localisation pour l'utilisateur actuel uniquement, avec le même commutateur que Paramètres. Les applications ne peuvent pas lire votre position, et vous perdez la météo locale et le fuseau horaire automatique pour ce compte.",
+      "de": "Schaltet den Standortzugriff nur für den aktuellen Benutzer aus, mit demselben Schalter wie in den Einstellungen. Apps können deinen Standort nicht lesen, und du verlierst für dieses Konto das lokale Wetter und die automatische Zeitzone.",
+      "ru": "Отключает доступ к местоположению только для текущего пользователя тем же переключателем, что и в «Параметрах». Приложения не узнают ваше местоположение, а для этой учётной записи пропадут местная погода и автоматический часовой пояс.",
+      "tr": "Konum erişimini yalnızca geçerli kullanıcı için, Ayarlar'ın kullandığı aynı anahtarla kapatır. Uygulamalar konumunu okuyamaz; bu hesapta yerel hava durumunu ve otomatik saat dilimini kaybedersin.",
+      "zh-CN": "仅为当前用户关闭位置访问，使用“设置”所用的同一开关。应用无法读取你的位置，此账户将失去本地天气和自动时区。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\CapabilityAccessManager\\ConsentStore\\location", "name": "Value", "kind": "String", "value": "Deny" }
+    ]
+  },
+  {
+    "id": "privacy.find-my-device",
+    "risk": "moderate",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-experience#allowfindmydevice",
+    "title": {
+      "en": "Turn off Find my device",
+      "pt-BR": "Desligar o Localizar meu dispositivo",
+      "es": "Desactivar Encontrar mi dispositivo",
+      "fr": "Désactiver Localiser mon appareil",
+      "de": "„Mein Gerät suchen“ ausschalten",
+      "ru": "Отключить «Поиск устройства»",
+      "tr": "Cihazımı bul özelliğini kapat",
+      "zh-CN": "关闭“查找我的设备”"
+    },
+    "description": {
+      "en": "The PC and its location are no longer registered in the cloud. You can't locate this PC from your Microsoft account if it's lost or stolen. Settings may show \"Some settings are managed by your organization\".",
+      "pt-BR": "O PC e a localização dele deixam de ser registrados na nuvem. Se ele for perdido ou roubado, você não poderá localizá-lo pela sua conta Microsoft. As Configurações podem mostrar \"Algumas configurações são gerenciadas pela sua organização\".",
+      "es": "El PC y su ubicación dejan de registrarse en la nube. Si se pierde o lo roban, no podrás localizarlo desde tu cuenta de Microsoft. Configuración puede mostrar \"Tu organización administra algunas configuraciones\".",
+      "fr": "Le PC et sa position ne sont plus enregistrés dans le cloud. En cas de perte ou de vol, vous ne pourrez plus le localiser depuis votre compte Microsoft. Paramètres peut afficher « Certains paramètres sont gérés par votre organisation ».",
+      "de": "Der PC und sein Standort werden nicht mehr in der Cloud registriert. Bei Verlust oder Diebstahl kannst du ihn nicht über dein Microsoft-Konto orten. In den Einstellungen kann „Einige Einstellungen werden von Ihrer Organisation verwaltet“ erscheinen.",
+      "ru": "ПК и его местоположение больше не регистрируются в облаке. В случае потери или кражи найти его через учётную запись Microsoft не получится. В «Параметрах» может появиться сообщение «Некоторыми параметрами управляет ваша организация».",
+      "tr": "Bilgisayar ve konumu artık bulutta kayıtlı olmaz. Kaybolursa veya çalınırsa Microsoft hesabından bulamazsın. Ayarlar \"Bazı ayarlar kuruluşunuz tarafından yönetiliyor\" mesajını gösterebilir.",
+      "zh-CN": "这台电脑及其位置将不再在云端注册。如果电脑丢失或被盗，你将无法通过 Microsoft 账户定位它。 “设置”中可能显示“某些设置由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\FindMyDevice", "name": "AllowFindMyDevice", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "privacy.settings-home-promos",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-experience#disableconsumeraccountstatecontent",
+    "appliesTo": { "minBuild": 22000, "editions": ["enterprise", "education"] },
+    "title": {
+      "en": "Turn off Microsoft 365 promos in Settings",
+      "pt-BR": "Desligar as promoções do Microsoft 365 nas Configurações",
+      "es": "Desactivar las promociones de Microsoft 365 en Configuración",
+      "fr": "Désactiver les promotions Microsoft 365 dans Paramètres",
+      "de": "Microsoft-365-Werbung in den Einstellungen ausschalten",
+      "ru": "Отключить рекламу Microsoft 365 в «Параметрах»",
+      "tr": "Ayarlar'daki Microsoft 365 tanıtımlarını kapat",
+      "zh-CN": "关闭“设置”中的 Microsoft 365 推广"
+    },
+    "description": {
+      "en": "The Settings home page shows default content instead of Microsoft 365 and other account-based promotions. Microsoft Learn lists this policy for Enterprise and Education, so on Home and Pro it may have no effect. Settings may show \"Some settings are managed by your organization\".",
+      "pt-BR": "A página inicial das Configurações mostra o conteúdo padrão em vez de promoções do Microsoft 365 e de outros serviços ligados à conta. O Microsoft Learn lista esta política para Enterprise e Education, então no Home e no Pro ela pode não ter efeito. As Configurações podem mostrar \"Algumas configurações são gerenciadas pela sua organização\".",
+      "es": "La página de inicio de Configuración muestra el contenido predeterminado en lugar de promociones de Microsoft 365 y otras basadas en la cuenta. Microsoft Learn indica esta directiva para Enterprise y Education, así que en Home y Pro puede no tener efecto. Configuración puede mostrar \"Tu organización administra algunas configuraciones\".",
+      "fr": "La page d'accueil de Paramètres affiche le contenu par défaut au lieu des promotions Microsoft 365 et autres liées au compte. Microsoft Learn indique cette stratégie pour Entreprise et Éducation ; sous Famille et Pro, elle peut rester sans effet. Paramètres peut afficher « Certains paramètres sont gérés par votre organisation ».",
+      "de": "Die Startseite der Einstellungen zeigt Standardinhalt statt Microsoft-365- und anderer kontobasierter Werbung. Microsoft Learn führt diese Richtlinie für Enterprise und Education auf; unter Home und Pro kann sie wirkungslos sein. In den Einstellungen kann „Einige Einstellungen werden von Ihrer Organisation verwaltet“ erscheinen.",
+      "ru": "На главной странице «Параметров» вместо рекламы Microsoft 365 и других предложений, связанных с учётной записью, показывается стандартное содержимое. Microsoft Learn указывает эту политику для Enterprise и Education, поэтому в Home и Pro она может не действовать. В «Параметрах» может появиться сообщение «Некоторыми параметрами управляет ваша организация».",
+      "tr": "Ayarlar giriş sayfası, Microsoft 365 ve diğer hesap tabanlı tanıtımlar yerine varsayılan içeriği gösterir. Microsoft Learn bu ilkeyi Enterprise ve Education için listeler; Home ve Pro'da etkisiz olabilir. Ayarlar \"Bazı ayarlar kuruluşunuz tarafından yönetiliyor\" mesajını gösterebilir.",
+      "zh-CN": "“设置”主页将显示默认内容，而不是 Microsoft 365 及其他基于账户的推广。Microsoft Learn 将此策略列为适用于企业版和教育版，因此在 Home 和 Pro 上可能没有效果。 “设置”中可能显示“某些设置由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent", "name": "DisableConsumerAccountStateContent", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "privacy.start-track-apps",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Disable_Telemetry.reg",
+    "title": {
+      "en": "Stop Start from tracking launched apps",
+      "pt-BR": "Impedir que o Iniciar rastreie os apps abertos",
+      "es": "Impedir que Inicio registre las apps abiertas",
+      "fr": "Empêcher Démarrer de suivre les applications lancées",
+      "de": "Start daran hindern, gestartete Apps zu verfolgen",
+      "ru": "Запретить «Пуску» отслеживать запускаемые приложения",
+      "tr": "Başlat'ın açılan uygulamaları izlemesini durdur",
+      "zh-CN": "禁止开始菜单跟踪已启动的应用"
+    },
+    "description": {
+      "en": "Windows stops recording which apps you launch to build Start's most-used list and search ranking. You lose the \"most used\" ordering. Applies to the current user.",
+      "pt-BR": "O Windows deixa de registrar quais apps você abre para montar a lista de mais usados do Menu Iniciar e a classificação da pesquisa. Você perde a ordenação por \"mais usados\". Vale para o usuário atual.",
+      "es": "Windows deja de registrar qué apps abres para armar la lista de más usadas de Inicio y el orden de la búsqueda. Pierdes la ordenación por \"más usadas\". Se aplica al usuario actual.",
+      "fr": "Windows cesse d'enregistrer les applications que vous lancez pour constituer la liste des plus utilisées de Démarrer et le classement de la recherche. Vous perdez le tri « les plus utilisées ». S'applique à l'utilisateur actuel.",
+      "de": "Windows zeichnet nicht mehr auf, welche Apps du startest, um die Liste der am häufigsten verwendeten Apps im Start und die Suchreihenfolge zu erstellen. Die Sortierung nach „Am häufigsten verwendet“ entfällt. Gilt für den aktuellen Benutzer.",
+      "ru": "Windows перестаёт записывать, какие приложения вы запускаете, для списка часто используемых в «Пуске» и ранжирования поиска. Вы теряете сортировку «Часто используемые». Действует для текущего пользователя.",
+      "tr": "Windows, Başlat'taki en çok kullanılanlar listesini ve arama sıralamasını oluşturmak için hangi uygulamaları açtığını kaydetmeyi bırakır. \"En çok kullanılan\" sıralamasını kaybedersin. Geçerli kullanıcı için geçerlidir.",
+      "zh-CN": "Windows 将不再记录你启动了哪些应用，以生成开始菜单的“最常用”列表和搜索排序。你将失去“最常用”排序。适用于当前用户。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "Start_TrackProgs", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "privacy.phone-link-start",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Disable_Phone_Link_In_Start.reg",
+    "appliesTo": { "minBuild": 22621 },
+    "title": {
+      "en": "Hide the Phone Link panel in Start",
+      "pt-BR": "Ocultar o painel do Vínculo com o Celular no Iniciar",
+      "es": "Ocultar el panel de Vincular con el móvil en Inicio",
+      "fr": "Masquer le volet Liaison avec le téléphone dans Démarrer",
+      "de": "Phone-Link-Bereich im Start ausblenden",
+      "ru": "Скрыть панель «Связь с телефоном» в «Пуске»",
+      "tr": "Başlat'taki Telefon Bağlantısı panelini gizle",
+      "zh-CN": "隐藏开始菜单中的手机连接面板"
+    },
+    "description": {
+      "en": "The mobile device panel next to Start's pinned apps is hidden. Phone Link itself is untouched and still opens on its own. Applies to the current user.",
+      "pt-BR": "O painel de dispositivo móvel ao lado dos apps fixados do Menu Iniciar fica oculto. O Vínculo com o Celular em si não é alterado e continua abrindo normalmente. Vale para o usuário atual.",
+      "es": "El panel de dispositivo móvil junto a las apps ancladas de Inicio queda oculto. Vincular con el móvil no se toca y se sigue abriendo por su cuenta. Se aplica al usuario actual.",
+      "fr": "Le volet de l'appareil mobile à côté des applications épinglées de Démarrer est masqué. Liaison avec le téléphone n'est pas modifié et s'ouvre toujours seul. S'applique à l'utilisateur actuel.",
+      "de": "Der Bereich für Mobilgeräte neben den angehefteten Apps im Start wird ausgeblendet. Phone Link selbst bleibt unverändert und lässt sich weiterhin einzeln öffnen. Gilt für den aktuellen Benutzer.",
+      "ru": "Панель мобильного устройства рядом с закреплёнными приложениями в «Пуске» скрывается. Само приложение «Связь с телефоном» не затрагивается и открывается как раньше. Действует для текущего пользователя.",
+      "tr": "Başlat'taki sabitlenmiş uygulamaların yanındaki mobil cihaz paneli gizlenir. Telefon Bağlantısı uygulamasına dokunulmaz ve kendi başına açılmaya devam eder. Geçerli kullanıcı için geçerlidir.",
+      "zh-CN": "开始菜单固定应用旁的移动设备面板将被隐藏。手机连接应用本身不受影响，仍可单独打开。适用于当前用户。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Start\\Companions\\Microsoft.YourPhone_8wekyb3d8bbwe", "name": "IsEnabled", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "privacy.language-list-access",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/farag2/Sophia-Script-for-Windows/blob/master/src/Sophia_Script_for_Windows_11/Module/Sophia.psm1",
+    "title": {
+      "en": "Don't let websites read my language list",
+      "pt-BR": "Não deixar sites lerem minha lista de idiomas",
+      "es": "No dejar que los sitios web lean mi lista de idiomas",
+      "fr": "Ne pas laisser les sites web lire ma liste de langues",
+      "de": "Websites den Zugriff auf meine Sprachliste verweigern",
+      "ru": "Не давать сайтам читать мой список языков",
+      "tr": "Web sitelerinin dil listemi okumasına izin verme",
+      "zh-CN": "不允许网站读取我的语言列表"
+    },
+    "description": {
+      "en": "Websites can no longer read the language list from your Windows settings to tailor content. Some sites may then show their default language instead of yours. Applies to the current user.",
+      "pt-BR": "Os sites deixam de poder ler a lista de idiomas das suas configurações do Windows para adaptar o conteúdo. Alguns sites podem então mostrar o idioma padrão deles em vez do seu. Vale para o usuário atual.",
+      "es": "Los sitios web ya no pueden leer la lista de idiomas de tu configuración de Windows para adaptar el contenido. Algunos sitios pueden mostrar entonces su idioma predeterminado en lugar del tuyo. Se aplica al usuario actual.",
+      "fr": "Les sites web ne peuvent plus lire la liste de langues de vos paramètres Windows pour adapter le contenu. Certains sites peuvent alors afficher leur langue par défaut au lieu de la vôtre. S'applique à l'utilisateur actuel.",
+      "de": "Websites können die Sprachliste aus deinen Windows-Einstellungen nicht mehr lesen, um Inhalte anzupassen. Manche Seiten zeigen dann ihre Standardsprache statt deiner. Gilt für den aktuellen Benutzer.",
+      "ru": "Сайты больше не могут читать список языков из ваших параметров Windows, чтобы подстраивать содержимое. Некоторые сайты могут показывать язык по умолчанию вместо вашего. Действует для текущего пользователя.",
+      "tr": "Web siteleri, içeriği uyarlamak için Windows ayarlarındaki dil listesini artık okuyamaz. Bazı siteler seninkinin yerine varsayılan dillerini gösterebilir. Geçerli kullanıcı için geçerlidir.",
+      "zh-CN": "网站将不再读取你 Windows 设置中的语言列表来定制内容。一些网站可能因此显示其默认语言而不是你的语言。适用于当前用户。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Control Panel\\International\\User Profile", "name": "HttpAcceptLanguageOptOut", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "privacy.restart-sign-in",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-windowslogon#allowautomaticrestartsignon",
+    "title": {
+      "en": "No automatic sign-in after update restarts",
+      "pt-BR": "Sem login automático após reinícios de atualização",
+      "es": "Sin inicio de sesión automático tras reinicios de actualización",
+      "fr": "Pas de connexion automatique après les redémarrages de mise à jour",
+      "de": "Keine automatische Anmeldung nach Update-Neustarts",
+      "ru": "Без автоматического входа после перезагрузки для обновления",
+      "tr": "Güncelleme yeniden başlatmalarından sonra otomatik oturum açma yok",
+      "zh-CN": "更新重启后不自动登录"
+    },
+    "description": {
+      "en": "After a restart, Windows no longer signs you in and locks the session on its own to finish setting up your apps. You sign in yourself, and your apps don't reopen until you do. Settings may show \"Some settings are managed by your organization\".",
+      "pt-BR": "Depois de uma reinicialização, o Windows deixa de entrar na sua conta e bloquear a sessão por conta própria para terminar de configurar seus apps. Você entra manualmente, e seus apps só reabrem depois disso. As Configurações podem mostrar \"Algumas configurações são gerenciadas pela sua organização\".",
+      "es": "Tras un reinicio, Windows ya no inicia sesión por su cuenta ni bloquea la sesión para terminar de configurar tus apps. Inicias sesión tú mismo y tus apps no se vuelven a abrir hasta entonces. Configuración puede mostrar \"Tu organización administra algunas configuraciones\".",
+      "fr": "Après un redémarrage, Windows n'ouvre plus votre session ni ne la verrouille de lui-même pour terminer la configuration de vos applications. Vous vous connectez vous-même, et vos applications ne se rouvrent qu'ensuite. Paramètres peut afficher « Certains paramètres sont gérés par votre organisation ».",
+      "de": "Nach einem Neustart meldet Windows dich nicht mehr von selbst an und sperrt die Sitzung nicht, um die Einrichtung deiner Apps abzuschließen. Du meldest dich selbst an, und deine Apps öffnen sich erst danach wieder. In den Einstellungen kann „Einige Einstellungen werden von Ihrer Organisation verwaltet“ erscheinen.",
+      "ru": "После перезагрузки Windows больше не входит в систему и не блокирует сеанс самостоятельно, чтобы завершить настройку ваших приложений. Вы входите сами, и приложения откроются только после этого. В «Параметрах» может появиться сообщение «Некоторыми параметрами управляет ваша организация».",
+      "tr": "Yeniden başlatmadan sonra Windows, uygulamalarının kurulumunu bitirmek için kendiliğinden oturum açıp oturumu kilitlemez. Oturumu sen açarsın ve uygulamaların ancak ondan sonra yeniden açılır. Ayarlar \"Bazı ayarlar kuruluşunuz tarafından yönetiliyor\" mesajını gösterebilir.",
+      "zh-CN": "重启后，Windows 不再自行登录并锁定会话来完成应用的设置。你需要自己登录，应用要等到那时才会重新打开。 “设置”中可能显示“某些设置由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System", "name": "DisableAutomaticRestartSignOn", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "privacy.device-metadata",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#4-device-metadata-retrieval",
+    "title": {
+      "en": "Don't fetch device info and companion apps online",
+      "pt-BR": "Não buscar informações de dispositivos e apps complementares online",
+      "es": "No buscar información de dispositivos ni apps complementarias en línea",
+      "fr": "Ne pas récupérer en ligne les infos d'appareil et les applications associées",
+      "de": "Geräteinfos und Begleit-Apps nicht online abrufen",
+      "ru": "Не загружать из интернета сведения об устройствах и сопутствующие приложения",
+      "tr": "Cihaz bilgilerini ve eşlik eden uygulamaları çevrimiçi alma",
+      "zh-CN": "不从网上获取设备信息和配套应用"
+    },
+    "description": {
+      "en": "When you plug in a device, Windows no longer downloads its icon, name and manufacturer's companion app from the internet. Devices still work with their drivers but may look generic. Settings may show \"Some settings are managed by your organization\".",
+      "pt-BR": "Ao conectar um dispositivo, o Windows deixa de baixar da internet o ícone, o nome e o app complementar do fabricante. Os dispositivos continuam funcionando com seus drivers, mas podem aparecer de forma genérica. As Configurações podem mostrar \"Algumas configurações são gerenciadas pela sua organização\".",
+      "es": "Al conectar un dispositivo, Windows ya no descarga de Internet su icono, nombre y app complementaria del fabricante. Los dispositivos siguen funcionando con sus controladores, pero pueden verse genéricos. Configuración puede mostrar \"Tu organización administra algunas configuraciones\".",
+      "fr": "Lorsque vous branchez un appareil, Windows ne télécharge plus depuis Internet son icône, son nom ni l'application associée du fabricant. Les appareils fonctionnent toujours avec leurs pilotes mais peuvent s'afficher de façon générique. Paramètres peut afficher « Certains paramètres sont gérés par votre organisation ».",
+      "de": "Beim Anschließen eines Geräts lädt Windows Symbol, Namen und Begleit-App des Herstellers nicht mehr aus dem Internet. Geräte funktionieren weiter mit ihren Treibern, wirken aber eventuell allgemein. In den Einstellungen kann „Einige Einstellungen werden von Ihrer Organisation verwaltet“ erscheinen.",
+      "ru": "При подключении устройства Windows больше не загружает из интернета его значок, название и сопутствующее приложение производителя. Устройства по-прежнему работают с драйверами, но могут выглядеть обезличенно. В «Параметрах» может появиться сообщение «Некоторыми параметрами управляет ваша организация».",
+      "tr": "Bir cihaz taktığında Windows, simgesini, adını ve üreticinin eşlik eden uygulamasını artık internetten indirmez. Cihazlar sürücüleriyle çalışmaya devam eder ancak genel görünebilir. Ayarlar \"Bazı ayarlar kuruluşunuz tarafından yönetiliyor\" mesajını gösterebilir.",
+      "zh-CN": "插入设备时，Windows 将不再从互联网下载其图标、名称和制造商的配套应用。设备仍可通过驱动程序正常工作，但可能显示为通用外观。 “设置”中可能显示“某些设置由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Device Metadata", "name": "PreventDeviceMetadataFromNetwork", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "privacy.notepad-ai",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Disable_Notepad_AI_Features.reg",
+    "appliesTo": { "minBuild": 22000 },
+    "title": {
+      "en": "Turn off AI features in Notepad",
+      "pt-BR": "Desligar os recursos de IA no Bloco de Notas",
+      "es": "Desactivar las funciones de IA del Bloc de notas",
+      "fr": "Désactiver les fonctions IA du Bloc-notes",
+      "de": "KI-Funktionen im Editor ausschalten",
+      "ru": "Отключить функции ИИ в «Блокноте»",
+      "tr": "Not Defteri'ndeki yapay zekâ özelliklerini kapat",
+      "zh-CN": "关闭记事本中的 AI 功能"
+    },
+    "description": {
+      "en": "Notepad hides its AI features such as rewrite, summarize and write. Plain editing is unchanged. Microsoft doesn't document this policy value; it is community-observed. Settings may show \"Some settings are managed by your organization\".",
+      "pt-BR": "O Bloco de Notas oculta seus recursos de IA, como reescrever, resumir e escrever. A edição comum não muda. A Microsoft não documenta este valor de política; ele é observado pela comunidade. As Configurações podem mostrar \"Algumas configurações são gerenciadas pela sua organização\".",
+      "es": "El Bloc de notas oculta sus funciones de IA, como reescribir, resumir y redactar. La edición normal no cambia. Microsoft no documenta este valor de directiva; lo ha observado la comunidad. Configuración puede mostrar \"Tu organización administra algunas configuraciones\".",
+      "fr": "Le Bloc-notes masque ses fonctions IA comme réécrire, résumer et rédiger. L'édition normale ne change pas. Microsoft ne documente pas cette valeur de stratégie ; elle a été observée par la communauté. Paramètres peut afficher « Certains paramètres sont gérés par votre organisation ».",
+      "de": "Der Editor blendet seine KI-Funktionen wie Umschreiben, Zusammenfassen und Schreiben aus. Das normale Bearbeiten bleibt unverändert. Microsoft dokumentiert diesen Richtlinienwert nicht; er wurde von der Community beobachtet. In den Einstellungen kann „Einige Einstellungen werden von Ihrer Organisation verwaltet“ erscheinen.",
+      "ru": "«Блокнот» скрывает свои функции ИИ, такие как переписывание, краткое изложение и написание текста. Обычное редактирование не меняется. Microsoft не документирует это значение политики; оно выявлено сообществом. В «Параметрах» может появиться сообщение «Некоторыми параметрами управляет ваша организация».",
+      "tr": "Not Defteri; yeniden yazma, özetleme ve yazma gibi yapay zekâ özelliklerini gizler. Normal düzenleme değişmez. Microsoft bu ilke değerini belgelemez; topluluk tarafından gözlemlenmiştir. Ayarlar \"Bazı ayarlar kuruluşunuz tarafından yönetiliyor\" mesajını gösterebilir.",
+      "zh-CN": "记事本将隐藏重写、总结和撰写等 AI 功能。普通编辑不受影响。Microsoft 未记录此策略值，它是社区观察到的。 “设置”中可能显示“某些设置由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\WindowsNotepad", "name": "DisableAIFeatures", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "privacy.paint-ai",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Disable_Paint_AI_Features.reg",
+    "appliesTo": { "minBuild": 22621 },
+    "title": {
+      "en": "Turn off AI features in Paint",
+      "pt-BR": "Desligar os recursos de IA no Paint",
+      "es": "Desactivar las funciones de IA de Paint",
+      "fr": "Désactiver les fonctions IA de Paint",
+      "de": "KI-Funktionen in Paint ausschalten",
+      "ru": "Отключить функции ИИ в Paint",
+      "tr": "Paint'teki yapay zekâ özelliklerini kapat",
+      "zh-CN": "关闭画图中的 AI 功能"
+    },
+    "description": {
+      "en": "Paint hides Cocreator, Image Creator, Generative fill, Generative erase and Remove background. Normal drawing and editing are unchanged. Microsoft documents only the first three of these values; the rest are community-observed.",
+      "pt-BR": "O Paint oculta Cocreator, Image Creator, Preenchimento generativo, Apagamento generativo e Remover plano de fundo. Desenhar e editar normalmente não muda. A Microsoft documenta só os três primeiros desses valores; os demais são observados pela comunidade.",
+      "es": "Paint oculta Cocreator, Image Creator, Relleno generativo, Borrado generativo y Quitar fondo. Dibujar y editar con normalidad no cambia. Microsoft documenta solo los tres primeros de estos valores; el resto los ha observado la comunidad.",
+      "fr": "Paint masque Cocreator, Image Creator, Remplissage génératif, Effacement génératif et Supprimer l'arrière-plan. Le dessin et l'édition normaux ne changent pas. Microsoft ne documente que les trois premières de ces valeurs ; les autres ont été observées par la communauté.",
+      "de": "Paint blendet Cocreator, Image Creator, Generatives Füllen, Generatives Löschen und Hintergrund entfernen aus. Normales Zeichnen und Bearbeiten bleibt unverändert. Microsoft dokumentiert nur die ersten drei dieser Werte; die übrigen wurden von der Community beobachtet.",
+      "ru": "Paint скрывает Cocreator, Image Creator, генеративную заливку, генеративное стирание и удаление фона. Обычное рисование и редактирование не меняются. Microsoft документирует только первые три из этих значений; остальные выявлены сообществом.",
+      "tr": "Paint; Cocreator, Image Creator, Üretken dolgu, Üretken silme ve Arka planı kaldır özelliklerini gizler. Normal çizim ve düzenleme değişmez. Microsoft bu değerlerden yalnızca ilk üçünü belgeler; diğerleri topluluk tarafından gözlemlenmiştir.",
+      "zh-CN": "画图将隐藏 Cocreator、Image Creator、生成式填充、生成式擦除和删除背景。正常的绘图和编辑不受影响。Microsoft 只记录了其中前三个值，其余是社区观察到的。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Paint", "name": "DisableCocreator", "kind": "DWord", "value": 1 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Paint", "name": "DisableGenerativeFill", "kind": "DWord", "value": 1 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Paint", "name": "DisableImageCreator", "kind": "DWord", "value": 1 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Paint", "name": "DisableGenerativeErase", "kind": "DWord", "value": 1 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Paint", "name": "DisableRemoveBackground", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "privacy.edge-data-collection",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/diagnosticdata",
+    "title": {
+      "en": "Turn off Edge data collection",
+      "pt-BR": "Desligar a coleta de dados do Edge",
+      "es": "Desactivar la recopilación de datos de Edge",
+      "fr": "Désactiver la collecte de données d'Edge",
+      "de": "Datenerfassung von Edge ausschalten",
+      "ru": "Отключить сбор данных в Edge",
+      "tr": "Edge veri toplamayı kapat",
+      "zh-CN": "关闭 Edge 数据收集"
+    },
+    "description": {
+      "en": "Edge stops sending diagnostic data (even the required kind, which Microsoft doesn't recommend) and browsing data used to personalize ads, and its feedback feature is disabled. Edge will show \"Managed by your organization\".",
+      "pt-BR": "O Edge deixa de enviar dados de diagnóstico (até os obrigatórios, o que a Microsoft não recomenda) e dados de navegação usados para personalizar anúncios, e o recurso de comentários é desativado. O Edge mostrará \"Gerenciado pela sua organização\".",
+      "es": "Edge deja de enviar datos de diagnóstico (incluso los requeridos, algo que Microsoft no recomienda) y datos de navegación usados para personalizar anuncios, y se desactiva su función de comentarios. Edge mostrará \"Tu organización administra tu explorador\".",
+      "fr": "Edge cesse d'envoyer des données de diagnostic (même les requises, ce que Microsoft déconseille) et des données de navigation servant à personnaliser les publicités, et sa fonction de commentaires est désactivée. Edge affichera « Géré par votre organisation ».",
+      "de": "Edge sendet keine Diagnosedaten mehr (auch nicht die erforderlichen, was Microsoft nicht empfiehlt) und keine Browserdaten zur Personalisierung von Werbung, und die Feedbackfunktion wird deaktiviert. Edge zeigt „Von Ihrer Organisation verwaltet“ an.",
+      "ru": "Edge перестаёт отправлять диагностические данные (даже необходимые, что Microsoft не рекомендует) и данные просмотра для персонализации рекламы, а функция отзывов отключается. Edge покажет «Управляется вашей организацией».",
+      "tr": "Edge tanılama verilerini (Microsoft'un önermediği gerekli veriler dahil) ve reklamları kişiselleştirmek için kullanılan gezinti verilerini göndermeyi bırakır; geri bildirim özelliği devre dışı kalır. Edge \"Kuruluşunuz tarafından yönetiliyor\" mesajını gösterir.",
+      "zh-CN": "Edge 将停止发送诊断数据（包括 Microsoft 不建议关闭的必需数据）以及用于个性化广告的浏览数据，其反馈功能也会被禁用。 Edge 会显示“由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge", "name": "DiagnosticData", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge", "name": "PersonalizationReportingEnabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge", "name": "UserFeedbackAllowed", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "privacy.edge-extras",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/hubssidebarenabled",
+    "title": {
+      "en": "Turn off Edge sidebar, shopping and background extras",
+      "pt-BR": "Desligar a barra lateral, as compras e os extras em segundo plano do Edge",
+      "es": "Desactivar la barra lateral, las compras y los extras en segundo plano de Edge",
+      "fr": "Désactiver la barre latérale, les achats et les extras en arrière-plan d'Edge",
+      "de": "Edge-Seitenleiste, Shopping und Hintergrund-Extras ausschalten",
+      "ru": "Отключить боковую панель, покупки и фоновую работу Edge",
+      "tr": "Edge kenar çubuğunu, alışverişi ve arka plan eklentilerini kapat",
+      "zh-CN": "关闭 Edge 边栏、购物和后台附加功能"
+    },
+    "description": {
+      "en": "Edge hides the sidebar, the shopping assistant and the Microsoft 365 Copilot Chat icon, and no longer starts early or keeps running after you close it. Edge opens a little slower and loses coupons and price comparison. Edge will show \"Managed by your organization\".",
+      "pt-BR": "O Edge oculta a barra lateral, o assistente de compras e o ícone do Microsoft 365 Copilot Chat, e deixa de iniciar antecipadamente ou continuar rodando depois de fechado. O Edge abre um pouco mais devagar e perde cupons e comparação de preços. O Edge mostrará \"Gerenciado pela sua organização\".",
+      "es": "Edge oculta la barra lateral, el asistente de compras y el icono de Microsoft 365 Copilot Chat, y deja de iniciarse antes de tiempo o de seguir ejecutándose al cerrarlo. Edge abre algo más lento y pierde cupones y comparación de precios. Edge mostrará \"Tu organización administra tu explorador\".",
+      "fr": "Edge masque la barre latérale, l'assistant d'achat et l'icône Microsoft 365 Copilot Chat, et ne démarre plus à l'avance ni ne reste actif après sa fermeture. Edge s'ouvre un peu plus lentement et perd les coupons et la comparaison de prix. Edge affichera « Géré par votre organisation ».",
+      "de": "Edge blendet die Seitenleiste, den Shopping-Assistenten und das Symbol von Microsoft 365 Copilot Chat aus und startet nicht mehr vorab oder läuft nach dem Schließen weiter. Edge öffnet etwas langsamer und verliert Gutscheine und Preisvergleich. Edge zeigt „Von Ihrer Organisation verwaltet“ an.",
+      "ru": "Edge скрывает боковую панель, помощника по покупкам и значок Microsoft 365 Copilot Chat, больше не запускается заранее и не работает в фоне после закрытия. Edge открывается чуть медленнее и теряет купоны и сравнение цен. Edge покажет «Управляется вашей организацией».",
+      "tr": "Edge kenar çubuğunu, alışveriş yardımcısını ve Microsoft 365 Copilot Chat simgesini gizler; önceden başlamaz ve kapatıldıktan sonra çalışmaya devam etmez. Edge biraz daha yavaş açılır ve kuponları ile fiyat karşılaştırmayı kaybeder. Edge \"Kuruluşunuz tarafından yönetiliyor\" mesajını gösterir.",
+      "zh-CN": "Edge 将隐藏边栏、购物助手和 Microsoft 365 Copilot Chat 图标，不再提前启动，关闭后也不再在后台运行。Edge 打开会稍慢一些，并失去优惠券和比价功能。 Edge 会显示“由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge", "name": "HubsSidebarEnabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge", "name": "EdgeShoppingAssistantEnabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge", "name": "StartupBoostEnabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge", "name": "BackgroundModeEnabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge", "name": "Microsoft365CopilotChatIconEnabled", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "privacy.firefox-telemetry",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "vendor",
+    "reversible": true,
+    "reference": "https://mozilla.github.io/policy-templates/",
+    "title": {
+      "en": "Turn off Firefox telemetry",
+      "pt-BR": "Desligar a telemetria do Firefox",
+      "es": "Desactivar la telemetría de Firefox",
+      "fr": "Désactiver la télémétrie de Firefox",
+      "de": "Firefox-Telemetrie ausschalten",
+      "ru": "Отключить телеметрию Firefox",
+      "tr": "Firefox telemetrisini kapat",
+      "zh-CN": "关闭 Firefox 遥测"
+    },
+    "description": {
+      "en": "Firefox stops uploading telemetry to Mozilla and no longer stores it locally. Firefox shows \"Your browser is being managed by your organization\" and its telemetry setting is locked.",
+      "pt-BR": "O Firefox deixa de enviar telemetria à Mozilla e de armazená-la localmente. O Firefox mostra \"Seu navegador é gerenciado pela sua organização\" e a configuração de telemetria fica travada.",
+      "es": "Firefox deja de enviar telemetría a Mozilla y de guardarla localmente. Firefox muestra \"Tu navegador está administrado por tu organización\" y el ajuste de telemetría queda bloqueado.",
+      "fr": "Firefox cesse d'envoyer la télémétrie à Mozilla et de la stocker localement. Firefox affiche « Votre navigateur est géré par votre organisation » et le réglage de télémétrie est verrouillé.",
+      "de": "Firefox lädt keine Telemetrie mehr zu Mozilla hoch und speichert sie auch nicht mehr lokal. Firefox zeigt „Ihr Browser wird von Ihrer Organisation verwaltet“ an, und die Telemetrie-Einstellung ist gesperrt.",
+      "ru": "Firefox перестаёт отправлять телеметрию в Mozilla и хранить её локально. Firefox показывает «Ваш браузер управляется вашей организацией», а параметр телеметрии заблокирован.",
+      "tr": "Firefox, Mozilla'ya telemetri yüklemeyi ve yerel olarak saklamayı bırakır. Firefox \"Tarayıcınız kuruluşunuz tarafından yönetiliyor\" mesajını gösterir ve telemetri ayarı kilitlenir.",
+      "zh-CN": "Firefox 将停止向 Mozilla 上传遥测数据，也不再在本地存储。Firefox 会显示“你的浏览器由你的组织管理”，且遥测设置会被锁定。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Mozilla\\Firefox", "name": "DisableTelemetry", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "privacy.brave-extras",
+    "risk": "moderate",
+    "scope": "machine",
+    "evidence": "vendor",
+    "reversible": true,
+    "reference": "https://raw.githubusercontent.com/brave/brave-core/master/components/policy/resources/templates/policy_definitions/BraveSoftware/BraveRewardsDisabled.yaml",
+    "title": {
+      "en": "Turn off Brave extras and telemetry",
+      "pt-BR": "Desligar os extras e a telemetria do Brave",
+      "es": "Desactivar los extras y la telemetría de Brave",
+      "fr": "Désactiver les extras et la télémétrie de Brave",
+      "de": "Brave-Extras und -Telemetrie ausschalten",
+      "ru": "Отключить дополнения и телеметрию Brave",
+      "tr": "Brave eklentilerini ve telemetrisini kapat",
+      "zh-CN": "关闭 Brave 附加功能和遥测"
+    },
+    "description": {
+      "en": "Brave hides Rewards, Wallet, VPN, AI Chat, News and Talk, and stops the analytics, usage ping and metrics reports. You lose those features, and Brave shows \"Managed by your organization\".",
+      "pt-BR": "O Brave oculta Rewards, Wallet, VPN, AI Chat, News e Talk, e para a análise de uso, o ping de uso e os relatórios de métricas. Você perde esses recursos, e o Brave mostra \"Gerenciado pela sua organização\".",
+      "es": "Brave oculta Rewards, Wallet, VPN, AI Chat, News y Talk, y detiene la analítica, el ping de uso y los informes de métricas. Pierdes esas funciones y Brave muestra \"Administrado por tu organización\".",
+      "fr": "Brave masque Rewards, Wallet, VPN, AI Chat, News et Talk, et arrête l'analyse, le ping d'utilisation et les rapports de métriques. Vous perdez ces fonctions, et Brave affiche « Géré par votre organisation ».",
+      "de": "Brave blendet Rewards, Wallet, VPN, AI Chat, News und Talk aus und beendet die Analyse, den Nutzungs-Ping und die Metrikberichte. Du verlierst diese Funktionen, und Brave zeigt „Von Ihrer Organisation verwaltet“ an.",
+      "ru": "Brave скрывает Rewards, Wallet, VPN, AI Chat, News и Talk и отключает аналитику, пинг использования и отчёты метрик. Вы теряете эти функции, а Brave показывает «Управляется вашей организацией».",
+      "tr": "Brave; Rewards, Wallet, VPN, AI Chat, News ve Talk özelliklerini gizler; analizi, kullanım ping'ini ve ölçüm raporlarını durdurur. Bu özellikleri kaybedersin ve Brave \"Kuruluşunuz tarafından yönetiliyor\" mesajını gösterir.",
+      "zh-CN": "Brave 将隐藏 Rewards、Wallet、VPN、AI Chat、News 和 Talk，并停止分析、使用情况 ping 和指标报告。你将失去这些功能，Brave 会显示“由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\BraveSoftware\\Brave", "name": "BraveRewardsDisabled", "kind": "DWord", "value": 1 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\BraveSoftware\\Brave", "name": "BraveWalletDisabled", "kind": "DWord", "value": 1 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\BraveSoftware\\Brave", "name": "BraveVPNDisabled", "kind": "DWord", "value": 1 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\BraveSoftware\\Brave", "name": "BraveAIChatEnabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\BraveSoftware\\Brave", "name": "BraveNewsDisabled", "kind": "DWord", "value": 1 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\BraveSoftware\\Brave", "name": "BraveTalkDisabled", "kind": "DWord", "value": 1 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\BraveSoftware\\Brave", "name": "BraveP3AEnabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\BraveSoftware\\Brave", "name": "BraveStatsPingEnabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\BraveSoftware\\Brave", "name": "MetricsReportingEnabled", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "privacy.feedback-frequency",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#1816-feedback--diagnostics",
+    "title": {
+      "en": "Set feedback frequency to never",
+      "pt-BR": "Definir a frequência de comentários como nunca",
+      "es": "Establecer la frecuencia de opiniones en nunca",
+      "fr": "Définir la fréquence des commentaires sur jamais",
+      "de": "Feedbackhäufigkeit auf „Nie“ setzen",
+      "ru": "Установить частоту отзывов «Никогда»",
+      "tr": "Geri bildirim sıklığını hiçbir zaman olarak ayarla",
+      "zh-CN": "将反馈频率设为“从不”"
+    },
+    "description": {
+      "en": "Windows never asks you for feedback, the same as choosing \"Never\" under Feedback frequency in Settings. You can still send feedback yourself from Feedback Hub. Applies to the current user.",
+      "pt-BR": "O Windows nunca pede sua opinião, o mesmo que escolher \"Nunca\" em Frequência de comentários nas Configurações. Você ainda pode enviar comentários pelo Hub de Comentários. Vale para o usuário atual.",
+      "es": "Windows nunca te pide opiniones, igual que elegir \"Nunca\" en Frecuencia de comentarios en Configuración. Aun así, puedes enviar opiniones tú mismo desde el Centro de opiniones. Se aplica al usuario actual.",
+      "fr": "Windows ne vous demande jamais votre avis, comme en choisissant « Jamais » sous Fréquence des commentaires dans Paramètres. Vous pouvez toujours envoyer des commentaires vous-même depuis le Hub de commentaires. S'applique à l'utilisateur actuel.",
+      "de": "Windows fragt nie nach Feedback, genau wie bei der Auswahl von „Nie“ unter Feedbackhäufigkeit in den Einstellungen. Feedback kannst du weiterhin selbst über den Feedback-Hub senden. Gilt für den aktuellen Benutzer.",
+      "ru": "Windows никогда не запрашивает отзывы — так же, как при выборе «Никогда» в разделе «Частота формирования отзывов» в «Параметрах». Отзыв по-прежнему можно отправить самостоятельно через Центр отзывов. Действует для текущего пользователя.",
+      "tr": "Windows senden hiçbir zaman geri bildirim istemez; Ayarlar'da Geri bildirim sıklığı altında \"Hiçbir zaman\" seçmekle aynıdır. Geri Bildirim Merkezi'nden yine kendin geri bildirim gönderebilirsin. Geçerli kullanıcı için geçerlidir.",
+      "zh-CN": "Windows 将从不请求反馈，效果与在“设置”的“反馈频率”中选择“从不”相同。你仍可通过反馈中心自行发送反馈。适用于当前用户。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Siuf\\Rules", "name": "NumberOfSIUFInPeriod", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Siuf\\Rules", "name": "PeriodInNanoSeconds", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "privacy.error-reporting",
+    "risk": "moderate",
+    "scope": "machine",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/farag2/Sophia-Script-for-Windows/blob/master/src/Sophia_Script_for_Windows_11/Module/Sophia.psm1",
+    "title": {
+      "en": "Turn off Windows Error Reporting",
+      "pt-BR": "Desligar o Relatório de Erros do Windows",
+      "es": "Desactivar el Informe de errores de Windows",
+      "fr": "Désactiver le Rapport d'erreurs Windows",
+      "de": "Windows-Fehlerberichterstattung ausschalten",
+      "ru": "Отключить отчёты об ошибках Windows",
+      "tr": "Windows Hata Raporlamayı kapat",
+      "zh-CN": "关闭 Windows 错误报告"
+    },
+    "description": {
+      "en": "Windows stops sending crash and error reports to Microsoft. You also lose the \"solution available\" prompts after a crash, and Microsoft gets less data to fix problems. Settings may show \"Some settings are managed by your organization\".",
+      "pt-BR": "O Windows deixa de enviar relatórios de falhas e erros à Microsoft. Você também perde os avisos de \"solução disponível\" após uma falha, e a Microsoft recebe menos dados para corrigir problemas. As Configurações podem mostrar \"Algumas configurações são gerenciadas pela sua organização\".",
+      "es": "Windows deja de enviar informes de bloqueos y errores a Microsoft. También pierdes los avisos de \"solución disponible\" tras un bloqueo, y Microsoft recibe menos datos para corregir problemas. Configuración puede mostrar \"Tu organización administra algunas configuraciones\".",
+      "fr": "Windows cesse d'envoyer des rapports de plantage et d'erreur à Microsoft. Vous perdez aussi les messages « solution disponible » après un plantage, et Microsoft reçoit moins de données pour corriger les problèmes. Paramètres peut afficher « Certains paramètres sont gérés par votre organisation ».",
+      "de": "Windows sendet keine Absturz- und Fehlerberichte mehr an Microsoft. Auch die Hinweise „Lösung verfügbar“ nach einem Absturz entfallen, und Microsoft erhält weniger Daten zur Fehlerbehebung. In den Einstellungen kann „Einige Einstellungen werden von Ihrer Organisation verwaltet“ erscheinen.",
+      "ru": "Windows перестаёт отправлять в Microsoft отчёты о сбоях и ошибках. Вы также теряете уведомления «Решение доступно» после сбоя, а у Microsoft остаётся меньше данных для исправления проблем. В «Параметрах» может появиться сообщение «Некоторыми параметрами управляет ваша организация».",
+      "tr": "Windows, Microsoft'a kilitlenme ve hata raporları göndermeyi bırakır. Bir çökmeden sonra \"çözüm mevcut\" bildirimlerini de kaybedersin ve Microsoft sorunları gidermek için daha az veri alır. Ayarlar \"Bazı ayarlar kuruluşunuz tarafından yönetiliyor\" mesajını gösterebilir.",
+      "zh-CN": "Windows 将停止向 Microsoft 发送崩溃和错误报告。你也会失去崩溃后的“有可用解决方案”提示，Microsoft 用于修复问题的数据也会减少。 “设置”中可能显示“某些设置由你的组织管理”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Error Reporting", "name": "Disabled", "kind": "DWord", "value": 1 }
     ]
   }
 ]

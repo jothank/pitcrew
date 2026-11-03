@@ -6,13 +6,34 @@ $script:PcCleanupTargets = @(
     [pscustomobject]@{ Id = 'user-temp'; TextKey = 'cleanup.userTemp'; NeedsAdmin = $false; PerUser = $true }
     [pscustomobject]@{ Id = 'windows-temp'; TextKey = 'cleanup.windowsTemp'; NeedsAdmin = $true; PerUser = $false }
     [pscustomobject]@{ Id = 'recycle-bin'; TextKey = 'cleanup.recycleBin'; NeedsAdmin = $false; PerUser = $true }
+    [pscustomobject]@{ Id = 'wu-cache'; TextKey = 'cleanup.wuCache'; NeedsAdmin = $true; PerUser = $false }
+    [pscustomobject]@{ Id = 'delivery-optimization'; TextKey = 'cleanup.doCache'; NeedsAdmin = $true; PerUser = $false }
+    [pscustomobject]@{ Id = 'error-reports'; TextKey = 'cleanup.errorReports'; NeedsAdmin = $true; PerUser = $true }
+    [pscustomobject]@{ Id = 'minidumps'; TextKey = 'cleanup.minidumps'; NeedsAdmin = $true; PerUser = $false }
 )
 
-function Get-PcCleanupFolder([string]$Id) {
+function Get-PcCleanupFolders([string]$Id) {
     switch ($Id) {
-        'user-temp'    { return [IO.Path]::GetTempPath() }
-        'windows-temp' { return Join-Path $env:windir 'Temp' }
+        'user-temp'     { [IO.Path]::GetTempPath() }
+        'windows-temp'  { Join-Path $env:windir 'Temp' }
+        'wu-cache'      { Join-Path $env:windir 'SoftwareDistribution\Download' }
+        'error-reports' {
+            Join-Path $env:ProgramData 'Microsoft\Windows\WER\ReportArchive'
+            Join-Path $env:ProgramData 'Microsoft\Windows\WER\ReportQueue'
+            Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\WER\ReportArchive'
+            Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\WER\ReportQueue'
+        }
+        'minidumps'     { Join-Path $env:windir 'Minidump' }
     }
+}
+
+function Test-PcRebootPending {
+    (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired') -or
+    (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending')
+}
+
+function Get-PcDeliveryOptimizationCacheBytes {
+    try { return [int64](Get-DeliveryOptimizationPerfSnap -ErrorAction Stop).FileSizeInCache } catch { return [int64]0 }
 }
 
 function Get-PcFolderTree([string]$Folder) {
@@ -67,26 +88,46 @@ function Get-PcRecycleBinSize {
 
 function Get-PcCleanupTargets {
     $isAdmin = Test-PcAdmin
+    $rebootPending = Test-PcRebootPending
     foreach ($t in $script:PcCleanupTargets) {
         $bytes = [int64]0
         $files = 0
-        if ($t.Id -eq 'recycle-bin') {
-            $size = Get-PcRecycleBinSize
-            $bytes = $size.Bytes
-            $files = $size.Files
-        } elseif (-not $t.NeedsAdmin -or $isAdmin) {
-            $old = @(Get-PcOldFiles (Get-PcCleanupFolder $t.Id))
-            $files = $old.Count
-            if ($files -gt 0) { $bytes = [int64]($old | Measure-Object Length -Sum).Sum }
+        $available = (-not $t.NeedsAdmin -or $isAdmin)
+        $blockedKey = if ($available) { $null } else { 'cleanup.adminOnly' }
+        if ($t.Id -eq 'wu-cache' -and $rebootPending) { $available = $false; $blockedKey = 'cleanup.rebootPending' }
+        if ($available) {
+            if ($t.Id -eq 'recycle-bin') {
+                $size = Get-PcRecycleBinSize
+                $bytes = $size.Bytes
+                $files = $size.Files
+            } elseif ($t.Id -eq 'delivery-optimization') {
+                $bytes = Get-PcDeliveryOptimizationCacheBytes
+            } else {
+                $old = @(foreach ($f in @(Get-PcCleanupFolders $t.Id)) { Get-PcOldFiles $f })
+                $files = $old.Count
+                if ($files -gt 0) { $bytes = [int64]($old | Measure-Object Length -Sum).Sum }
+            }
         }
         [pscustomobject]@{
-            Id        = $t.Id
-            Name      = Get-PcText $t.TextKey
-            Bytes     = $bytes
-            Files     = $files
-            Available = (-not $t.NeedsAdmin -or $isAdmin)
-            PerUser   = $t.PerUser
+            Id         = $t.Id
+            Name       = Get-PcText $t.TextKey
+            Bytes      = $bytes
+            Files      = $files
+            Available  = $available
+            BlockedKey = $blockedKey
+            PerUser    = $t.PerUser
         }
+    }
+}
+
+function Invoke-PcWindowsUpdateCacheCleanup {
+    # The download folder is locked while these run; they are put back exactly as they were
+    $services = @(Get-Service wuauserv, bits -ErrorAction SilentlyContinue | Where-Object Status -eq 'Running')
+    try {
+        $services | Stop-Service -Force -ErrorAction Stop
+        return Remove-PcOldFiles (Get-PcCleanupFolders 'wu-cache')
+    } finally {
+        foreach ($s in $services) { Start-Service -Name $s.Name -ErrorAction SilentlyContinue }
     }
 }
 
@@ -100,13 +141,28 @@ function Invoke-PcCleanup {
 
         $freed = [int64]0
         $failed = 0
-        if ($id -eq 'recycle-bin') {
-            $freed = (Get-PcRecycleBinSize).Bytes
-            Clear-RecycleBin -Force -ErrorAction SilentlyContinue
-        } else {
-            $result = Remove-PcOldFiles (Get-PcCleanupFolder $id)
-            $freed = $result.FreedBytes
-            $failed = $result.InUse
+        switch ($id) {
+            'recycle-bin' {
+                $freed = (Get-PcRecycleBinSize).Bytes
+                Clear-RecycleBin -Force -ErrorAction SilentlyContinue
+            }
+            'delivery-optimization' {
+                $freed = Get-PcDeliveryOptimizationCacheBytes
+                Delete-DeliveryOptimizationCache -Force -ErrorAction Stop
+            }
+            'wu-cache' {
+                if (Test-PcRebootPending) { throw (Get-PcText 'cleanup.rebootPending') }
+                $result = Invoke-PcWindowsUpdateCacheCleanup
+                $freed = $result.FreedBytes
+                $failed = $result.InUse
+            }
+            default {
+                foreach ($folder in @(Get-PcCleanupFolders $id)) {
+                    $result = Remove-PcOldFiles $folder
+                    $freed += $result.FreedBytes
+                    $failed += $result.InUse
+                }
+            }
         }
         Write-PcLog "Cleanup $id freed $freed bytes ($failed files in use)"
         [pscustomobject]@{ Id = $id; FreedBytes = $freed; InUse = $failed }

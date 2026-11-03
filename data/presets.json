@@ -1,0 +1,35 @@
+[
+  {
+    "id": "essentials",
+    "name": { "en": "Essentials", "pt-BR": "Essencial", "es": "Esencial", "fr": "Essentiel", "de": "Grundlagen", "ru": "Основное", "tr": "Temel", "zh-CN": "基础" },
+    "tweaks": [
+      "privacy.advertising-id", "privacy.tailored-experiences", "privacy.feedback-notifications", "privacy.feedback-frequency",
+      "privacy.start-settings-suggestions", "privacy.silent-app-installs", "privacy.lockscreen-tips", "privacy.start-web-search",
+      "privacy.settings-home-promos", "privacy.device-metadata", "privacy.diagnostic-data-minimum", "privacy.diagnostic-data-off",
+      "explorer.show-file-extensions", "explorer.sticky-keys-shortcut-off", "performance.long-paths"
+    ]
+  },
+  {
+    "id": "gaming",
+    "name": { "en": "Gaming", "pt-BR": "Jogos", "es": "Juegos", "fr": "Jeux", "de": "Gaming", "ru": "Игры", "tr": "Oyun", "zh-CN": "游戏" },
+    "tweaks": [
+      "performance.game-recording", "performance.game-bar-capture", "performance.mouse-acceleration",
+      "performance.windowed-game-optimizations", "performance.high-performance-plan", "performance.gpu-scheduling",
+      "explorer.sticky-keys-shortcut-off"
+    ]
+  },
+  {
+    "id": "privacy",
+    "name": { "en": "More privacy", "pt-BR": "Mais privacidade", "es": "Más privacidad", "fr": "Plus de confidentialité", "de": "Mehr Datenschutz", "ru": "Больше конфиденциальности", "tr": "Daha fazla gizlilik", "zh-CN": "更多隐私" },
+    "tweaks": [
+      "privacy.advertising-id", "privacy.activity-history", "privacy.tailored-experiences", "privacy.feedback-notifications",
+      "privacy.feedback-frequency", "privacy.diagnostic-data-minimum", "privacy.diagnostic-data-off", "privacy.diagnostic-service",
+      "privacy.telemetry-tasks-appraiser", "privacy.telemetry-tasks-ceip", "privacy.telemetry-tasks-autochk",
+      "privacy.start-settings-suggestions", "privacy.silent-app-installs", "privacy.lockscreen-tips", "privacy.start-web-search",
+      "privacy.typing-inking-collection", "privacy.cloud-clipboard", "privacy.recall-click-to-do", "privacy.copilot-policy",
+      "privacy.copilot-button", "privacy.widgets", "privacy.settings-home-promos", "privacy.start-track-apps",
+      "privacy.phone-link-start", "privacy.language-list-access", "privacy.restart-sign-in", "privacy.device-metadata",
+      "privacy.notepad-ai", "privacy.paint-ai", "privacy.edge-data-collection", "privacy.error-reporting"
+    ]
+  }
+]

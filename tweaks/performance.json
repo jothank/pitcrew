@@ -3,6 +3,7 @@
     "id": "performance.game-recording",
     "risk": "safe",
     "scope": "machine",
+    "evidence": "learn",
     "reversible": true,
     "reference": "https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-applicationmanagement#allowgamedvr",
     "title": {
@@ -33,6 +34,7 @@
     "id": "performance.background-apps",
     "risk": "moderate",
     "scope": "machine",
+    "evidence": "learn",
     "reversible": true,
     "reference": "https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#1817-background-apps",
     "title": {
@@ -57,6 +59,387 @@
     },
     "actions": [
       { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy", "name": "LetAppsRunInBackground", "kind": "DWord", "value": 2 }
+    ]
+  },
+  {
+    "id": "performance.game-bar-capture",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/farag2/Sophia-Script-for-Windows/blob/master/src/Sophia_Script_for_Windows_11/Module/Sophia.psm1",
+    "title": {
+      "en": "Turn off Game Bar background capture",
+      "pt-BR": "Desligar a captura em segundo plano da Game Bar",
+      "es": "Desactivar la captura en segundo plano de Game Bar",
+      "fr": "Désactiver la capture en arrière-plan de Game Bar",
+      "de": "Hintergrundaufnahme der Game Bar ausschalten",
+      "ru": "Отключить фоновую запись Game Bar",
+      "tr": "Game Bar arka plan yakalamasını kapat",
+      "zh-CN": "关闭 Game Bar 后台捕获"
+    },
+    "description": {
+      "en": "Stops Game Bar from capturing gameplay in the background for your account only, without the machine-wide policy. You lose background recording and \"record that\" clips for this user. Microsoft doesn't document these two values; they are widely used and observable.",
+      "pt-BR": "Impede a Game Bar de capturar jogos em segundo plano só na sua conta, sem usar a política do computador inteiro. Você perde a gravação em segundo plano e os clipes de \"gravar o que aconteceu\" neste usuário. A Microsoft não documenta esses dois valores; eles são muito usados e observáveis.",
+      "es": "Evita que Game Bar capture partidas en segundo plano solo en tu cuenta, sin usar la directiva de todo el equipo. Pierdes la grabación en segundo plano y los clips de \"grabar lo que acaba de pasar\" para este usuario. Microsoft no documenta estos dos valores; son de uso muy extendido y observables.",
+      "fr": "Empêche Game Bar de capturer vos parties en arrière-plan pour votre compte uniquement, sans la stratégie valable pour tout le PC. Vous perdez l'enregistrement en arrière-plan et les clips « enregistrer les dernières minutes » pour cet utilisateur. Microsoft ne documente pas ces deux valeurs ; elles sont très répandues et observables.",
+      "de": "Verhindert, dass die Game Bar Spiele im Hintergrund aufnimmt, nur für dein Konto und ohne die Richtlinie für den ganzen PC. Du verlierst für diesen Benutzer die Hintergrundaufzeichnung und die Clips „Das gerade Geschehene aufzeichnen“. Microsoft dokumentiert diese beiden Werte nicht; sie sind weit verbreitet und beobachtbar.",
+      "ru": "Не даёт Game Bar фоново записывать игру только для вашей учётной записи, без политики для всего компьютера. Для этого пользователя пропадут фоновая запись и клипы «записать последние минуты». Microsoft не документирует эти два значения; они широко используются и наблюдаемы.",
+      "tr": "Game Bar'ın oyunları arka planda yakalamasını yalnızca hesabın için durdurur; tüm bilgisayar için geçerli ilkeyi kullanmaz. Bu kullanıcı için arka planda kayıt ve \"son olanı kaydet\" klipleri kaybolur. Microsoft bu iki değeri belgelemez; yaygın olarak kullanılır ve gözlemlenebilir.",
+      "zh-CN": "仅针对你的账户阻止 Game Bar 在后台捕获游戏，无需使用整台电脑的策略。该用户将失去后台录制和“录制最近内容”的片段。Microsoft 未记录这两个值，但它们被广泛使用且可观察到。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR", "name": "AppCaptureEnabled", "kind": "DWord", "value": 0 },
+      { "type": "registry", "path": "HKCU:\\System\\GameConfigStore", "name": "GameDVR_Enabled", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "performance.high-performance-plan",
+    "risk": "moderate",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows-hardware/design/device-experiences/powercfg-command-line-options",
+    "appliesTo": { "formFactor": "desktop" },
+    "title": {
+      "en": "Use the High Performance power plan",
+      "pt-BR": "Usar o plano de energia Alto Desempenho",
+      "es": "Usar el plan de energía Alto rendimiento",
+      "fr": "Utiliser le mode d'alimentation Hautes performances",
+      "de": "Energiesparplan „Höchstleistung“ verwenden",
+      "ru": "Использовать схему питания «Высокая производительность»",
+      "tr": "Yüksek Performans güç planını kullan",
+      "zh-CN": "使用“高性能”电源计划"
+    },
+    "description": {
+      "en": "Keeps the processor from slowing down to save power, which can make the PC respond faster. You lose power savings: the PC uses more power and runs warmer. Only one power plan is active at a time, so this replaces the current one.",
+      "pt-BR": "Impede que o processador diminua a velocidade para economizar energia, o que pode deixar o PC mais ágil. Você perde a economia de energia: o PC consome mais e esquenta mais. Só um plano de energia fica ativo por vez, então este substitui o atual.",
+      "es": "Evita que el procesador reduzca su velocidad para ahorrar energía, lo que puede hacer que el equipo responda más rápido. Pierdes el ahorro de energía: el equipo consume más y se calienta más. Solo hay un plan de energía activo a la vez, así que este reemplaza al actual.",
+      "fr": "Empêche le processeur de ralentir pour économiser l'énergie, ce qui peut rendre le PC plus réactif. Vous perdez l'économie d'énergie : le PC consomme plus et chauffe plus. Un seul mode d'alimentation est actif à la fois ; celui-ci remplace donc l'actuel.",
+      "de": "Verhindert, dass der Prozessor zum Stromsparen langsamer wird, wodurch der PC schneller reagieren kann. Du verlierst die Energieersparnis: Der PC verbraucht mehr Strom und wird wärmer. Es ist immer nur ein Energiesparplan aktiv, dieser ersetzt also den aktuellen.",
+      "ru": "Не даёт процессору снижать скорость ради экономии энергии, поэтому компьютер может отзываться быстрее. Вы потеряете экономию энергии: ПК потребляет больше и сильнее нагревается. Одновременно активна только одна схема питания, поэтому эта заменит текущую.",
+      "tr": "İşlemcinin güç tasarrufu için yavaşlamasını önler; bu da bilgisayarın daha hızlı yanıt vermesini sağlayabilir. Güç tasarrufunu kaybedersin: bilgisayar daha çok güç harcar ve daha fazla ısınır. Aynı anda yalnızca bir güç planı etkindir, bu yüzden bu plan mevcut olanın yerini alır.",
+      "zh-CN": "防止处理器为省电而降速，可能让电脑响应更快。你将失去节能效果：电脑更耗电、温度更高。同一时间只能启用一个电源计划，因此这会替换当前的计划。"
+    },
+    "actions": [
+      { "type": "powerPlan", "guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c", "source": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c" }
+    ]
+  },
+  {
+    "id": "performance.ultimate-performance-plan",
+    "risk": "moderate",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows-hardware/design/device-experiences/powercfg-command-line-options",
+    "appliesTo": { "formFactor": "desktop" },
+    "title": {
+      "en": "Use the Ultimate Performance power plan",
+      "pt-BR": "Usar o plano de energia Desempenho Máximo",
+      "es": "Usar el plan de energía Máximo rendimiento",
+      "fr": "Utiliser le mode d'alimentation Performances optimales",
+      "de": "Energiesparplan „Ultimative Leistung“ verwenden",
+      "ru": "Использовать схему питания «Максимальная производительность»",
+      "tr": "Nihai Performans güç planını kullan",
+      "zh-CN": "使用“卓越性能”电源计划"
+    },
+    "description": {
+      "en": "Removes the small delays Windows adds to save power, so the processor reacts as fast as it can. You lose power savings: the PC uses more power and runs warmer. Only one plan can be active, so applying this one replaces High Performance, and the other way around.",
+      "pt-BR": "Remove os pequenos atrasos que o Windows adiciona para economizar energia, e o processador reage o mais rápido possível. Você perde a economia de energia: o PC consome mais e esquenta mais. Só um plano pode ficar ativo, então aplicar este substitui o Alto Desempenho, e vice-versa.",
+      "es": "Elimina los pequeños retrasos que Windows añade para ahorrar energía, de modo que el procesador reacciona lo más rápido posible. Pierdes el ahorro de energía: el equipo consume más y se calienta más. Solo un plan puede estar activo, así que aplicar este reemplaza a Alto rendimiento, y viceversa.",
+      "fr": "Supprime les petits délais que Windows ajoute pour économiser l'énergie, afin que le processeur réagisse aussi vite que possible. Vous perdez l'économie d'énergie : le PC consomme plus et chauffe plus. Un seul mode peut être actif ; l'appliquer remplace donc Hautes performances, et inversement.",
+      "de": "Entfernt die kleinen Verzögerungen, die Windows zum Stromsparen einbaut, sodass der Prozessor so schnell wie möglich reagiert. Du verlierst die Energieersparnis: Der PC verbraucht mehr Strom und wird wärmer. Nur ein Plan kann aktiv sein: Wendest du diesen an, ersetzt er „Höchstleistung“ und umgekehrt.",
+      "ru": "Убирает небольшие задержки, которые Windows добавляет ради экономии энергии, поэтому процессор реагирует как можно быстрее. Вы потеряете экономию энергии: ПК потребляет больше и сильнее нагревается. Активна может быть только одна схема: применение этой заменяет «Высокую производительность», и наоборот.",
+      "tr": "Windows'un güç tasarrufu için eklediği küçük gecikmeleri kaldırır; işlemci olabildiğince hızlı tepki verir. Güç tasarrufunu kaybedersin: bilgisayar daha çok güç harcar ve daha fazla ısınır. Yalnızca bir plan etkin olabilir; bunu uygulamak Yüksek Performans'ın yerini alır, tersi de geçerlidir.",
+      "zh-CN": "去除 Windows 为省电而加入的细微延迟，让处理器尽可能快地响应。你将失去节能效果：电脑更耗电、温度更高。同一时间只能启用一个计划，因此应用此项会替换“高性能”，反之亦然。"
+    },
+    "actions": [
+      { "type": "powerPlan", "guid": "6b1f3c0e-7a52-4c1d-9e0f-2d4b8a6c5e10", "source": "e9a42b02-d5df-448d-aa00-03f14749eb61" }
+    ]
+  },
+  {
+    "id": "performance.hibernation-off",
+    "risk": "moderate",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows-hardware/design/device-experiences/powercfg-command-line-options",
+    "appliesTo": { "formFactor": "desktop" },
+    "title": {
+      "en": "Turn off hibernation",
+      "pt-BR": "Desligar a hibernação",
+      "es": "Desactivar la hibernación",
+      "fr": "Désactiver l'hibernation",
+      "de": "Ruhezustand ausschalten",
+      "ru": "Отключить гибернацию",
+      "tr": "Hazırda bekletmeyi kapat",
+      "zh-CN": "关闭休眠"
+    },
+    "description": {
+      "en": "Deletes the hiberfil.sys file and frees several GB of disk space. You lose Hibernate, and it also turns off Fast Startup.",
+      "pt-BR": "Apaga o arquivo hiberfil.sys e libera vários GB de espaço em disco. Você perde a opção Hibernar, e isso também desliga a Inicialização Rápida.",
+      "es": "Elimina el archivo hiberfil.sys y libera varios GB de espacio en disco. Pierdes la opción Hibernar, y además se desactiva el Inicio rápido.",
+      "fr": "Supprime le fichier hiberfil.sys et libère plusieurs Go d'espace disque. Vous perdez l'hibernation, et le démarrage rapide est aussi désactivé.",
+      "de": "Löscht die Datei hiberfil.sys und gibt mehrere GB Speicherplatz frei. Du verlierst den Ruhezustand, und der Schnellstart wird ebenfalls ausgeschaltet.",
+      "ru": "Удаляет файл hiberfil.sys и освобождает несколько ГБ на диске. Вы потеряете гибернацию, а также будет отключён быстрый запуск.",
+      "tr": "hiberfil.sys dosyasını siler ve diskte birkaç GB yer açar. Hazırda bekletme kaybolur ve Hızlı Başlangıç da kapanır.",
+      "zh-CN": "删除 hiberfil.sys 文件，释放数 GB 磁盘空间。你将失去休眠功能，同时快速启动也会被关闭。"
+    },
+    "actions": [
+      { "type": "hibernation", "enabled": false }
+    ]
+  },
+  {
+    "id": "performance.fast-startup",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/iot/iot-enterprise/customize/hibernate-once-resume-many-horm",
+    "title": {
+      "en": "Turn off Fast Startup",
+      "pt-BR": "Desligar a Inicialização Rápida",
+      "es": "Desactivar el Inicio rápido",
+      "fr": "Désactiver le démarrage rapide",
+      "de": "Schnellstart ausschalten",
+      "ru": "Отключить быстрый запуск",
+      "tr": "Hızlı Başlangıç'ı kapat",
+      "zh-CN": "关闭快速启动"
+    },
+    "description": {
+      "en": "Makes Shut down a full shutdown, which fixes drivers that get stuck and helps with dual boot. This is about reliability, not speed. You lose the faster cold boot, so starting up can take a few seconds longer.",
+      "pt-BR": "Faz o Desligar ser um desligamento completo, o que corrige drivers travados e ajuda em dual boot. É uma questão de confiabilidade, não de velocidade. Você perde a inicialização mais rápida, então ligar o PC pode demorar alguns segundos a mais.",
+      "es": "Hace que Apagar sea un apagado completo, lo que corrige controladores atascados y ayuda con el arranque dual. Se trata de fiabilidad, no de velocidad. Pierdes el arranque más rápido, así que el inicio puede tardar unos segundos más.",
+      "fr": "Fait de l'arrêt un arrêt complet, ce qui corrige les pilotes bloqués et aide en double démarrage. C'est une question de fiabilité, pas de vitesse. Vous perdez le démarrage plus rapide : le PC peut mettre quelques secondes de plus à démarrer.",
+      "de": "Macht aus dem Herunterfahren ein vollständiges Herunterfahren, was hängende Treiber behebt und bei Dual-Boot hilft. Es geht um Zuverlässigkeit, nicht um Geschwindigkeit. Du verlierst den schnelleren Start, das Hochfahren kann einige Sekunden länger dauern.",
+      "ru": "Делает завершение работы полным, что устраняет зависшие драйверы и помогает при двойной загрузке. Это про надёжность, а не про скорость. Вы потеряете более быстрый запуск: включение ПК может занимать на несколько секунд больше.",
+      "tr": "Kapat komutunu tam bir kapatma yapar; bu, takılan sürücüleri düzeltir ve çift önyüklemede yardımcı olur. Mesele hız değil, güvenilirliktir. Daha hızlı açılışı kaybedersin, bilgisayarın açılması birkaç saniye daha uzun sürebilir.",
+      "zh-CN": "让“关机”变为完全关机，可修复卡住的驱动程序，并有助于双系统启动。这关乎稳定性而非速度。你将失去更快的开机速度，启动可能多花几秒钟。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power", "name": "HiberbootEnabled", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "performance.mouse-acceleration",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-systemparametersinfoa",
+    "refresh": "mouse",
+    "title": {
+      "en": "Turn off mouse acceleration",
+      "pt-BR": "Desligar a aceleração do mouse",
+      "es": "Desactivar la aceleración del ratón",
+      "fr": "Désactiver l'accélération de la souris",
+      "de": "Mausbeschleunigung ausschalten",
+      "ru": "Отключить ускорение мыши",
+      "tr": "Fare ivmesini kapat",
+      "zh-CN": "关闭鼠标加速"
+    },
+    "description": {
+      "en": "Turns off \"Enhance pointer precision\" so the pointer moves the same distance for the same hand movement. This is mostly useful in games and design work. You lose the speed boost on fast flicks, so long moves may feel slower until you raise the pointer speed.",
+      "pt-BR": "Desliga a opção \"Aprimorar a precisão do ponteiro\" para o ponteiro andar a mesma distância para o mesmo movimento da mão. É útil principalmente em jogos e trabalhos de design. Você perde o impulso de velocidade nos movimentos rápidos, então deslocamentos longos podem parecer mais lentos até você aumentar a velocidade do ponteiro.",
+      "es": "Desactiva \"Mejorar la precisión del puntero\" para que el puntero recorra la misma distancia con el mismo movimiento de la mano. Es útil sobre todo en juegos y diseño. Pierdes el impulso de velocidad en los movimientos rápidos, así que los desplazamientos largos pueden sentirse más lentos hasta que subas la velocidad del puntero.",
+      "fr": "Désactive « Améliorer la précision du pointeur » : le pointeur parcourt la même distance pour un même geste de la main. C'est surtout utile en jeu et en création graphique. Vous perdez le surcroît de vitesse lors des mouvements rapides ; les longs déplacements peuvent sembler plus lents tant que vous n'augmentez pas la vitesse du pointeur.",
+      "de": "Schaltet „Zeigerbeschleunigung verbessern“ aus, sodass der Zeiger bei gleicher Handbewegung immer die gleiche Strecke zurücklegt. Das ist vor allem in Spielen und beim Gestalten nützlich. Du verlierst den Tempo-Schub bei schnellen Bewegungen, lange Wege fühlen sich daher langsamer an, bis du die Zeigergeschwindigkeit erhöhst.",
+      "ru": "Выключает «Включить повышенную точность установки указателя», чтобы указатель проходил одинаковое расстояние при одинаковом движении руки. Это полезно в основном в играх и при работе с графикой. Вы потеряете прибавку скорости при быстрых движениях: длинные перемещения могут казаться медленнее, пока вы не увеличите скорость указателя.",
+      "tr": "\"İşaretçi duyarlılığını artır\" seçeneğini kapatır; böylece aynı el hareketi için işaretçi hep aynı mesafeyi gider. Çoğunlukla oyunlarda ve tasarım işlerinde işe yarar. Hızlı hareketlerdeki hız desteğini kaybedersin, bu yüzden uzun hareketler, işaretçi hızını artırana kadar daha yavaş hissedilebilir.",
+      "zh-CN": "关闭“提高指针精确度”，使相同的手部移动让指针移动相同的距离，主要对游戏和设计工作有用。你将失去快速移动时的加速效果，长距离移动可能显得更慢，需要自行调高指针速度。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Control Panel\\Mouse", "name": "MouseSpeed", "kind": "String", "value": "0" },
+      { "type": "registry", "path": "HKCU:\\Control Panel\\Mouse", "name": "MouseThreshold1", "kind": "String", "value": "0" },
+      { "type": "registry", "path": "HKCU:\\Control Panel\\Mouse", "name": "MouseThreshold2", "kind": "String", "value": "0" }
+    ]
+  },
+  {
+    "id": "performance.windowed-game-optimizations",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/shoober420/windows11-scripts/blob/main/EnableSwapEffectUpgrade.bat",
+    "title": {
+      "en": "Turn on optimizations for windowed games",
+      "pt-BR": "Ativar otimizações para jogos em janela",
+      "es": "Activar las optimizaciones para juegos en ventana",
+      "fr": "Activer les optimisations pour les jeux en fenêtre",
+      "de": "Optimierungen für Spiele im Fenstermodus einschalten",
+      "ru": "Включить оптимизацию для игр в оконном режиме",
+      "tr": "Pencere modundaki oyunlar için iyileştirmeleri aç",
+      "zh-CN": "启用窗口化游戏优化"
+    },
+    "description": {
+      "en": "Lets Windows present DirectX 10 and 11 games running in a window or borderless window with the more efficient flip model, which can lower latency. Same as Settings > Display > Graphics > Optimizations for windowed games. A few older games may misbehave; you can switch it off per game. Microsoft doesn't document the registry value.",
+      "pt-BR": "Permite que o Windows exiba jogos DirectX 10 e 11 em janela ou em janela sem bordas com o modelo flip, mais eficiente, o que pode reduzir a latência. É o mesmo que Configurações > Tela > Gráficos > Otimizações para jogos em janela. Alguns jogos antigos podem se comportar mal; dá para desligar por jogo. A Microsoft não documenta esse valor do registro.",
+      "es": "Permite que Windows presente los juegos DirectX 10 y 11 en ventana o en ventana sin bordes con el modelo flip, más eficiente, lo que puede reducir la latencia. Equivale a Configuración > Pantalla > Gráficos > Optimizaciones para juegos en ventana. Algunos juegos antiguos pueden fallar; puedes desactivarlo por juego. Microsoft no documenta este valor del registro.",
+      "fr": "Permet à Windows d'afficher les jeux DirectX 10 et 11 en fenêtre ou en fenêtre sans bordure avec le modèle flip, plus efficace, ce qui peut réduire la latence. Équivaut à Paramètres > Affichage > Graphiques > Optimisations pour les jeux en fenêtre. Quelques anciens jeux peuvent mal se comporter ; vous pouvez le désactiver jeu par jeu. Microsoft ne documente pas cette valeur de registre.",
+      "de": "Lässt Windows DirectX-10- und DirectX-11-Spiele im Fenster oder randlosen Fenster mit dem effizienteren Flip-Modell darstellen, was die Latenz senken kann. Entspricht Einstellungen > Anzeige > Grafik > Optimierungen für Spiele im Fenstermodus. Einige ältere Spiele verhalten sich eventuell fehlerhaft; du kannst es pro Spiel abschalten. Microsoft dokumentiert den Registrywert nicht.",
+      "ru": "Позволяет Windows выводить игры DirectX 10 и 11 в окне или в окне без рамки с более эффективной моделью flip, что может снизить задержку. То же, что Параметры > Дисплей > Графика > Оптимизация для игр в оконном режиме. Некоторые старые игры могут работать неправильно; её можно отключить для отдельной игры. Microsoft не документирует это значение реестра.",
+      "tr": "Windows'un pencere veya kenarlıksız pencere modunda çalışan DirectX 10 ve 11 oyunlarını daha verimli flip modeliyle göstermesini sağlar; bu gecikmeyi azaltabilir. Ayarlar > Ekran > Grafik > Pencere modundaki oyunlar için iyileştirmeler ile aynıdır. Bazı eski oyunlar hatalı çalışabilir; oyun başına kapatabilirsin. Microsoft bu kayıt defteri değerini belgelemez.",
+      "zh-CN": "让 Windows 使用更高效的翻转（flip）模型呈现窗口或无边框窗口中的 DirectX 10 和 11 游戏，可能降低延迟。等同于“设置 > 显示 > 图形 > 窗口化游戏优化”。个别旧游戏可能出现异常，可按游戏单独关闭。Microsoft 未记录该注册表值。"
+    },
+    "actions": [
+      { "type": "dxSetting", "key": "SwapEffectUpgradeEnable", "value": "1" }
+    ]
+  },
+  {
+    "id": "performance.gpu-scheduling",
+    "risk": "moderate",
+    "scope": "machine",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/farag2/Sophia-Script-for-Windows/blob/master/src/Sophia_Script_for_Windows_11/Module/Sophia.psm1",
+    "requires": { "restart": true },
+    "title": {
+      "en": "Turn on hardware-accelerated GPU scheduling",
+      "pt-BR": "Ativar o agendamento de GPU acelerado por hardware",
+      "es": "Activar la programación de GPU acelerada por hardware",
+      "fr": "Activer la planification GPU avec accélération matérielle",
+      "de": "Hardwarebeschleunigte GPU-Planung einschalten",
+      "ru": "Включить планирование GPU с аппаратным ускорением",
+      "tr": "Donanım hızlandırmalı GPU zamanlamasını aç",
+      "zh-CN": "启用硬件加速 GPU 计划"
+    },
+    "description": {
+      "en": "Lets the graphics card manage its own work queue instead of Windows. The effect depends on your GPU and driver, so it is not a guaranteed FPS gain, and some setups get stutter. DLSS Frame Generation requires it. Needs a restart, and Windows only uses it with a supported GPU and driver.",
+      "pt-BR": "Deixa a placa de vídeo gerenciar a própria fila de tarefas em vez do Windows. O efeito depende da GPU e do driver, então não é ganho garantido de FPS, e em alguns PCs causa travadinhas. O DLSS Frame Generation exige essa opção. Precisa reiniciar, e o Windows só usa com GPU e driver compatíveis.",
+      "es": "Permite que la tarjeta gráfica gestione su propia cola de trabajo en lugar de Windows. El efecto depende de tu GPU y de tu controlador, así que no garantiza más FPS, y en algunos equipos causa tirones. DLSS Frame Generation lo requiere. Necesita reiniciar, y Windows solo lo usa con una GPU y un controlador compatibles.",
+      "fr": "Laisse la carte graphique gérer sa propre file de travail au lieu de Windows. L'effet dépend de votre GPU et de son pilote : le gain de FPS n'est pas garanti et certaines configurations subissent des saccades. DLSS Frame Generation l'exige. Un redémarrage est nécessaire, et Windows ne l'utilise qu'avec un GPU et un pilote compatibles.",
+      "de": "Lässt die Grafikkarte ihre Arbeitswarteschlange selbst verwalten statt Windows. Die Wirkung hängt von GPU und Treiber ab, ein FPS-Gewinn ist also nicht garantiert, und manche Systeme ruckeln. DLSS Frame Generation setzt es voraus. Ein Neustart ist nötig, und Windows nutzt es nur mit unterstützter GPU und unterstütztem Treiber.",
+      "ru": "Позволяет видеокарте самой управлять своей очередью задач вместо Windows. Эффект зависит от GPU и драйвера, поэтому прирост FPS не гарантирован, а на некоторых ПК появляются подтормаживания. Для DLSS Frame Generation она обязательна. Нужна перезагрузка, а Windows использует её только с поддерживаемыми GPU и драйвером.",
+      "tr": "Windows yerine ekran kartının kendi iş kuyruğunu yönetmesini sağlar. Etki GPU'na ve sürücüne bağlıdır; bu yüzden FPS artışı garanti değildir ve bazı sistemlerde takılma olur. DLSS Frame Generation bunu gerektirir. Yeniden başlatma gerekir ve Windows bunu yalnızca desteklenen GPU ve sürücüyle kullanır.",
+      "zh-CN": "让显卡自行管理工作队列，而不是由 Windows 管理。效果取决于你的 GPU 和驱动程序，不保证提升帧率，部分配置还会出现卡顿。DLSS 帧生成需要启用它。需要重启，且仅在 GPU 和驱动受支持时 Windows 才会使用。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers", "name": "HwSchMode", "kind": "DWord", "value": 2 }
+    ]
+  },
+  {
+    "id": "performance.long-paths",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation",
+    "title": {
+      "en": "Allow long file paths",
+      "pt-BR": "Permitir caminhos de arquivo longos",
+      "es": "Permitir rutas de archivo largas",
+      "fr": "Autoriser les chemins de fichiers longs",
+      "de": "Lange Dateipfade zulassen",
+      "ru": "Разрешить длинные пути к файлам",
+      "tr": "Uzun dosya yollarına izin ver",
+      "zh-CN": "允许长文件路径"
+    },
+    "description": {
+      "en": "Lets apps that support it use paths longer than 260 characters, which avoids errors with deeply nested folders and git repositories. Nothing is lost, but apps that don't declare support are unaffected, and a restart may be needed for all of them to notice.",
+      "pt-BR": "Permite que apps compatíveis usem caminhos com mais de 260 caracteres, o que evita erros com pastas muito aninhadas e repositórios git. Você não perde nada, mas apps que não declaram suporte não mudam, e talvez seja preciso reiniciar para todos perceberem.",
+      "es": "Permite que las apps compatibles usen rutas de más de 260 caracteres, lo que evita errores con carpetas muy anidadas y repositorios git. No pierdes nada, pero las apps que no declaran compatibilidad no cambian, y puede hacer falta reiniciar para que todas lo detecten.",
+      "fr": "Permet aux applications compatibles d'utiliser des chemins de plus de 260 caractères, ce qui évite des erreurs avec des dossiers très imbriqués et des dépôts git. Vous ne perdez rien, mais les applications qui ne déclarent pas la prise en charge ne changent pas, et un redémarrage peut être nécessaire pour que toutes la prennent en compte.",
+      "de": "Erlaubt kompatiblen Apps Pfade mit mehr als 260 Zeichen, was Fehler bei tief verschachtelten Ordnern und Git-Repositorys vermeidet. Du verlierst nichts, aber Apps ohne deklarierte Unterstützung bleiben unverändert, und ein Neustart kann nötig sein, damit alle es bemerken.",
+      "ru": "Позволяет поддерживающим это приложениям использовать пути длиннее 260 символов, что избавляет от ошибок с глубоко вложенными папками и репозиториями git. Ничего не теряется, но приложения без объявленной поддержки не меняются, а чтобы все заметили изменение, может понадобиться перезагрузка.",
+      "tr": "Bunu destekleyen uygulamaların 260 karakterden uzun yollar kullanmasına izin verir; bu, çok iç içe klasörlerde ve git depolarında hataları önler. Hiçbir şey kaybetmezsin, ancak desteği bildirmeyen uygulamalar etkilenmez ve hepsinin fark etmesi için yeniden başlatma gerekebilir.",
+      "zh-CN": "允许支持此功能的应用使用超过 260 个字符的路径，可避免深层文件夹和 git 仓库出错。不会损失任何功能，但未声明支持的应用不受影响，可能需要重启才能让所有应用生效。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem", "name": "LongPathsEnabled", "kind": "DWord", "value": 1 }
+    ]
+  },
+  {
+    "id": "performance.transparency-effects",
+    "risk": "safe",
+    "scope": "user",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/Raphire/Win11Debloat/blob/master/Regfiles/Disable_Transparency.reg",
+    "title": {
+      "en": "Turn off transparency effects",
+      "pt-BR": "Desligar os efeitos de transparência",
+      "es": "Desactivar los efectos de transparencia",
+      "fr": "Désactiver les effets de transparence",
+      "de": "Transparenzeffekte ausschalten",
+      "ru": "Отключить эффекты прозрачности",
+      "tr": "Saydamlık efektlerini kapat",
+      "zh-CN": "关闭透明效果"
+    },
+    "description": {
+      "en": "Makes the taskbar, Start menu and windows solid instead of see-through, which takes a little load off the graphics card on weak PCs. You lose the frosted-glass look. Microsoft doesn't document this registry value.",
+      "pt-BR": "Deixa a barra de tarefas, o menu Iniciar e as janelas sólidos em vez de translúcidos, o que alivia um pouco a placa de vídeo em PCs fracos. Você perde o visual de vidro fosco. A Microsoft não documenta esse valor do registro.",
+      "es": "Hace que la barra de tareas, el menú Inicio y las ventanas sean sólidos en lugar de translúcidos, lo que alivia un poco la tarjeta gráfica en equipos modestos. Pierdes el aspecto de cristal esmerilado. Microsoft no documenta este valor del registro.",
+      "fr": "Rend la barre des tâches, le menu Démarrer et les fenêtres opaques au lieu de translucides, ce qui soulage un peu la carte graphique sur les PC modestes. Vous perdez l'aspect verre dépoli. Microsoft ne documente pas cette valeur de registre.",
+      "de": "Macht Taskleiste, Startmenü und Fenster undurchsichtig statt durchscheinend, was die Grafikkarte auf schwachen PCs etwas entlastet. Du verlierst die Milchglasoptik. Microsoft dokumentiert diesen Registrywert nicht.",
+      "ru": "Делает панель задач, меню «Пуск» и окна сплошными вместо полупрозрачных, что немного разгружает видеокарту на слабых ПК. Вы потеряете эффект матового стекла. Microsoft не документирует это значение реестра.",
+      "tr": "Görev çubuğunu, Başlat menüsünü ve pencereleri saydam yerine düz yapar; bu, zayıf bilgisayarlarda ekran kartını biraz rahatlatır. Buzlu cam görünümünü kaybedersin. Microsoft bu kayıt defteri değerini belgelemez.",
+      "zh-CN": "让任务栏、开始菜单和窗口变为不透明而非半透明，可在配置较低的电脑上略微减轻显卡负担。你将失去磨砂玻璃的外观。Microsoft 未记录该注册表值。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "name": "EnableTransparency", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "performance.no-update-sharing",
+    "risk": "safe",
+    "scope": "machine",
+    "evidence": "learn",
+    "reversible": true,
+    "reference": "https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-deliveryoptimization",
+    "title": {
+      "en": "Don't share updates with other PCs",
+      "pt-BR": "Não compartilhar atualizações com outros PCs",
+      "es": "No compartir actualizaciones con otros equipos",
+      "fr": "Ne pas partager les mises à jour avec d'autres PC",
+      "de": "Updates nicht mit anderen PCs teilen",
+      "ru": "Не раздавать обновления другим компьютерам",
+      "tr": "Güncellemeleri diğer bilgisayarlarla paylaşma",
+      "zh-CN": "不与其他电脑共享更新"
+    },
+    "description": {
+      "en": "Windows downloads updates only from Microsoft over HTTP and no longer sends them to or gets them from other PCs, which saves upload bandwidth. You lose the faster downloads you may get from nearby PCs. This is set as a policy, so Windows Update settings may show \"Some settings are managed by your organization\".",
+      "pt-BR": "O Windows baixa as atualizações só da Microsoft por HTTP e deixa de enviá-las a outros PCs ou recebê-las deles, o que economiza banda de upload. Você perde os downloads mais rápidos que poderia obter de PCs próximos. Isso é definido como política, então as configurações do Windows Update podem mostrar \"Algumas configurações são gerenciadas pela sua organização\".",
+      "es": "Windows descarga las actualizaciones solo de Microsoft por HTTP y deja de enviarlas a otros equipos o recibirlas de ellos, lo que ahorra ancho de banda de subida. Pierdes las descargas más rápidas que podrías obtener de equipos cercanos. Se aplica como directiva, así que la configuración de Windows Update puede mostrar \"Su organización administra algunas configuraciones\".",
+      "fr": "Windows télécharge les mises à jour uniquement depuis Microsoft en HTTP et ne les envoie plus à d'autres PC ni ne les reçoit d'eux, ce qui économise de la bande passante en envoi. Vous perdez les téléchargements plus rapides que des PC proches pourraient offrir. Il s'agit d'une stratégie : les paramètres de Windows Update peuvent afficher « Certains paramètres sont gérés par votre organisation ».",
+      "de": "Windows lädt Updates nur per HTTP von Microsoft herunter und sendet sie nicht mehr an andere PCs und bezieht sie nicht mehr von ihnen, was Upload-Bandbreite spart. Du verlierst die schnelleren Downloads, die PCs in der Nähe liefern könnten. Das wird als Richtlinie gesetzt, daher können die Windows-Update-Einstellungen „Einige Einstellungen werden von Ihrer Organisation verwaltet“ anzeigen.",
+      "ru": "Windows загружает обновления только с серверов Microsoft по HTTP и больше не отправляет их другим компьютерам и не получает от них, что экономит исходящий трафик. Вы потеряете более быструю загрузку, которую могли бы дать соседние ПК. Параметр задаётся политикой, поэтому в настройках Центра обновления Windows может появиться сообщение «Некоторыми параметрами управляет ваша организация».",
+      "tr": "Windows güncellemeleri yalnızca Microsoft'tan HTTP ile indirir; diğer bilgisayarlara göndermez ve onlardan almaz, bu da yükleme bant genişliğinden tasarruf sağlar. Yakındaki bilgisayarlardan alabileceğin daha hızlı indirmeleri kaybedersin. Bu bir ilke olarak ayarlanır, bu yüzden Windows Update ayarlarında \"Bazı ayarlar kuruluşunuz tarafından yönetiliyor\" yazabilir.",
+      "zh-CN": "Windows 仅通过 HTTP 从 Microsoft 下载更新，不再向其他电脑发送或从其获取更新，可节省上传带宽。你将失去附近电脑可能带来的更快下载速度。此项以策略方式设置，因此 Windows 更新设置中可能显示“你的组织管理着某些设置”。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DeliveryOptimization", "name": "DODownloadMode", "kind": "DWord", "value": 0 }
+    ]
+  },
+  {
+    "id": "performance.multiplane-overlay",
+    "risk": "advanced",
+    "scope": "machine",
+    "evidence": "community",
+    "reversible": true,
+    "reference": "https://github.com/ChrisTitusTech/winutil/blob/main/config/tweaks.json",
+    "requires": { "restart": true },
+    "title": {
+      "en": "Turn off Multiplane Overlay (troubleshooting)",
+      "pt-BR": "Desligar o Multiplane Overlay (solução de problemas)",
+      "es": "Desactivar Multiplane Overlay (solución de problemas)",
+      "fr": "Désactiver Multiplane Overlay (dépannage)",
+      "de": "Multiplane Overlay ausschalten (Fehlersuche)",
+      "ru": "Отключить Multiplane Overlay (устранение неполадок)",
+      "tr": "Multiplane Overlay'i kapat (sorun giderme)",
+      "zh-CN": "关闭多平面叠加（故障排除）"
+    },
+    "description": {
+      "en": "Only for flicker or black screens that appear with some GPU drivers; otherwise leave it alone. It turns off the hardware overlay planes Windows uses to compose the screen, which can slightly raise GPU load and power use. Needs a restart. Microsoft doesn't document this value, and it is not a guaranteed fix.",
+      "pt-BR": "Só para tremulação ou telas pretas que aparecem com alguns drivers de vídeo; caso contrário, deixe como está. Desliga os planos de sobreposição por hardware que o Windows usa para compor a tela, o que pode aumentar um pouco o uso da GPU e o consumo de energia. Precisa reiniciar. A Microsoft não documenta esse valor, e a correção não é garantida.",
+      "es": "Solo para parpadeos o pantallas negras que aparecen con algunos controladores de GPU; si no, déjalo como está. Desactiva los planos de superposición por hardware que Windows usa para componer la pantalla, lo que puede aumentar ligeramente la carga de la GPU y el consumo. Necesita reiniciar. Microsoft no documenta este valor y la solución no está garantizada.",
+      "fr": "Uniquement pour le scintillement ou les écrans noirs qui apparaissent avec certains pilotes graphiques ; sinon, n'y touchez pas. Désactive les plans de superposition matériels que Windows utilise pour composer l'écran, ce qui peut augmenter légèrement la charge du GPU et la consommation. Un redémarrage est nécessaire. Microsoft ne documente pas cette valeur et la correction n'est pas garantie.",
+      "de": "Nur bei Flackern oder schwarzen Bildschirmen mit bestimmten GPU-Treibern; sonst lass es unangetastet. Schaltet die Hardware-Overlay-Ebenen ab, mit denen Windows das Bild zusammensetzt, was GPU-Last und Stromverbrauch leicht erhöhen kann. Ein Neustart ist nötig. Microsoft dokumentiert diesen Wert nicht, und eine Lösung ist nicht garantiert.",
+      "ru": "Только при мерцании или чёрных экранах с некоторыми драйверами видеокарты; в остальных случаях не трогайте. Отключает аппаратные плоскости наложения, которые Windows использует для составления изображения, что может немного повысить нагрузку на GPU и энергопотребление. Нужна перезагрузка. Microsoft не документирует это значение, и исправление не гарантировано.",
+      "tr": "Yalnızca bazı GPU sürücülerinde görülen titreme veya siyah ekranlar için; aksi halde dokunma. Windows'un ekranı oluşturmak için kullandığı donanım bindirme katmanlarını kapatır; bu, GPU yükünü ve güç kullanımını biraz artırabilir. Yeniden başlatma gerekir. Microsoft bu değeri belgelemez ve çözüm garanti değildir.",
+      "zh-CN": "仅适用于某些显卡驱动下出现的闪烁或黑屏；否则请不要改动。它会关闭 Windows 用于合成画面的硬件叠加平面，可能略微增加 GPU 负载和耗电。需要重启。Microsoft 未记录该值，也不保证一定能解决问题。"
+    },
+    "actions": [
+      { "type": "registry", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\Dwm", "name": "OverlayTestMode", "kind": "DWord", "value": 5 }
     ]
   }
 ]
