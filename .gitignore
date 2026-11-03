@@ -11,6 +11,9 @@ driver-backups/
 /screenshots-local/
 *.tmp
 
+# Local state of the oh-my-claudecode agent tooling
+.omc/
+
 # Editors
 .vscode/
 .idea/
