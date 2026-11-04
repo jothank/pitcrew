@@ -38,7 +38,8 @@ function Get-PcText {
     param([Parameter(Mandatory)][string]$Key, [object[]]$FormatArgs)
     $text = $Pc.Texts[$Key]
     if (-not $text) { return $Key }
-    if ($FormatArgs) { return $text -f $FormatArgs }
+    # ContainsKey, not a truth test: a single 0 is a real argument
+    if ($PSBoundParameters.ContainsKey('FormatArgs')) { return $text -f $FormatArgs }
     return $text
 }
 

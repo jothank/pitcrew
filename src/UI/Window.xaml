@@ -1,145 +1,174 @@
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="PitCrew" Width="1120" Height="740" MinWidth="900" MinHeight="560"
-        WindowStartupLocation="CenterScreen" Background="#F6F7F9"
+        Title="PitCrew" Width="1120" Height="760" MinWidth="900" MinHeight="580"
+        WindowStartupLocation="CenterScreen" Background="{DynamicResource Bg}"
         FontFamily="Segoe UI" FontSize="13" UseLayoutRounding="True">
   <Window.Resources>
-    <SolidColorBrush x:Key="Accent" Color="#E10600"/>
-    <SolidColorBrush x:Key="Ink" Color="#1B1F24"/>
-    <SolidColorBrush x:Key="Muted" Color="#5F6773"/>
-    <SolidColorBrush x:Key="Line" Color="#E3E6EA"/>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <!--THEME-->
+      </ResourceDictionary.MergedDictionaries>
 
-    <Style x:Key="PrimaryButton" TargetType="Button">
-      <Setter Property="Foreground" Value="White"/>
-      <Setter Property="Background" Value="{StaticResource Accent}"/>
-      <Setter Property="Padding" Value="16,8"/>
-      <Setter Property="Margin" Value="8,0,0,0"/>
-      <Setter Property="Cursor" Value="Hand"/>
-      <Setter Property="Template">
-        <Setter.Value>
-          <ControlTemplate TargetType="Button">
-            <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
-              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Border>
-            <ControlTemplate.Triggers>
-              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bg" Property="Opacity" Value="0.88"/></Trigger>
-              <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Bg" Property="Opacity" Value="0.4"/></Trigger>
-            </ControlTemplate.Triggers>
-          </ControlTemplate>
-        </Setter.Value>
-      </Setter>
-    </Style>
-    <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
-      <Setter Property="Foreground" Value="{StaticResource Ink}"/>
-      <Setter Property="Background" Value="#E9ECF0"/>
-    </Style>
+      <!-- The navigation list keeps its dark background while a job runs (the default template
+           turns a disabled list white) -->
+      <Style x:Key="NavList" TargetType="ListBox">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="ListBox">
+              <ScrollViewer x:Name="Scroll" Focusable="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <ItemsPresenter/>
+              </ScrollViewer>
+              <ControlTemplate.Triggers>
+                <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Scroll" Property="Opacity" Value="0.55"/></Trigger>
+              </ControlTemplate.Triggers>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
 
-    <Style x:Key="NavItem" TargetType="ListBoxItem">
-      <Setter Property="Foreground" Value="#C9CED6"/>
-      <Setter Property="Cursor" Value="Hand"/>
-      <Setter Property="Template">
-        <Setter.Value>
-          <ControlTemplate TargetType="ListBoxItem">
-            <Border x:Name="Bg" Background="Transparent" Padding="18,10" Margin="8,2" CornerRadius="6">
-              <Grid>
-                <Border x:Name="Bar" Width="3" HorizontalAlignment="Left" Margin="-12,0,0,0" Background="{StaticResource Accent}" Visibility="Collapsed" CornerRadius="2"/>
-                <ContentPresenter/>
-              </Grid>
-            </Border>
-            <ControlTemplate.Triggers>
-              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bg" Property="Background" Value="#1F2228"/></Trigger>
-              <Trigger Property="IsSelected" Value="True">
-                <Setter TargetName="Bg" Property="Background" Value="#262A31"/>
-                <Setter TargetName="Bar" Property="Visibility" Value="Visible"/>
-                <Setter Property="Foreground" Value="White"/>
-              </Trigger>
-            </ControlTemplate.Triggers>
-          </ControlTemplate>
-        </Setter.Value>
-      </Setter>
-    </Style>
-
-    <Style x:Key="Pill" TargetType="Border">
-      <Setter Property="CornerRadius" Value="10"/>
-      <Setter Property="Padding" Value="8,2"/>
-      <Setter Property="Margin" Value="6,0,0,0"/>
-      <Setter Property="VerticalAlignment" Value="Center"/>
-    </Style>
-
-    <DataTemplate x:Key="ItemCard">
-      <Border Background="White" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="8" Padding="16,12" Margin="0,0,0,8">
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-          </Grid.ColumnDefinitions>
-          <CheckBox x:Name="Pick" Grid.Column="0" VerticalAlignment="Top" Margin="0,3,12,0"
-                    IsChecked="{Binding IsSelected, Mode=TwoWay}" IsEnabled="{Binding IsEnabled}"/>
-          <StackPanel Grid.Column="1">
-            <DockPanel LastChildFill="False">
-              <TextBlock DockPanel.Dock="Left" Text="{Binding Title}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource Ink}" TextWrapping="Wrap"/>
-              <Border x:Name="BadgePill" DockPanel.Dock="Left" Style="{StaticResource Pill}" Background="#EEF0F3">
-                <TextBlock x:Name="BadgeText" Text="{Binding Badge}" FontSize="11" Foreground="#4A5160"/>
+      <Style x:Key="NavItem" TargetType="ListBoxItem">
+        <Setter Property="Foreground" Value="{DynamicResource SidebarText}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="ListBoxItem">
+              <Border x:Name="Bg" Background="Transparent" Padding="18,8" Margin="8,1" CornerRadius="6">
+                <Grid>
+                  <Border x:Name="Bar" Width="3" HorizontalAlignment="Left" Margin="-12,0,0,0" Background="{DynamicResource Accent}" Visibility="Collapsed" CornerRadius="2"/>
+                  <ContentPresenter/>
+                </Grid>
               </Border>
-              <Border x:Name="TagPill" DockPanel.Dock="Left" Style="{StaticResource Pill}" Background="#EEF0F3">
-                <TextBlock x:Name="TagText" Text="{Binding Tag}" FontSize="11" Foreground="#4A5160"/>
-              </Border>
-            </DockPanel>
-            <TextBlock Text="{Binding Detail}" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,0"/>
-            <DockPanel x:Name="MetaRow" LastChildFill="False" Margin="0,4,0,0">
-              <TextBlock DockPanel.Dock="Left" Text="{Binding Meta}" FontSize="11.5" Foreground="#8A919C"/>
-              <TextBlock x:Name="LinkBlock" DockPanel.Dock="Left" FontSize="11.5" Margin="10,0,0,0">
-                <Hyperlink NavigateUri="{Binding Link}" Foreground="#0B62D6"><Run Text="{Binding LinkText}"/></Hyperlink>
-              </TextBlock>
-            </DockPanel>
-          </StackPanel>
-        </Grid>
-      </Border>
-      <DataTemplate.Triggers>
-        <DataTrigger Binding="{Binding BadgeKind}" Value="good">
-          <Setter TargetName="BadgePill" Property="Background" Value="#E7F6EC"/>
-          <Setter TargetName="BadgeText" Property="Foreground" Value="#1E7B3A"/>
-        </DataTrigger>
-        <DataTrigger Binding="{Binding BadgeKind}" Value="warn">
-          <Setter TargetName="BadgePill" Property="Background" Value="#FFF4E0"/>
-          <Setter TargetName="BadgeText" Property="Foreground" Value="#9A5B00"/>
-        </DataTrigger>
-        <DataTrigger Binding="{Binding BadgeKind}" Value="bad">
-          <Setter TargetName="BadgePill" Property="Background" Value="#FDECEC"/>
-          <Setter TargetName="BadgeText" Property="Foreground" Value="#B42318"/>
-        </DataTrigger>
-        <DataTrigger Binding="{Binding TagKind}" Value="warn">
-          <Setter TargetName="TagPill" Property="Background" Value="#FFF4E0"/>
-          <Setter TargetName="TagText" Property="Foreground" Value="#9A5B00"/>
-        </DataTrigger>
-        <DataTrigger Binding="{Binding TagKind}" Value="bad">
-          <Setter TargetName="TagPill" Property="Background" Value="#FDECEC"/>
-          <Setter TargetName="TagText" Property="Foreground" Value="#B42318"/>
-        </DataTrigger>
-        <DataTrigger Binding="{Binding Badge}" Value="">
-          <Setter TargetName="BadgePill" Property="Visibility" Value="Collapsed"/>
-        </DataTrigger>
-        <DataTrigger Binding="{Binding Tag}" Value="">
-          <Setter TargetName="TagPill" Property="Visibility" Value="Collapsed"/>
-        </DataTrigger>
-        <DataTrigger Binding="{Binding Link}" Value="{x:Null}">
-          <Setter TargetName="LinkBlock" Property="Visibility" Value="Collapsed"/>
-        </DataTrigger>
-        <DataTrigger Binding="{Binding Meta}" Value="">
-          <Setter TargetName="LinkBlock" Property="Margin" Value="0"/>
-        </DataTrigger>
-        <DataTrigger Binding="{Binding Selectable}" Value="False">
-          <Setter TargetName="Pick" Property="Visibility" Value="Collapsed"/>
-        </DataTrigger>
-        <MultiDataTrigger>
-          <MultiDataTrigger.Conditions>
-            <Condition Binding="{Binding Meta}" Value=""/>
-            <Condition Binding="{Binding Link}" Value="{x:Null}"/>
-          </MultiDataTrigger.Conditions>
-          <Setter TargetName="MetaRow" Property="Visibility" Value="Collapsed"/>
-        </MultiDataTrigger>
-      </DataTemplate.Triggers>
-    </DataTemplate>
+              <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bg" Property="Background" Value="{DynamicResource NavHover}"/></Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                  <Setter TargetName="Bg" Property="Background" Value="{DynamicResource NavSelected}"/>
+                  <Setter TargetName="Bar" Property="Visibility" Value="Visible"/>
+                  <Setter Property="Foreground" Value="{DynamicResource AccentText}"/>
+                </Trigger>
+              </ControlTemplate.Triggers>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+
+      <Style x:Key="SidebarBox" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+        <Setter Property="Background" Value="{DynamicResource SidebarInput}"/>
+        <Setter Property="Foreground" Value="{DynamicResource SidebarText}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NavSelected}"/>
+        <Setter Property="Margin" Value="0,6,0,0"/>
+      </Style>
+
+      <Style x:Key="AboutCard" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource Surface}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Line}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="18,16"/>
+        <Setter Property="Margin" Value="0,0,0,12"/>
+      </Style>
+      <Style x:Key="AboutHeading" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource Ink}"/>
+        <Setter Property="Margin" Value="0,0,0,6"/>
+      </Style>
+      <Style x:Key="AboutBody" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource Body}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="LineHeight" Value="20"/>
+      </Style>
+      <Style x:Key="AboutNote" TargetType="TextBlock" BasedOn="{StaticResource AboutBody}">
+        <Setter Property="Foreground" Value="{DynamicResource Muted}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="LineHeight" Value="18"/>
+        <Setter Property="Margin" Value="0,10,0,0"/>
+      </Style>
+
+      <Style x:Key="Pill" TargetType="Border">
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="8,2"/>
+        <Setter Property="Margin" Value="6,0,0,0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+      </Style>
+
+      <DataTemplate x:Key="ItemCard">
+        <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="8" Padding="16,12" Margin="0,0,0,8">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <CheckBox x:Name="Pick" Grid.Column="0" VerticalAlignment="Top" Margin="0,2,12,0"
+                      IsChecked="{Binding IsSelected, Mode=TwoWay}" IsEnabled="{Binding IsEnabled}"/>
+            <StackPanel Grid.Column="1">
+              <DockPanel LastChildFill="False">
+                <TextBlock DockPanel.Dock="Left" Text="{Binding Title}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource Ink}" TextWrapping="Wrap"/>
+                <Border x:Name="BadgePill" DockPanel.Dock="Left" Style="{StaticResource Pill}" Background="{DynamicResource PillBg}">
+                  <TextBlock x:Name="BadgeText" Text="{Binding Badge}" FontSize="11" Foreground="{DynamicResource PillText}"/>
+                </Border>
+                <Border x:Name="TagPill" DockPanel.Dock="Left" Style="{StaticResource Pill}" Background="{DynamicResource PillBg}">
+                  <TextBlock x:Name="TagText" Text="{Binding Tag}" FontSize="11" Foreground="{DynamicResource PillText}"/>
+                </Border>
+              </DockPanel>
+              <TextBlock Text="{Binding Detail}" Foreground="{DynamicResource Muted}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+              <DockPanel x:Name="MetaRow" LastChildFill="False" Margin="0,4,0,0">
+                <TextBlock DockPanel.Dock="Left" Text="{Binding Meta}" FontSize="11.5" Foreground="{DynamicResource Faint}"/>
+                <TextBlock x:Name="LinkBlock" DockPanel.Dock="Left" FontSize="11.5" Margin="10,0,0,0">
+                  <Hyperlink NavigateUri="{Binding Link}" Foreground="{DynamicResource Link}"><Run Text="{Binding LinkText}"/></Hyperlink>
+                </TextBlock>
+              </DockPanel>
+            </StackPanel>
+          </Grid>
+        </Border>
+        <DataTemplate.Triggers>
+          <DataTrigger Binding="{Binding BadgeKind}" Value="good">
+            <Setter TargetName="BadgePill" Property="Background" Value="{DynamicResource GoodBg}"/>
+            <Setter TargetName="BadgeText" Property="Foreground" Value="{DynamicResource GoodText}"/>
+          </DataTrigger>
+          <DataTrigger Binding="{Binding BadgeKind}" Value="warn">
+            <Setter TargetName="BadgePill" Property="Background" Value="{DynamicResource WarnBg}"/>
+            <Setter TargetName="BadgeText" Property="Foreground" Value="{DynamicResource WarnText}"/>
+          </DataTrigger>
+          <DataTrigger Binding="{Binding BadgeKind}" Value="bad">
+            <Setter TargetName="BadgePill" Property="Background" Value="{DynamicResource BadBg}"/>
+            <Setter TargetName="BadgeText" Property="Foreground" Value="{DynamicResource BadText}"/>
+          </DataTrigger>
+          <DataTrigger Binding="{Binding TagKind}" Value="warn">
+            <Setter TargetName="TagPill" Property="Background" Value="{DynamicResource WarnBg}"/>
+            <Setter TargetName="TagText" Property="Foreground" Value="{DynamicResource WarnText}"/>
+          </DataTrigger>
+          <DataTrigger Binding="{Binding TagKind}" Value="bad">
+            <Setter TargetName="TagPill" Property="Background" Value="{DynamicResource BadBg}"/>
+            <Setter TargetName="TagText" Property="Foreground" Value="{DynamicResource BadText}"/>
+          </DataTrigger>
+          <DataTrigger Binding="{Binding Badge}" Value="">
+            <Setter TargetName="BadgePill" Property="Visibility" Value="Collapsed"/>
+          </DataTrigger>
+          <DataTrigger Binding="{Binding Tag}" Value="">
+            <Setter TargetName="TagPill" Property="Visibility" Value="Collapsed"/>
+          </DataTrigger>
+          <DataTrigger Binding="{Binding Link}" Value="{x:Null}">
+            <Setter TargetName="LinkBlock" Property="Visibility" Value="Collapsed"/>
+          </DataTrigger>
+          <DataTrigger Binding="{Binding Meta}" Value="">
+            <Setter TargetName="LinkBlock" Property="Margin" Value="0"/>
+          </DataTrigger>
+          <DataTrigger Binding="{Binding Selectable}" Value="False">
+            <Setter TargetName="Pick" Property="Visibility" Value="Collapsed"/>
+          </DataTrigger>
+          <MultiDataTrigger>
+            <MultiDataTrigger.Conditions>
+              <Condition Binding="{Binding Meta}" Value=""/>
+              <Condition Binding="{Binding Link}" Value="{x:Null}"/>
+            </MultiDataTrigger.Conditions>
+            <Setter TargetName="MetaRow" Property="Visibility" Value="Collapsed"/>
+          </MultiDataTrigger>
+        </DataTemplate.Triggers>
+      </DataTemplate>
+
+    </ResourceDictionary>
   </Window.Resources>
 
   <Grid>
@@ -149,26 +178,27 @@
     </Grid.ColumnDefinitions>
 
     <!-- Navigation -->
-    <Border Grid.Column="0" Background="#15171C">
+    <Border Grid.Column="0" Background="{DynamicResource Sidebar}">
       <DockPanel>
-        <StackPanel DockPanel.Dock="Top" Margin="22,24,22,18">
+        <StackPanel DockPanel.Dock="Top" Margin="22,22,22,14">
           <StackPanel Orientation="Horizontal">
-            <Border Width="10" Height="22" Background="{StaticResource Accent}" CornerRadius="2" Margin="0,0,10,0"/>
-            <TextBlock Text="PitCrew" FontSize="22" FontWeight="Bold" Foreground="White"/>
+            <Image x:Name="LogoImage" Width="28" Height="28" Margin="0,0,10,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+            <TextBlock Text="PitCrew" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource AccentText}" VerticalAlignment="Center"/>
           </StackPanel>
-          <TextBlock x:Name="Tagline" Foreground="#8A919C" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"/>
+          <TextBlock x:Name="Tagline" Foreground="{DynamicResource SidebarFaint}" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"/>
         </StackPanel>
-        <StackPanel DockPanel.Dock="Bottom" Margin="22,12,22,20">
-          <TextBlock x:Name="ModeText" Foreground="#8A919C" FontSize="11.5" TextWrapping="Wrap" Margin="0,0,0,10"/>
-          <ComboBox x:Name="LanguageBox"/>
+        <StackPanel DockPanel.Dock="Bottom" Margin="22,10,22,18">
+          <TextBlock x:Name="ModeText" Foreground="{DynamicResource SidebarFaint}" FontSize="11.5" TextWrapping="Wrap"/>
+          <ComboBox x:Name="LanguageBox" Style="{StaticResource SidebarBox}"/>
+          <ComboBox x:Name="ThemeBox" Style="{StaticResource SidebarBox}"/>
         </StackPanel>
-        <ListBox x:Name="Nav" Background="Transparent" BorderThickness="0" ItemContainerStyle="{StaticResource NavItem}"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="14">
+        <ListBox x:Name="Nav" Style="{StaticResource NavList}" ItemContainerStyle="{StaticResource NavItem}" FontSize="14">
           <ListBoxItem x:Name="NavPerformance" Tag="performance"/>
           <ListBoxItem x:Name="NavPrivacy" Tag="privacy"/>
           <ListBoxItem x:Name="NavExplorer" Tag="explorer"/>
           <ListBoxItem x:Name="NavStartup" Tag="startup"/>
           <ListBoxItem x:Name="NavCleanup" Tag="cleanup"/>
+          <ListBoxItem x:Name="NavMemory" Tag="memory"/>
           <ListBoxItem x:Name="NavMaintenance" Tag="maintenance"/>
           <ListBoxItem x:Name="NavApps" Tag="apps"/>
           <ListBoxItem x:Name="NavDrivers" Tag="drivers"/>
@@ -188,14 +218,17 @@
         <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
 
-      <StackPanel Grid.Row="0" Margin="32,26,32,10">
-        <TextBlock x:Name="PageTitle" FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource Ink}"/>
-        <TextBlock x:Name="PageIntro" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0"/>
-      </StackPanel>
+      <DockPanel Grid.Row="0" Margin="32,24,32,10">
+        <Button x:Name="RefreshButton" DockPanel.Dock="Right" Style="{StaticResource LinkButton}" VerticalAlignment="Top" Visibility="Collapsed"/>
+        <StackPanel>
+          <TextBlock x:Name="PageTitle" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource Ink}"/>
+          <TextBlock x:Name="PageIntro" Foreground="{DynamicResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+        </StackPanel>
+      </DockPanel>
 
       <Border x:Name="Banner" Grid.Row="1" Margin="32,0,32,10" Padding="12,8" CornerRadius="6"
-              Background="#FFF4E0" BorderBrush="#F2D29B" BorderThickness="1" Visibility="Collapsed">
-        <TextBlock x:Name="BannerText" Foreground="#7A4800" TextWrapping="Wrap"/>
+              Background="{DynamicResource WarnBg}" BorderBrush="{DynamicResource WarnLine}" BorderThickness="1" Visibility="Collapsed">
+        <TextBlock x:Name="BannerText" Foreground="{DynamicResource WarnText}" TextWrapping="Wrap"/>
       </Border>
 
       <Grid Grid.Row="2">
@@ -203,34 +236,136 @@
           <RowDefinition Height="Auto"/>
           <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <!-- Search, filter, presets and profile: shown on long list pages only -->
-        <DockPanel x:Name="FilterBar" Grid.Row="0" Margin="32,0,32,10" LastChildFill="False" Visibility="Collapsed">
-          <Grid DockPanel.Dock="Left" Width="250">
-            <TextBox x:Name="SearchBox" Padding="8,5" VerticalContentAlignment="Center" BorderBrush="{StaticResource Line}"/>
-            <TextBlock x:Name="SearchHint" Margin="11,0,0,0" VerticalAlignment="Center" Foreground="#8A919C" IsHitTestVisible="False"/>
+        <!-- Search, status filter, quick selection, presets and profile: on long list pages only -->
+        <WrapPanel x:Name="FilterBar" Grid.Row="0" Margin="32,0,32,4" Visibility="Collapsed">
+          <Grid Width="220" Margin="0,0,10,8">
+            <TextBox x:Name="SearchBox" Padding="8,5" VerticalContentAlignment="Center"/>
+            <TextBlock x:Name="SearchHint" Margin="11,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource Faint}" IsHitTestVisible="False"/>
           </Grid>
-          <CheckBox x:Name="HideUnavailable" DockPanel.Dock="Left" Margin="14,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Muted}"/>
-          <Button x:Name="ExportProfile" DockPanel.Dock="Right" Style="{StaticResource SecondaryButton}" Padding="12,6"/>
-          <ComboBox x:Name="PresetBox" DockPanel.Dock="Right" Width="200" Margin="14,0,0,0" VerticalContentAlignment="Center" Padding="8,5"/>
-        </DockPanel>
+          <ComboBox x:Name="StatusFilter" Width="190" Margin="0,0,10,8"/>
+          <Button x:Name="SelectVisible" Style="{StaticResource LinkButton}" Margin="0,0,2,8"/>
+          <Button x:Name="ClearSelection" Style="{StaticResource LinkButton}" Margin="0,0,10,8"/>
+          <ComboBox x:Name="PresetBox" Width="190" Margin="0,0,10,8"/>
+          <Button x:Name="ExportProfile" Style="{StaticResource SecondaryButton}" Padding="12,6" Margin="0,0,0,8"/>
+        </WrapPanel>
         <ScrollViewer Grid.Row="1" x:Name="ListScroll" Padding="32,4,32,8" VerticalScrollBarVisibility="Auto">
           <StackPanel>
-            <TextBlock x:Name="PageInfo" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,10" Visibility="Collapsed"/>
+            <ProgressBar x:Name="MemoryBar" Height="10" Minimum="0" Maximum="100" Margin="0,0,0,10" Visibility="Collapsed"
+                         Foreground="{DynamicResource Accent}" Background="{DynamicResource Line}" BorderThickness="0"/>
+            <TextBlock x:Name="PageInfo" Foreground="{DynamicResource Muted}" TextWrapping="Wrap" Margin="0,0,0,10" Visibility="Collapsed"/>
+            <!-- About page: filled by Show-PcAbout; links come from $script:PcLinks -->
+            <StackPanel x:Name="AboutPanel" Visibility="Collapsed" MaxWidth="860" HorizontalAlignment="Left" Margin="0,0,0,8">
+              <Border Background="{DynamicResource Hero}" CornerRadius="10" Padding="22,18" Margin="0,0,0,12">
+                <DockPanel>
+                  <Image x:Name="AboutIcon" DockPanel.Dock="Left" Width="64" Height="64" Margin="0,0,18,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                  <StackPanel VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                      <TextBlock Text="PitCrew" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource AccentText}"/>
+                      <Border Background="{DynamicResource Accent}" CornerRadius="10" Padding="9,2" Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock x:Name="AboutVersion" Foreground="{DynamicResource AccentText}" FontSize="11.5" FontWeight="SemiBold"/>
+                      </Border>
+                    </StackPanel>
+                    <TextBlock x:Name="AboutTagline" Foreground="{DynamicResource HeroText}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                  </StackPanel>
+                </DockPanel>
+              </Border>
+              <Border Background="{DynamicResource WarnBg}" BorderBrush="{DynamicResource WarnLine}" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,12">
+                <TextBlock x:Name="AboutBeta" Foreground="{DynamicResource WarnText}" TextWrapping="Wrap"/>
+              </Border>
+
+              <Border Style="{StaticResource AboutCard}">
+                <StackPanel>
+                  <TextBlock x:Name="AboutWhatTitle" Style="{StaticResource AboutHeading}"/>
+                  <TextBlock x:Name="AboutWhat" Style="{StaticResource AboutBody}"/>
+                  <TextBlock x:Name="AboutFeaturesTitle" Style="{StaticResource AboutHeading}" Margin="0,16,0,6"/>
+                  <ItemsControl x:Name="AboutFeatures" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <DockPanel Margin="0,0,0,4">
+                          <Ellipse DockPanel.Dock="Left" Width="6" Height="6" Fill="{DynamicResource Accent}" Margin="2,7,10,0" VerticalAlignment="Top"/>
+                          <TextBlock Text="{Binding}" Style="{StaticResource AboutBody}"/>
+                        </DockPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <TextBlock x:Name="AboutGoalTitle" Style="{StaticResource AboutHeading}" Margin="0,12,0,6"/>
+                  <TextBlock x:Name="AboutGoal" Style="{StaticResource AboutBody}"/>
+                </StackPanel>
+              </Border>
+
+              <Border Style="{StaticResource AboutCard}">
+                <DockPanel>
+                  <Border DockPanel.Dock="Left" Width="52" Height="52" CornerRadius="26" Background="{DynamicResource Hero}" Margin="0,2,16,0" VerticalAlignment="Top">
+                    <TextBlock Text="JC" Foreground="{DynamicResource AccentText}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  </Border>
+                  <StackPanel>
+                    <TextBlock x:Name="AboutAuthorTitle" Foreground="{DynamicResource Muted}" FontSize="12"/>
+                    <TextBlock Text="Jonathan Costa" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource Ink}"/>
+                    <TextBlock x:Name="AboutAuthorBio" Style="{StaticResource AboutBody}" Margin="0,6,0,10"/>
+                    <TextBlock Style="{StaticResource AboutBody}">
+                      <Run Text="GitHub" FontWeight="SemiBold" Foreground="{DynamicResource Ink}"/>
+                      <Hyperlink x:Name="LinkGitHub" Foreground="{DynamicResource Link}"><Run x:Name="LinkGitHubText"/></Hyperlink>
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource AboutBody}">
+                      <Run Text="LinkedIn" FontWeight="SemiBold" Foreground="{DynamicResource Ink}"/>
+                      <Hyperlink x:Name="LinkLinkedIn" Foreground="{DynamicResource Link}"><Run x:Name="LinkLinkedInText"/></Hyperlink>
+                    </TextBlock>
+                  </StackPanel>
+                </DockPanel>
+              </Border>
+
+              <!-- Donations by Pix: the QR code stays black on white in both themes so bank apps can read it -->
+              <Border x:Name="SupportCard" Style="{StaticResource AboutCard}" Visibility="Collapsed">
+                <DockPanel>
+                  <Border x:Name="PixQrFrame" DockPanel.Dock="Left" Background="White" CornerRadius="6" Padding="4" Margin="0,0,18,0" VerticalAlignment="Top">
+                    <Image x:Name="PixQr" Width="171" Height="171" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                  </Border>
+                  <StackPanel>
+                    <TextBlock x:Name="SupportTitle" Style="{StaticResource AboutHeading}"/>
+                    <TextBlock x:Name="SupportText" Style="{StaticResource AboutBody}"/>
+                    <TextBlock x:Name="PixKeyLabel" Foreground="{DynamicResource Muted}" FontSize="12" Margin="0,10,0,2"/>
+                    <TextBox x:Name="PixKey" IsReadOnly="True" BorderThickness="0" Background="Transparent" Padding="0" FontFamily="Consolas" FontSize="13"/>
+                    <WrapPanel Margin="0,10,0,0">
+                      <Button x:Name="CopyPixKey" Style="{StaticResource SecondaryButton}" Padding="12,6" Margin="0,0,8,6"/>
+                      <Button x:Name="CopyPixCode" Style="{StaticResource SecondaryButton}" Padding="12,6" Margin="0,0,8,6"/>
+                    </WrapPanel>
+                  </StackPanel>
+                </DockPanel>
+              </Border>
+
+              <Border Style="{StaticResource AboutCard}">
+                <StackPanel>
+                  <TextBlock x:Name="AboutProjectTitle" Style="{StaticResource AboutHeading}"/>
+                  <TextBlock Style="{StaticResource AboutBody}">
+                    <Run x:Name="AboutRepoText"/>
+                    <Hyperlink x:Name="LinkRepo" Foreground="{DynamicResource Link}"><Run x:Name="LinkRepoText"/></Hyperlink>
+                  </TextBlock>
+                  <TextBlock Style="{StaticResource AboutBody}" Margin="0,2,0,0">
+                    <Hyperlink x:Name="LinkIssues" Foreground="{DynamicResource Link}"><Run x:Name="LinkIssuesText"/></Hyperlink>
+                  </TextBlock>
+                  <TextBlock x:Name="AboutCredits" Style="{StaticResource AboutNote}"/>
+                  <TextBlock x:Name="AboutTranslations" Style="{StaticResource AboutNote}"/>
+                  <TextBlock x:Name="AboutDataDir" Style="{StaticResource AboutNote}"/>
+                </StackPanel>
+              </Border>
+            </StackPanel>
             <ItemsControl x:Name="Items" ItemTemplate="{StaticResource ItemCard}"/>
-            <TextBlock x:Name="EmptyText" Foreground="{StaticResource Muted}" Margin="0,8,0,0" Visibility="Collapsed" TextWrapping="Wrap"/>
+            <TextBlock x:Name="EmptyText" Foreground="{DynamicResource Muted}" Margin="0,8,0,0" Visibility="Collapsed" TextWrapping="Wrap"/>
           </StackPanel>
         </ScrollViewer>
       </Grid>
 
-      <Border Grid.Row="3" Background="White" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="32,12">
+      <Border Grid.Row="3" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Padding="32,12">
         <DockPanel>
           <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+            <TextBlock x:Name="SelectionText" Foreground="{DynamicResource Muted}" VerticalAlignment="Center" Margin="0,0,8,0"/>
             <Button x:Name="SecondaryAction" Style="{StaticResource SecondaryButton}"/>
             <Button x:Name="PrimaryAction" Style="{StaticResource PrimaryButton}"/>
           </StackPanel>
           <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-            <ProgressBar x:Name="Busy" Width="90" Height="4" IsIndeterminate="True" Visibility="Collapsed" Margin="0,0,10,0" Foreground="{StaticResource Accent}"/>
-            <TextBlock x:Name="StatusText" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis" MaxWidth="520"/>
+            <ProgressBar x:Name="Busy" Width="90" Height="4" IsIndeterminate="True" Visibility="Collapsed" Margin="0,0,10,0"
+                         Foreground="{DynamicResource Accent}" Background="{DynamicResource Line}" BorderThickness="0"/>
+            <TextBlock x:Name="StatusText" Foreground="{DynamicResource Muted}" TextTrimming="CharacterEllipsis" MaxWidth="460"/>
           </StackPanel>
         </DockPanel>
       </Border>

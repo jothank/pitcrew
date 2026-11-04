@@ -657,7 +657,9 @@ try {
         foreach ($r in 'safe', 'moderate', 'advanced') { $used += "risk.$r" }
         foreach ($v in 'recommended', 'older', 'noDate', 'firmware', 'display', 'unknownDevice') { $used += "drivers.verdict.$v" }
         foreach ($v in 'installed', 'installedWithErrors', 'failed', 'aborted', 'downloadFailed') { $used += "drivers.result.$v" }
-        foreach ($p in 'performance', 'privacy', 'explorer', 'startup', 'cleanup', 'maintenance', 'apps', 'drivers', 'restore', 'history', 'about') { $used += "page.$p.title", "page.$p.intro", "nav.$p" }
+        foreach ($p in 'performance', 'privacy', 'explorer', 'startup', 'cleanup', 'memory', 'maintenance', 'apps', 'drivers', 'restore', 'history', 'about') { $used += "page.$p.title", "page.$p.intro", "nav.$p" }
+        foreach ($o in @($script:PcFilterOptions.Values | ForEach-Object { $_ }) | Sort-Object -Unique) { $used += "filter.$o" }
+        foreach ($t in 'auto', 'light', 'dark') { $used += "theme.$t" }
         foreach ($r in 'safe', 'caution') { $used += "apps.risk.$r" }
         $used += 'link.vendor', 'link.community'
         foreach ($c in $script:PcCleanupTargets) { $used += "cleanup.$($c.Id).detail" }
@@ -703,6 +705,113 @@ try {
             foreach ($lang in $languages) { Assert-True ($p.name.$lang) "preset $($p.id) name in $lang" }
             $unknown = @(@($p.tweaks) | Where-Object { $ids -notcontains $_ })
             Assert-True ($unknown.Count -eq 0) "preset $($p.id) unknown tweaks: $($unknown -join ', ')"
+        }
+    }
+
+    Test-Case 'the version is one semantic version and every About link is https' {
+        Assert-True ($script:PcVersion -match '^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$') "version '$script:PcVersion'"
+        foreach ($k in 'Repository', 'Issues', 'AuthorGitHub', 'AuthorLinkedIn') {
+            Assert-True ($script:PcLinks[$k] -match '^https://[^\s"]+$') "$k link"
+        }
+    }
+
+    Test-Case 'the Pix code follows the Banco Central format and the QR picture is up to date' {
+        # The example from the Pix manual (BR Code, static QR), CRC included
+        $example = '00020126580014br.gov.bcb.pix0136123e4567-e12b-12d1-a456-4266554400005204000053039865802BR5913Fulano de Tal6008BRASILIA62070503***63041D3D'
+        Assert-Equal $example (Get-PcPixPayload -Key '123e4567-e12b-12d1-a456-426655440000' -Name 'Fulano de Tal' -City 'BRASILIA') 'manual example'
+        $d = $script:PcDonation
+        Assert-True ($d.PixName -match '^[A-Za-z ]{1,25}$' -and $d.PixCity -match '^[A-Za-z ]{1,15}$') 'name and city fit the Pix limits'
+        $payload = Get-PcPixPayload
+        Assert-True ($payload.Contains($d.PixKey)) 'the key is in the code'
+        # Build-PixQr.ps1 writes the text it drew next to the picture
+        Assert-Equal $payload ([IO.File]::ReadAllText((Join-Path $root 'assets\pix-qr.txt')).Trim()) 'assets\pix-qr.png was drawn from the current Pix data (run tools\Build-PixQr.ps1)'
+        Assert-True (Test-Path (Join-Path $root 'assets\pix-qr.png')) 'QR picture'
+        if (-not ('PitCrew.QrCode' -as [type])) { Add-Type -TypeDefinition ([IO.File]::ReadAllText((Join-Path $root 'tools\QrCode.cs'))) }
+        # Error correction of the textbook "HELLO WORLD" 1-M example
+        $hello = [byte[]](32, 91, 11, 120, 209, 114, 220, 77, 67, 64, 236, 17, 236, 17, 236, 17)
+        Assert-Equal '196 35 39 119 235 215 231 226 93 23' (([PitCrew.QrCode]::ReedSolomon($hello, 10)) -join ' ') 'Reed-Solomon'
+        Assert-Equal '5412 5125 5E7C 5B4B 45F9 40CE 4F97 4AA0' ((0..7 | ForEach-Object { '{0:X4}' -f [PitCrew.QrCode]::FormatBits($_) }) -join ' ') 'format bits, level M'
+    }
+
+    Test-Case 'every theme color is swappable: palettes match and nothing is hard-coded' {
+        . (Join-Path $root 'src\UI\Window.ps1')
+        $themeXaml = [IO.File]::ReadAllText((Join-Path $root 'src\UI\Theme.xaml'))
+        $defaults = @{}
+        foreach ($m in [regex]::Matches($themeXaml, '<SolidColorBrush x:Key="(\w+)" Color="(#[0-9A-Fa-f]{6})"/>')) { $defaults[$m.Groups[1].Value] = $m.Groups[2].Value }
+        $light = $script:PcPalettes.light
+        $dark = $script:PcPalettes.dark
+        Assert-Equal (@($defaults.Keys | Sort-Object) -join ',') (@($light.Keys | Sort-Object) -join ',') 'Theme.xaml and the light palette name the same colors'
+        Assert-Equal (@($light.Keys | Sort-Object) -join ',') (@($dark.Keys | Sort-Object) -join ',') 'light and dark name the same colors'
+        foreach ($k in $light.Keys) { Assert-Equal $defaults[$k].ToUpperInvariant() $light[$k].ToUpperInvariant() "light $k matches Theme.xaml" }
+        # Outside the palette, colors must be DynamicResource: a StaticResource or a literal never follows the theme
+        $windowCode = [IO.File]::ReadAllText((Join-Path $root 'src\UI\Window.ps1'))
+        $xamlParts = @([IO.File]::ReadAllText((Join-Path $root 'src\UI\Window.xaml'))) + @([regex]::Matches($windowCode, "(?s)@'\s*(<Window.*?)'@") | ForEach-Object { $_.Groups[1].Value })
+        $themeStyles = $themeXaml -replace '<SolidColorBrush x:Key="\w+" Color="#[0-9A-Fa-f]{6}"/>', ''
+        foreach ($x in $xamlParts + $themeStyles) {
+            $literal = [regex]::Match($x, '"#[0-9A-Fa-f]{6,8}"')
+            Assert-True (-not $literal.Success) "hard-coded color $($literal.Value)"
+            foreach ($k in $light.Keys) { Assert-True ($x -notmatch "StaticResource $k\}") "StaticResource $k" }
+        }
+    }
+
+    Test-Case 'memory page groups processes per program and never offers to close Windows or PitCrew' {
+        $samples = @(
+            [pscustomobject]@{ Name = 'chrome'; IDProcess = 100; WorkingSetPrivate = 300MB }
+            [pscustomobject]@{ Name = 'chrome#1'; IDProcess = 101; WorkingSetPrivate = 200MB }
+            [pscustomobject]@{ Name = 'svchost'; IDProcess = 200; WorkingSetPrivate = 900MB }
+            [pscustomobject]@{ Name = 'notepad'; IDProcess = 300; WorkingSetPrivate = 10MB }
+            [pscustomobject]@{ Name = 'helper'; IDProcess = 400; WorkingSetPrivate = 50MB }
+            [pscustomobject]@{ Name = 'powershell'; IDProcess = 500; WorkingSetPrivate = 80MB }
+            [pscustomobject]@{ Name = '_Total'; IDProcess = 0; WorkingSetPrivate = 9GB }
+        )
+        $groups = @(ConvertTo-PcMemoryGroups -Samples $samples -WindowIds @(101, 200, 300, 500) -Descriptions @{ 100 = 'Google Chrome' } -Keys @{ 101 = '101|638000000000000000' } -SelfId 300)
+        Assert-Equal 'svchost,chrome,powershell,helper,notepad' (($groups | ForEach-Object Name) -join ',') 'one line per program, largest first, no _Total'
+        $chrome = $groups | Where-Object Name -eq 'chrome'
+        Assert-Equal 'Google Chrome' $chrome.DisplayName 'friendly name'
+        Assert-Equal 2 $chrome.Count 'two processes'
+        Assert-Equal ([int64]500MB) $chrome.Bytes 'memory summed'
+        Assert-Equal '101' (@($chrome.WindowIds) -join ',') 'only the process with a window is asked to close'
+        Assert-Equal '101|638000000000000000' (@($chrome.WindowKeys) -join ',') 'closing is keyed by PID and start time'
+        Assert-Equal 0 (Close-PcProcessWindows -Keys @("$PID|1", 'not-a-key')) 'a stale or malformed key closes nothing'
+        Assert-True ((Get-PcText 'memory.closeDone' -FormatArgs 0) -notlike '*{0}*') 'a count of 0 is still filled in'
+        Assert-True $chrome.Closable 'a program with a window can be closed'
+        Assert-True (-not ($groups | Where-Object Name -eq 'svchost').Closable) 'Windows services never'
+        Assert-True (-not ($groups | Where-Object Name -eq 'powershell').Closable) 'consoles never'
+        Assert-True (-not ($groups | Where-Object Name -eq 'helper').Closable) 'nothing without a window'
+        Assert-True (-not ($groups | Where-Object Name -eq 'notepad').Closable) 'never PitCrew itself'
+        Assert-Equal 2 @(ConvertTo-PcMemoryGroups -Samples $samples -WindowIds @() -Top 2).Count 'top N'
+    }
+
+    Test-Case 'the icon has every size Windows asks for and each frame is well formed' {
+        $b = [IO.File]::ReadAllBytes((Join-Path $root 'assets\pitcrew.ico'))
+        Assert-Equal 1 ([BitConverter]::ToUInt16($b, 2)) 'ICO type'
+        $sizes = @()
+        for ($i = 0; $i -lt [BitConverter]::ToUInt16($b, 4); $i++) {
+            $e = 6 + 16 * $i
+            $size = if ($b[$e] -eq 0) { 256 } else { [int]$b[$e] }
+            $length = [BitConverter]::ToInt32($b, $e + 8)
+            $offset = [BitConverter]::ToInt32($b, $e + 12)
+            Assert-True ($offset + $length -le $b.Length) "$size px frame inside the file"
+            if ($b[$offset] -eq 0x89 -and $b[$offset + 1] -eq 0x50) { Assert-Equal 256 $size 'only the 256 px frame is PNG' }
+            else {
+                # Bitmap frames: the height counts the color image and the AND mask together
+                Assert-Equal $size ([BitConverter]::ToInt32($b, $offset + 4)) "$size px width"
+                Assert-Equal (2 * $size) ([BitConverter]::ToInt32($b, $offset + 8)) "$size px height"
+                Assert-Equal 32 ([int][BitConverter]::ToUInt16($b, $offset + 14)) "$size px bits"
+                $maskRow = [int][Math]::Ceiling($size / 32) * 4
+                Assert-Equal (40 + $size * $size * 4 + $maskRow * $size) $length "$size px frame length"
+            }
+            $sizes += $size
+        }
+        foreach ($s in 16, 20, 24, 32, 40, 48, 64, 256) { Assert-True ($sizes -contains $s) "$s px frame" }
+    }
+
+    Test-Case 'launcher tests pass (tests\Launcher-Tests.ps1)' {
+        $out = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $root 'tests\Launcher-Tests.ps1') 2>&1
+        Assert-Equal 0 $LASTEXITCODE ("launcher tests failed:`n" + (($out | Select-String 'FAIL' -CaseSensitive -Context 0, 1) -join "`n"))
+        $skipped = @($out | Select-String '^\s+skip\s')
+        if ($skipped) {
+            Write-Host "        $($skipped.Count) launcher checks skipped: Windows blocked the newly built exe here (Smart App Control). Run them in Windows Sandbox." -ForegroundColor Yellow
         }
     }
 

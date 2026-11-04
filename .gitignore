@@ -18,3 +18,14 @@ driver-backups/
 .vscode/
 .idea/
 *.swp
+
+# Release builds (tools\Build-Release.ps1)
+/dist/
+
+# Never part of a release: a built launcher at the root, signing keys, local secrets and agent settings
+/PitCrew.exe
+*.pfx
+*.p12
+*.snk
+.env
+.claude/settings.local.json

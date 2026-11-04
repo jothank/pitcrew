@@ -18,6 +18,8 @@ namespace PitCrew {
 
         public string Id { get; set; }
         public object Data { get; set; }
+        // Untranslated state the status filter works on (Applied, NotApplied, Installed, On...)
+        public string State { get; set; }
         public string Title { get { return title; } set { title = value; Notify("Title"); } }
         public string Detail { get { return detail; } set { detail = value; Notify("Detail"); } }
         public string Badge { get { return badge; } set { badge = value; Notify("Badge"); } }
@@ -34,6 +36,91 @@ namespace PitCrew {
     }
 }
 '@
+}
+
+if (-not ('PitCrew.NativeShell' -as [type])) {
+    # Gives the window its own taskbar button and icon instead of grouping it with PowerShell
+    Add-Type -Namespace PitCrew -Name NativeShell -MemberDefinition @'
+[DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = false)]
+public static extern void SetCurrentProcessExplicitAppUserModelID(string appId);
+[DllImport("dwmapi.dll")]
+public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+'@
+}
+
+# --- Themes ---------------------------------------------------------------------------------------
+
+# Light must match the defaults in Theme.xaml (switching back from dark restores these)
+$script:PcPalettes = @{
+    light = @{
+        Bg = '#F6F7F9'; Surface = '#FFFFFF'; SurfaceAlt = '#E9ECF0'; Line = '#E3E6EA'; Ink = '#1B1F24'; Body = '#3C434D'
+        Muted = '#5F6773'; Faint = '#8A919C'; Link = '#0B62D6'; Accent = '#E10600'; AccentText = '#FFFFFF'
+        Sidebar = '#15171C'; SidebarText = '#C9CED6'; SidebarFaint = '#8A919C'; SidebarInput = '#22252B'; NavHover = '#1F2228'; NavSelected = '#262A31'
+        PillBg = '#EEF0F3'; PillText = '#4A5160'; GoodBg = '#E7F6EC'; GoodText = '#1E7B3A'; WarnBg = '#FFF4E0'; WarnText = '#8A5200'; WarnLine = '#F2D29B'
+        BadBg = '#FDECEC'; BadText = '#B42318'; InfoBg = '#E8F0FD'; InfoText = '#0B62D6'; InputBg = '#FFFFFF'; Thumb = '#C7CCD3'
+        Hero = '#15171C'; HeroText = '#C9CED6'
+    }
+    dark = @{
+        Bg = '#121418'; Surface = '#1B1E24'; SurfaceAlt = '#2A2E36'; Line = '#2C3038'; Ink = '#E8EAED'; Body = '#C4C9D0'
+        Muted = '#9AA1AC'; Faint = '#7D848F'; Link = '#6CA8FF'; Accent = '#E10600'; AccentText = '#FFFFFF'
+        Sidebar = '#0B0C0F'; SidebarText = '#C9CED6'; SidebarFaint = '#7D848F'; SidebarInput = '#1A1D22'; NavHover = '#1A1D22'; NavSelected = '#22262D'
+        PillBg = '#2A2E36'; PillText = '#B8BEC7'; GoodBg = '#16351F'; GoodText = '#7DDA92'; WarnBg = '#33280F'; WarnText = '#F5C26B'; WarnLine = '#5C4518'
+        BadBg = '#3D1A1A'; BadText = '#FF8A80'; InfoBg = '#1A2A44'; InfoText = '#8DBBFF'; InputBg = '#15181D'; Thumb = '#3A3F48'
+        Hero = '#0B0C0F'; HeroText = '#C9CED6'
+    }
+}
+$script:PcThemeChoice = 'auto'
+$script:PcTheme = 'light'
+
+function ConvertFrom-PcXaml([string]$Xaml) {
+    # Every window and dialog gets the shared theme dictionary (styles and palette) in its resources
+    $theme = [IO.File]::ReadAllText((Join-Path $Pc.Root 'src\UI\Theme.xaml')) -replace '^\s*<\?xml[^>]*\?>', ''
+    [Windows.Markup.XamlReader]::Parse($Xaml.Replace('<!--THEME-->', $theme))
+}
+
+function Get-PcEffectiveTheme([string]$Choice) {
+    if (@('light', 'dark') -contains $Choice) { return $Choice }
+    # Automatic: the app mode chosen in Windows Settings > Personalization > Colors
+    try {
+        $light = Get-ItemPropertyValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' 'AppsUseLightTheme' -ErrorAction Stop
+        if ($light -eq 0) { return 'dark' }
+    } catch { }
+    return 'light'
+}
+
+function Set-PcPalette($Resources, [string]$Theme) {
+    foreach ($entry in $script:PcPalettes[$Theme].GetEnumerator()) {
+        $brush = New-Object Windows.Media.SolidColorBrush ([Windows.Media.ColorConverter]::ConvertFromString($entry.Value))
+        $brush.Freeze()
+        # The cast unwraps PowerShell's PSObject; WPF only accepts the brush itself
+        $Resources[$entry.Key] = [Windows.Media.SolidColorBrush]$brush
+    }
+}
+
+function Set-PcTitleBarTheme($Window, [string]$Theme) {
+    # Dark title bar: attribute 20 on current Windows, 19 on early Windows 10; ignored elsewhere
+    try {
+        $hwnd = (New-Object Windows.Interop.WindowInteropHelper($Window)).Handle
+        if ($hwnd -eq [IntPtr]::Zero) { return }
+        $on = [int]($Theme -eq 'dark')
+        if ([PitCrew.NativeShell]::DwmSetWindowAttribute($hwnd, 20, [ref]$on, 4) -ne 0) {
+            [void][PitCrew.NativeShell]::DwmSetWindowAttribute($hwnd, 19, [ref]$on, 4)
+        }
+    } catch { }
+}
+
+function Set-PcTheme([string]$Choice) {
+    $script:PcThemeChoice = $Choice
+    $script:PcTheme = Get-PcEffectiveTheme $Choice
+    Set-PcPalette $Ui.Window.Resources $script:PcTheme
+    Set-PcTitleBarTheme $Ui.Window $script:PcTheme
+}
+
+function Initialize-PcDialogWindow($Dialog) {
+    # Same colors and title bar as the main window; owned by it only once it is on screen
+    Set-PcPalette $Dialog.Resources $script:PcTheme
+    $Dialog.Add_SourceInitialized({ Set-PcTitleBarTheme $this $script:PcTheme })
+    if ($Ui.Window -and $Ui.Window.IsVisible) { $Dialog.Owner = $Ui.Window } else { $Dialog.WindowStartupLocation = 'CenterScreen' }
 }
 
 $script:Ui = @{}
@@ -104,9 +191,10 @@ function Complete-PcJob {
 
 function Set-PcBusy([bool]$IsBusy, [string]$Status) {
     $Ui.Busy.Visibility = if ($IsBusy) { 'Visible' } else { 'Collapsed' }
-    $Ui.Nav.IsEnabled = -not $IsBusy
-    $Ui.LanguageBox.IsEnabled = -not $IsBusy
-    $Ui.Items.IsEnabled = -not $IsBusy
+    # Anything that would start another job or switch pages waits until this one ends
+    foreach ($control in $Ui.Nav, $Ui.LanguageBox, $Ui.Items, $Ui.RefreshButton, $Ui.ExportProfile, $Ui.PresetBox) {
+        if ($control) { $control.IsEnabled = -not $IsBusy }
+    }
     if ($IsBusy) {
         $Ui.PrimaryAction.IsEnabled = $false
         $Ui.SecondaryAction.IsEnabled = $false
@@ -116,13 +204,78 @@ function Set-PcBusy([bool]$IsBusy, [string]$Status) {
     }
 }
 
+function Show-PcDialog([string]$Text, [string]$Icon = 'Information', [switch]$Confirm) {
+    $dialog = New-PcMessageDialog $Text $Icon -Confirm:$Confirm
+    if ($script:PcDialogSound) { $script:PcDialogSound.Play() }
+    return [bool]$dialog.ShowDialog()
+}
+
+function New-PcMessageDialog([string]$Text, [string]$Icon = 'Information', [switch]$Confirm) {
+    # PitCrew's own message box: follows the theme, and the text can be selected and copied
+    # (to paste an error into an issue). A confirmation defaults to No, like the Windows one did.
+    $xaml = @'
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PitCrew" Width="480" SizeToContent="Height" WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        ShowInTaskbar="False" FontFamily="Segoe UI" FontSize="13" Background="{DynamicResource Surface}">
+  <Window.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries><!--THEME--></ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Window.Resources>
+  <DockPanel Margin="24,22,24,20">
+    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+      <Button x:Name="No" Style="{StaticResource SecondaryButton}" MinWidth="88" Visibility="Collapsed"/>
+      <Button x:Name="Yes" Style="{StaticResource PrimaryButton}" MinWidth="88"/>
+    </StackPanel>
+    <Border x:Name="Badge" DockPanel.Dock="Left" Width="34" Height="34" CornerRadius="17" VerticalAlignment="Top" Margin="0,0,14,0">
+      <TextBlock x:Name="Glyph" FontSize="17" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </Border>
+    <ScrollViewer MaxHeight="440" VerticalScrollBarVisibility="Auto">
+      <TextBox x:Name="Message" IsReadOnly="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent" Padding="0" Margin="0,7,0,0"/>
+    </ScrollViewer>
+  </DockPanel>
+</Window>
+'@
+    $dialog = ConvertFrom-PcXaml $xaml
+    $parts = @{}
+    foreach ($n in 'No', 'Yes', 'Badge', 'Glyph', 'Message') { $parts[$n] = $dialog.FindName($n) }
+    $look = switch ($Icon) {
+        'Warning' { @('!', 'WarnBg', 'WarnText', [System.Media.SystemSounds]::Exclamation) }
+        'Error'   { @([string][char]0x00D7, 'BadBg', 'BadText', [System.Media.SystemSounds]::Hand) }
+        'Question' { @('?', 'InfoBg', 'InfoText', $null) }
+        default   { @('i', 'InfoBg', 'InfoText', [System.Media.SystemSounds]::Asterisk) }
+    }
+    if ($Confirm -and $Icon -eq 'Information') { $look = @('?', 'InfoBg', 'InfoText', $null) }
+    $parts.Glyph.Text = $look[0]
+    $parts.Badge.SetResourceReference([System.Windows.Controls.Border]::BackgroundProperty, $look[1])
+    $parts.Glyph.SetResourceReference([System.Windows.Controls.TextBlock]::ForegroundProperty, $look[2])
+    $parts.Message.Text = $Text
+    if ($Confirm) {
+        $parts.No.Visibility = 'Visible'
+        $parts.No.Content = Get-PcText 'dialog.no'
+        $parts.Yes.Content = Get-PcText 'dialog.yes'
+        # Enter and Esc both answer No; only a deliberate click says Yes
+        $parts.No.IsDefault = $true
+        $parts.No.IsCancel = $true
+    } else {
+        $parts.Yes.Content = Get-PcText 'dialog.ok'
+        $parts.Yes.IsDefault = $true
+        $parts.Yes.IsCancel = $true
+    }
+    $parts.Yes.Add_Click({ [System.Windows.Window]::GetWindow($this).DialogResult = $true })
+    Initialize-PcDialogWindow $dialog
+    $dialog.Add_ContentRendered({ [void]$this.FindName($(if ($this.FindName('No').IsVisible) { 'No' } else { 'Yes' })).Focus() })
+    $script:PcDialogSound = $look[3]
+    return $dialog
+}
+
 function Show-PcMessage([string]$Text, [string]$Icon = 'Information') {
-    [void][System.Windows.MessageBox]::Show($Ui.Window, $Text, 'PitCrew', 'OK', $Icon)
+    [void](Show-PcDialog $Text $Icon)
 }
 
 function Confirm-PcAction([string]$Text) {
-    $answer = [System.Windows.MessageBox]::Show($Ui.Window, $Text, 'PitCrew', 'YesNo', 'Question', 'No')
-    return $answer -eq 'Yes'
+    return (Show-PcDialog $Text 'Question' -Confirm)
 }
 
 # Items hidden by the search or filter are never acted on, even if they were ticked before
@@ -139,6 +292,7 @@ function Set-PcItems($Items, [string]$EmptyKey = 'empty.list') {
     foreach ($i in @($Items)) { if ($i) { $list.Add($i) } }
     $Ui.Items.ItemsSource = $list
     Update-PcFilter
+    Update-PcSelectionCount
     $Ui.EmptyText.Text = Get-PcText $EmptyKey
     $Ui.EmptyText.Visibility = if ($list.Count -eq 0) { 'Visible' } else { 'Collapsed' }
     Update-PcActionButtons
@@ -148,9 +302,51 @@ function Set-PcItems($Items, [string]$EmptyKey = 'empty.list') {
 
 $script:PcPreselected = @()
 
+# Status filter options per kind of page; the texts are filter.<option>
+$script:PcFilterOptions = @{
+    tweaks  = @('all', 'available', 'notApplied', 'applied', 'partial', 'selected')
+    apps    = @('all', 'installed', 'notInstalled', 'selected')
+    startup = @('all', 'on', 'off', 'selected')
+}
+# Options that keep only one State (set on each card, never translated)
+$script:PcFilterStates = @{
+    notApplied = 'NotApplied'; applied = 'Applied'; partial = 'Partial'
+    installed = 'Installed'; notInstalled = 'NotInstalled'; on = 'On'; off = 'Off'
+}
+$script:PcStatusFilter = 'all'
+
+function Get-PcFilterKind([string]$Page) {
+    if ($script:PcTweakCategories -contains $Page) { return 'tweaks' }
+    if ($script:PcFilterOptions.ContainsKey($Page)) { return $Page }
+    return $null
+}
+
+function Update-PcStatusFilter([string]$Page) {
+    # Refilled on every page change and language change; starts at "All"
+    $script:PcFilterUpdating = $true
+    $Ui.StatusFilter.Items.Clear()
+    $kind = Get-PcFilterKind $Page
+    if ($kind) {
+        foreach ($option in $script:PcFilterOptions[$kind]) {
+            $entry = New-Object System.Windows.Controls.ComboBoxItem
+            $entry.Content = Get-PcText "filter.$option"
+            $entry.Tag = $option
+            [void]$Ui.StatusFilter.Items.Add($entry)
+        }
+        $Ui.StatusFilter.SelectedIndex = 0
+    }
+    $script:PcStatusFilter = 'all'
+    $script:PcFilterUpdating = $false
+}
+
 function Test-PcItemVisible($Item) {
     if (-not $Ui.FilterBar -or $Ui.FilterBar.Visibility -ne 'Visible') { return $true }
-    if ($Ui.HideUnavailable.IsChecked -and $Item.Selectable -and -not $Item.IsEnabled) { return $false }
+    switch ($script:PcStatusFilter) {
+        'all'       { }
+        'available' { if ($Item.State -eq 'NotApplicable') { return $false } }
+        'selected'  { if (-not $Item.IsSelected) { return $false } }
+        default     { if ($Item.State -ne $script:PcFilterStates[$script:PcStatusFilter]) { return $false } }
+    }
     $q = $Ui.SearchBox.Text.Trim()
     if (-not $q) { return $true }
     return ($Item.Title.IndexOf($q, [StringComparison]::OrdinalIgnoreCase) -ge 0) -or
@@ -159,10 +355,27 @@ function Test-PcItemVisible($Item) {
 
 function Update-PcFilter {
     $Ui.SearchHint.Visibility = if ($Ui.SearchBox.Text) { 'Collapsed' } else { 'Visible' }
-    if (-not $Ui.Items.ItemsSource) { return }
-    $view = [System.Windows.Data.CollectionViewSource]::GetDefaultView($Ui.Items.ItemsSource)
-    $view.Filter = [Predicate[object]] { param($item) Test-PcItemVisible $item }
-    $view.Refresh()
+    if ($Ui.Items.ItemsSource) {
+        $view = [System.Windows.Data.CollectionViewSource]::GetDefaultView($Ui.Items.ItemsSource)
+        $view.Filter = [Predicate[object]] { param($item) Test-PcItemVisible $item }
+        $view.Refresh()
+    }
+    Update-PcSelectionCount
+}
+
+function Update-PcSelectionCount {
+    # Counts what an action would really touch: ticked and visible
+    $n = @(Get-PcSelectedItems).Count
+    $Ui.SelectionText.Text = if ($n -gt 0) { Get-PcText 'footer.selected' -FormatArgs $n } else { '' }
+}
+
+function Select-PcVisibleItems([bool]$Selected) {
+    foreach ($item in @($Ui.Items.ItemsSource)) {
+        if (-not $Selected) { $item.IsSelected = $false; continue }
+        # Only what is on screen and can be acted on
+        if ($item.Selectable -and $item.IsEnabled -and (Test-PcItemVisible $item)) { $item.IsSelected = $true }
+    }
+    Update-PcSelectionCount
 }
 
 function Update-PcPresetBox {
@@ -256,6 +469,7 @@ $script:PcPages = @{
     explorer    = @{ Primary = @('button.apply', $true, $true); Secondary = @('button.undo', $true, $true) }
     startup     = @{ Primary = @('button.disable', $false, $true); Secondary = @('button.enable', $false, $true) }
     cleanup     = @{ Primary = @('button.clean', $true, $true); Secondary = @('button.analyze', $false, $false) }
+    memory      = @{ Primary = @('button.closeApps', $false, $true); Secondary = @('button.memoryDiagnostic', $true, $false) }
     maintenance = @{ Primary = @('button.run', $true, $true) }
     apps        = @{ Primary = @('button.remove', $true, $true); Secondary = @('button.reinstall', $true, $true) }
     drivers     = @{ Primary = @('button.install', $true, $true); Secondary = @('button.search', $false, $false) }
@@ -283,24 +497,111 @@ function Show-PcPage([string]$Page) {
     $Ui.PageTitle.Text = Get-PcText "page.$Page.title"
     $Ui.PageIntro.Text = Get-PcText "page.$Page.intro"
     Set-PcPageInfo ''
-    # Search and filter on long lists; presets and profiles only where there are tweaks
+    # Search, status filter and quick selection on long lists; presets and profiles only for tweaks
     $isTweakPage = $script:PcTweakCategories -contains $Page
-    $Ui.FilterBar.Visibility = if ($isTweakPage -or $Page -eq 'apps' -or $Page -eq 'startup') { 'Visible' } else { 'Collapsed' }
+    $Ui.FilterBar.Visibility = if (Get-PcFilterKind $Page) { 'Visible' } else { 'Collapsed' }
     $Ui.PresetBox.Visibility = if ($isTweakPage) { 'Visible' } else { 'Collapsed' }
     $Ui.ExportProfile.Visibility = if ($isTweakPage) { 'Visible' } else { 'Collapsed' }
+    Update-PcStatusFilter $Page
     $Ui.SearchBox.Text = ''
     Set-PcItems @()
     $Ui.EmptyText.Visibility = 'Collapsed'
+    $Ui.AboutPanel.Visibility = 'Collapsed'
+    $Ui.MemoryBar.Visibility = 'Collapsed'
+    $Ui.RefreshButton.Visibility = if ($Page -eq 'memory') { 'Visible' } else { 'Collapsed' }
     $Ui.StatusText.Text = Get-PcText 'status.ready'
     switch ($Page) {
         'startup' { Invoke-PcLoadStartup }
         'cleanup' { Invoke-PcAnalyzeCleanup }
+        'memory'  { Invoke-PcLoadMemory }
         'apps'    { Invoke-PcLoadApps }
         'drivers' { Invoke-PcLoadDriverSummary }
         'restore' { Invoke-PcLoadRestorePoints }
-        'about'   { Set-PcPageInfo ((Get-PcText 'about.text') + "`n`n" + (Get-PcText 'about.dataDir' -FormatArgs $Pc.DataDir) + "`n`n" + (Get-PcText 'about.credits')) }
+        'about'   { Show-PcAbout }
         default   { Update-PcCurrentPage }
     }
+}
+
+function Open-PcWebPage([Uri]$Uri) {
+    # Web pages only: a link (some come from the catalog files) must never start a program or open a file
+    if (-not ($Uri -and $Uri.IsAbsoluteUri -and @('http', 'https') -contains $Uri.Scheme)) { return }
+    if (Test-PcAdmin) {
+        # Started from here the browser would run as administrator too. Explorer hands the link to
+        # the desktop's own shell, which opens it as the signed-in user.
+        $explorer = Join-Path ([Environment]::GetFolderPath('Windows')) 'explorer.exe'
+        Start-Process -FilePath $explorer -ArgumentList "`"$($Uri.AbsoluteUri)`""
+    } else {
+        Start-Process $Uri.AbsoluteUri
+    }
+}
+
+function Set-PcLink($Hyperlink, $TextRun, [string]$Url) {
+    $Hyperlink.NavigateUri = [Uri]$Url
+    $TextRun.Text = $Url -replace '^https://(www\.)?', '' -replace '/$', ''
+}
+
+function Show-PcAbout {
+    $Ui.AboutVersion.Text = Get-PcText 'about.version' -FormatArgs $script:PcVersion
+    $Ui.AboutTagline.Text = Get-PcText 'app.tagline'
+    $Ui.AboutBeta.Text = Get-PcText 'about.beta'
+    $Ui.AboutWhatTitle.Text = Get-PcText 'about.whatTitle'
+    $Ui.AboutWhat.Text = Get-PcText 'about.what'
+    $Ui.AboutFeaturesTitle.Text = Get-PcText 'about.featuresTitle'
+    $Ui.AboutFeatures.ItemsSource = @((Get-PcText 'about.features' -FormatArgs $script:PcTweaks.Count) -split "`n" | Where-Object { $_ })
+    $Ui.AboutGoalTitle.Text = Get-PcText 'about.goalTitle'
+    $Ui.AboutGoal.Text = Get-PcText 'about.goal'
+    $Ui.AboutAuthorTitle.Text = Get-PcText 'about.authorTitle'
+    $Ui.AboutAuthorBio.Text = Get-PcText 'about.authorBio'
+    Set-PcLink $Ui.LinkGitHub $Ui.LinkGitHubText $script:PcLinks.AuthorGitHub
+    Set-PcLink $Ui.LinkLinkedIn $Ui.LinkLinkedInText $script:PcLinks.AuthorLinkedIn
+    $Ui.AboutProjectTitle.Text = Get-PcText 'about.projectTitle'
+    $Ui.AboutRepoText.Text = Get-PcText 'about.repo'
+    Set-PcLink $Ui.LinkRepo $Ui.LinkRepoText $script:PcLinks.Repository
+    $Ui.LinkIssues.NavigateUri = [Uri]$script:PcLinks.Issues
+    $Ui.LinkIssuesText.Text = Get-PcText 'about.issues'
+    $Ui.AboutCredits.Text = Get-PcText 'about.credits'
+    $Ui.AboutTranslations.Text = Get-PcText 'about.translations'
+    $Ui.AboutDataDir.Text = Get-PcText 'about.dataDir' -FormatArgs $Pc.DataDir
+    Show-PcSupport
+    $Ui.AboutPanel.Visibility = 'Visible'
+}
+
+function Show-PcSupport {
+    # Donations by Pix: the key, the "copia e cola" code and the QR code (assets\pix-qr.png)
+    $key = $script:PcDonation.PixKey
+    $Ui.SupportCard.Visibility = if ($key) { 'Visible' } else { 'Collapsed' }
+    if (-not $key) { return }
+    $Ui.SupportTitle.Text = Get-PcText 'about.support'
+    $Ui.SupportText.Text = Get-PcText 'about.supportText'
+    $Ui.PixKeyLabel.Text = Get-PcText 'about.pixKey'
+    $Ui.PixKey.Text = $key
+    $Ui.CopyPixKey.Content = Get-PcText 'about.copyPixKey'
+    $Ui.CopyPixCode.Content = Get-PcText 'about.copyPixCode'
+    $qr = Get-PcAssetImage 'pix-qr.png'
+    $Ui.PixQr.Source = $qr
+    $Ui.PixQrFrame.Visibility = if ($qr) { 'Visible' } else { 'Collapsed' }
+}
+
+function Copy-PcText([string]$Text) {
+    try {
+        [System.Windows.Clipboard]::SetText($Text)
+        $Ui.StatusText.Text = Get-PcText 'about.copied'
+    } catch { Show-PcMessage (Get-PcText 'msg.error' -FormatArgs $_.Exception.Message) 'Error' }
+}
+
+function Get-PcLogoImage { Get-PcAssetImage 'pitcrew.png' }
+
+function Get-PcAssetImage([string]$Name) {
+    # A missing picture only hides it; it never stops the window from opening
+    $file = Join-Path $Pc.Root "assets\$Name"
+    if (-not (Test-Path -LiteralPath $file)) { return $null }
+    $image = New-Object Windows.Media.Imaging.BitmapImage
+    $image.BeginInit()
+    $image.UriSource = New-Object Uri $file
+    $image.CacheOption = [Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+    $image.EndInit()
+    $image.Freeze()
+    $image
 }
 
 function Update-PcCurrentPage {
@@ -321,6 +622,7 @@ function Invoke-PcPrimaryAction {
         { $script:PcTweakCategories -contains $_ } { Invoke-PcApplyTweaks }
         'startup'     { Invoke-PcSetStartup $false }
         'cleanup'     { Invoke-PcRunCleanup }
+        'memory'      { Invoke-PcCloseApps }
         'maintenance' { Invoke-PcRunMaintenance }
         'apps'        { Invoke-PcRemoveApps }
         'drivers'     { Invoke-PcInstallDrivers }
@@ -334,6 +636,7 @@ function Invoke-PcSecondaryAction {
         { $script:PcTweakCategories -contains $_ } { Invoke-PcUndoTweaks }
         'startup' { Invoke-PcSetStartup $true }
         'cleanup' { Invoke-PcAnalyzeCleanup }
+        'memory'  { Invoke-PcMemoryDiagnostic }
         'apps'    { Invoke-PcReinstallApps }
         'drivers' { Invoke-PcSearchDrivers }
         'restore' { Start-Process rstrui.exe }
@@ -374,6 +677,7 @@ function Get-PcTweakItems([string]$Category, [hashtable]$States) {
         $tagKind = switch ($t.risk) { 'moderate' { 'warn' } 'advanced' { 'bad' } default { 'neutral' } }
         New-PcItem @{
             Id        = $t.id
+            State     = [string]$state
             Title     = Resolve-PcLocalized $t.title
             Detail    = Resolve-PcLocalized $t.description
             Badge     = Get-PcText "state.$state"
@@ -412,7 +716,6 @@ $script:PcApplyWork = {
 function Show-PcApplyDialog($Tweaks) {
     # Returns $null when cancelled, otherwise whether to create a restore point first
     $dialog = New-PcApplyDialog $Tweaks
-    $dialog.Owner = $Ui.Window
     if (-not $dialog.ShowDialog()) { return $null }
     return @{ RestorePoint = [bool]$script:PcDialog.RestorePoint.IsChecked }
 }
@@ -424,28 +727,34 @@ function New-PcApplyDialog($Tweaks) {
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Width="540" SizeToContent="Height" WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
-        ShowInTaskbar="False" FontFamily="Segoe UI" FontSize="13" Background="White">
+        ShowInTaskbar="False" FontFamily="Segoe UI" FontSize="13" Background="{DynamicResource Surface}">
+  <Window.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries><!--THEME--></ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Window.Resources>
   <StackPanel Margin="26,22">
-    <TextBlock x:Name="Heading" FontSize="18" FontWeight="SemiBold" Foreground="#1B1F24"/>
-    <TextBlock x:Name="Intro" Foreground="#5F6773" Margin="0,8,0,6"/>
+    <TextBlock x:Name="Heading" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource Ink}"/>
+    <TextBlock x:Name="Intro" Foreground="{DynamicResource Muted}" Margin="0,8,0,6"/>
     <ItemsControl x:Name="Changes" Margin="0,0,0,14">
       <ItemsControl.ItemTemplate>
-        <DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,2" Foreground="#1B1F24"/></DataTemplate>
+        <DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,2" Foreground="{DynamicResource Ink}"/></DataTemplate>
       </ItemsControl.ItemTemplate>
     </ItemsControl>
     <CheckBox x:Name="RestorePoint" IsChecked="True">
       <TextBlock x:Name="RestorePointText" TextWrapping="Wrap" FontWeight="SemiBold"/>
     </CheckBox>
-    <TextBlock x:Name="LastPoint" Foreground="#5F6773" TextWrapping="Wrap" Margin="22,4,0,0" FontSize="12" Visibility="Collapsed"/>
-    <TextBlock x:Name="Note" Foreground="#9A5B00" TextWrapping="Wrap" Margin="22,6,0,0" Visibility="Collapsed"/>
+    <TextBlock x:Name="LastPoint" Foreground="{DynamicResource Muted}" TextWrapping="Wrap" Margin="24,4,0,0" FontSize="12" Visibility="Collapsed"/>
+    <TextBlock x:Name="Note" Foreground="{DynamicResource WarnText}" TextWrapping="Wrap" Margin="24,6,0,0" Visibility="Collapsed"/>
     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-      <Button x:Name="Cancel" IsCancel="True"/>
-      <Button x:Name="Confirm" IsDefault="True"/>
+      <Button x:Name="Cancel" Style="{StaticResource SecondaryButton}" IsCancel="True"/>
+      <Button x:Name="Confirm" Style="{StaticResource PrimaryButton}"/>
     </StackPanel>
   </StackPanel>
 </Window>
 '@
-    $dialog = [Windows.Markup.XamlReader]::Parse($xaml)
+    $dialog = ConvertFrom-PcXaml $xaml
+    Initialize-PcDialogWindow $dialog
     $script:PcDialog = @{ Window = $dialog }
     foreach ($n in 'Heading', 'Intro', 'Changes', 'RestorePoint', 'RestorePointText', 'LastPoint', 'Note', 'Cancel', 'Confirm') { $script:PcDialog[$n] = $dialog.FindName($n) }
     $d = $script:PcDialog
@@ -460,8 +769,6 @@ function New-PcApplyDialog($Tweaks) {
     $d.RestorePointText.Text = Get-PcText 'dialog.apply.restorePoint'
     $d.Cancel.Content = Get-PcText 'dialog.cancel'
     $d.Confirm.Content = Get-PcText 'dialog.apply.confirm'
-    $d.Cancel.Style = $Ui.Window.Resources['SecondaryButton']
-    $d.Confirm.Style = $Ui.Window.Resources['PrimaryButton']
     $d.Note.Text = Get-PcText 'dialog.apply.noRestorePointNote'
     $blockedKey = $null
     if ($Pc.SkipRestorePoint) { $blockedKey = 'dialog.apply.testMode' }
@@ -590,6 +897,7 @@ function Invoke-PcLoadRestorePoints {
     }
     Start-PcJob -Work $work -Status (Get-PcText 'status.loading') -OnDone {
         param($r)
+        if ($script:PcPage -ne 'restore') { return }
         Set-PcItems @(foreach ($p in @($r) | Sort-Object Created -Descending) {
             $typeKey = "restore.type.$($p.Type)"
             if (@(0, 1, 10, 12, 13) -notcontains $p.Type) { $typeKey = 'restore.type.other' }
@@ -647,16 +955,73 @@ function Invoke-PcRunMaintenance {
     }
 }
 
+# --- Memory ---------------------------------------------------------------------------------------
+
+function Invoke-PcLoadMemory {
+    Start-PcJob -Work { param($Sync) [pscustomobject]@{ Status = Get-PcMemoryStatus; Groups = @(Get-PcMemoryGroups) } } -Status (Get-PcText 'status.loading') -OnDone {
+        param($r)
+        if ($script:PcPage -ne 'memory') { return }
+        $m = $r[-1]
+        $s = $m.Status
+        $Ui.MemoryBar.Value = $s.Percent
+        $Ui.MemoryBar.Visibility = 'Visible'
+        $lines = @(Get-PcText 'memory.summary' -FormatArgs (Format-PcBytes $s.UsedBytes), (Format-PcBytes $s.TotalBytes), $s.Percent, (Format-PcBytes $s.AvailableBytes))
+        if ($s.PageFileSizeBytes -gt 0) { $lines[0] += '  ·  ' + (Get-PcText 'memory.pageFile' -FormatArgs (Format-PcBytes $s.PageFileUsedBytes), (Format-PcBytes $s.PageFileSizeBytes)) }
+        $lines += Get-PcText 'memory.note'
+        Set-PcPageInfo ($lines -join "`n`n")
+        Set-PcItems @(foreach ($g in @($m.Groups)) {
+            New-PcItem @{
+                Id         = $g.Name
+                Title      = $g.DisplayName
+                Detail     = $(if ($g.Count -gt 1) { Get-PcText 'memory.processes' -FormatArgs $g.Count } else { $g.Name })
+                Badge      = Format-PcBytes $g.Bytes
+                BadgeKind  = $(if ($g.Bytes -ge 1.5GB) { 'warn' } else { 'neutral' })
+                Meta       = $(if ($g.Closable) { '' } else { Get-PcText 'memory.notClosable' })
+                Selectable = [bool]$g.Closable
+                Data       = @($g.WindowKeys)
+            }
+        }) 'memory.empty'
+    }
+}
+
+function Invoke-PcCloseApps {
+    $selected = Get-PcSelectedItems
+    if ($selected.Count -eq 0) { Show-PcMessage (Get-PcText 'msg.selectFirst'); return }
+    if (-not (Confirm-PcAction (Get-PcText 'memory.confirmClose' -FormatArgs $selected.Count))) { return }
+    $keys = @(foreach ($s in $selected) { @($s.Data) | ForEach-Object { [string]$_ } })
+    $work = {
+        param($Sync, $Keys)
+        $asked = Close-PcProcessWindows -Keys $Keys
+        # Give the programs a moment to close (or to ask about saving) before measuring again
+        Start-Sleep -Seconds 2
+        $asked
+    }
+    Start-PcJob -Work $work -Arguments @{ Keys = $keys } -Status (Get-PcText 'status.closingApps') -OnDone {
+        param($r)
+        Show-PcMessage (Get-PcText 'memory.closeDone' -FormatArgs ([int]$r[-1]))
+        Invoke-PcLoadMemory
+    }
+}
+
+function Invoke-PcMemoryDiagnostic {
+    # Windows' own memory test runs at the next restart; MdSched asks when to restart
+    try { Start-Process -FilePath (Join-Path ([Environment]::SystemDirectory) 'MdSched.exe') }
+    catch { Show-PcMessage (Get-PcText 'msg.error' -FormatArgs $_.Exception.Message) 'Error' }
+}
+
 # --- Startup apps ---------------------------------------------------------------------------------
 
 function Invoke-PcLoadStartup {
     Start-PcJob -Work { param($Sync) Get-PcStartupItems } -Status (Get-PcText 'status.loading') -OnDone {
         param($r)
+        # A result for a page the user already left is dropped
+        if ($script:PcPage -ne 'startup') { return }
         Set-PcItems @(foreach ($s in $r) {
             $meta = $s.Source
             if ($s.Publisher) { $meta += '  ·  ' + $s.Publisher }
             New-PcItem @{
                 Id        = $s.Id
+                State     = $(if ($s.Enabled) { 'On' } else { 'Off' })
                 Title     = $s.Name
                 Detail    = [string]$s.Command
                 Meta      = $meta
@@ -698,6 +1063,7 @@ function Invoke-PcSetStartup([bool]$Enabled) {
 function Invoke-PcAnalyzeCleanup {
     Start-PcJob -Work { param($Sync) Get-PcCleanupTargets } -Status (Get-PcText 'status.analyzing') -OnDone {
         param($r)
+        if ($script:PcPage -ne 'cleanup') { return }
         Set-PcItems @(foreach ($t in $r) {
             $meta = Get-PcText 'cleanup.meta' -FormatArgs (Format-PcBytes $t.Bytes), $t.Files
             if ($t.Id -eq 'delivery-optimization') { $meta = Format-PcBytes $t.Bytes }
@@ -720,7 +1086,7 @@ function Invoke-PcRunCleanup {
         $inUse = [int](@($r) | Measure-Object InUse -Sum).Sum
         $text = Get-PcText 'msg.cleanDone' -FormatArgs (Format-PcBytes $freed)
         if ($inUse -gt 0) { $text += "`n" + (Get-PcText 'msg.cleanInUse' -FormatArgs $inUse) }
-        foreach ($bad in @($r | Where-Object Error)) { $text += "`n" + ('{0}: {1}' -f (Get-PcText "cleanup.$($bad.Id).detail").Split('.')[0], $bad.Error) }
+        foreach ($bad in @($r | Where-Object Error)) { $text += "`n" + ('{0}: {1}' -f ((Get-PcText "cleanup.$($bad.Id).detail") -split '[.。]')[0], $bad.Error) }
         Show-PcMessage $text
         Invoke-PcAnalyzeCleanup
     }
@@ -731,12 +1097,14 @@ function Invoke-PcRunCleanup {
 function Invoke-PcLoadApps {
     Start-PcJob -Work { param($Sync) Get-PcRemovableApps } -Status (Get-PcText 'status.loading') -OnDone {
         param($r)
+        if ($script:PcPage -ne 'apps') { return }
         Set-PcItems @(foreach ($a in $r) {
             $badge = if ($a.Installed) { Get-PcText 'apps.installed' } else { Get-PcText 'apps.notInstalled' }
             $kind = if ($a.Installed) { 'neutral' } else { 'good' }
             $detail = if ($a.Note) { $a.Note } else { $a.Package }
             $tagKind = if ($a.Risk -eq 'caution') { 'warn' } else { 'neutral' }
-            New-PcItem @{ Id = $a.Package; Title = $a.Name; Detail = $detail; Meta = $a.Package; Badge = $badge; BadgeKind = $kind
+            New-PcItem @{ Id = $a.Package; State = $(if ($a.Installed) { 'Installed' } else { 'NotInstalled' })
+                Title = $a.Name; Detail = $detail; Meta = $a.Package; Badge = $badge; BadgeKind = $kind
                 Tag = Get-PcText "apps.risk.$($a.Risk)"; TagKind = $tagKind; Data = $a.Installed }
         })
     }
@@ -783,6 +1151,7 @@ function Invoke-PcLoadDriverSummary {
     }
     Start-PcJob -Work $work -Status (Get-PcText 'status.loading') -OnDone {
         param($r)
+        if ($script:PcPage -ne 'drivers') { return }
         $s = $r[-1]
         $lines = @(Get-PcText 'drivers.summary' -FormatArgs $s.Total, ($s.Total - $s.ThirdParty), $s.ThirdParty)
         if (@($s.Problems).Count -gt 0) {
@@ -805,6 +1174,7 @@ function Invoke-PcLoadDriverSummary {
 function Invoke-PcSearchDrivers {
     Start-PcJob -Work { param($Sync) Find-PcDriverUpdates } -Status (Get-PcText 'status.searching') -OnDone {
         param($r)
+        if ($script:PcPage -ne 'drivers') { return }
         Set-PcItems @(foreach ($o in $r) {
             $kind = if ($o.Recommended) { 'good' } else { 'warn' }
             New-PcItem @{
@@ -850,10 +1220,13 @@ function Invoke-PcInstallDrivers {
 function Set-PcStaticTexts {
     $Ui.Tagline.Text = Get-PcText 'app.tagline'
     $Ui.SearchHint.Text = Get-PcText 'filter.search'
-    $Ui.HideUnavailable.Content = Get-PcText 'filter.hideUnavailable'
+    $Ui.SelectVisible.Content = Get-PcText 'filter.selectVisible'
+    $Ui.ClearSelection.Content = Get-PcText 'filter.clearSelection'
+    $Ui.RefreshButton.Content = Get-PcText 'button.refresh'
     $Ui.ExportProfile.Content = Get-PcText 'button.exportProfile'
     Update-PcPresetBox
-    foreach ($page in 'Performance', 'Privacy', 'Explorer', 'Startup', 'Cleanup', 'Maintenance', 'Apps', 'Drivers', 'Restore', 'History', 'About') {
+    Update-PcThemeBox
+    foreach ($page in 'Performance', 'Privacy', 'Explorer', 'Startup', 'Cleanup', 'Memory', 'Maintenance', 'Apps', 'Drivers', 'Restore', 'History', 'About') {
         $Ui["Nav$page"].Content = Get-PcText "nav.$($page.ToLowerInvariant())"
     }
     $Ui.ModeText.Text = if ($script:PcIsAdmin) { Get-PcText 'mode.admin' } else { Get-PcText 'mode.readOnly' }
@@ -867,16 +1240,51 @@ function Set-PcStaticTexts {
     $Ui.Banner.Visibility = if ($banner) { 'Visible' } else { 'Collapsed' }
 }
 
+function Update-PcThemeBox {
+    $script:PcThemeUpdating = $true
+    $Ui.ThemeBox.Items.Clear()
+    foreach ($choice in 'auto', 'light', 'dark') {
+        $option = New-Object System.Windows.Controls.ComboBoxItem
+        $option.Content = Get-PcText "theme.$choice"
+        $option.Tag = $choice
+        [void]$Ui.ThemeBox.Items.Add($option)
+        if ($choice -eq $script:PcThemeChoice) { $Ui.ThemeBox.SelectedItem = $option }
+    }
+    $script:PcThemeUpdating = $false
+}
+
 function New-PcWindow {
     $xaml = [IO.File]::ReadAllText((Join-Path $Pc.Root 'src\UI\Window.xaml'))
-    $window = [Windows.Markup.XamlReader]::Parse($xaml)
+    $window = ConvertFrom-PcXaml $xaml
     $script:Ui = @{ Window = $window }
-    foreach ($name in 'Tagline', 'ModeText', 'LanguageBox', 'Nav', 'NavPerformance', 'NavPrivacy', 'NavExplorer', 'NavStartup', 'NavCleanup', 'NavMaintenance',
-        'NavApps', 'NavDrivers', 'NavRestore', 'NavHistory', 'NavAbout', 'PageTitle', 'PageIntro', 'Banner', 'BannerText', 'PageInfo', 'Items', 'EmptyText',
-        'PrimaryAction', 'SecondaryAction', 'Busy', 'StatusText', 'FilterBar', 'SearchBox', 'SearchHint', 'HideUnavailable',
-        'ExportProfile', 'PresetBox') {
+    foreach ($name in 'Tagline', 'ModeText', 'LanguageBox', 'ThemeBox', 'Nav', 'NavPerformance',
+        'NavPrivacy', 'NavExplorer', 'NavStartup', 'NavCleanup', 'NavMemory', 'NavMaintenance', 'NavApps', 'NavDrivers', 'NavRestore', 'NavHistory',
+        'NavAbout', 'PageTitle', 'PageIntro', 'RefreshButton', 'Banner', 'BannerText', 'MemoryBar', 'PageInfo', 'Items', 'EmptyText',
+        'PrimaryAction', 'SecondaryAction', 'SelectionText', 'Busy', 'StatusText', 'FilterBar', 'SearchBox', 'SearchHint', 'StatusFilter',
+        'SelectVisible', 'ClearSelection', 'ExportProfile', 'PresetBox', 'LogoImage', 'AboutPanel', 'AboutIcon', 'AboutVersion', 'AboutTagline', 'AboutBeta',
+        'AboutWhatTitle', 'AboutWhat', 'AboutFeaturesTitle', 'AboutFeatures', 'AboutGoalTitle', 'AboutGoal', 'AboutAuthorTitle',
+        'AboutAuthorBio', 'LinkGitHub', 'LinkGitHubText', 'LinkLinkedIn', 'LinkLinkedInText',
+        'SupportCard', 'PixQrFrame', 'PixQr', 'SupportTitle', 'SupportText', 'PixKeyLabel', 'PixKey', 'CopyPixKey', 'CopyPixCode',
+        'AboutProjectTitle', 'AboutRepoText', 'LinkRepo', 'LinkRepoText', 'LinkIssues', 'LinkIssuesText', 'AboutCredits',
+        'AboutTranslations', 'AboutDataDir') {
         $Ui[$name] = $window.FindName($name)
     }
+
+    # Theme: the one picked last time, otherwise follow Windows
+    $savedTheme = Get-PcPreference 'Theme'
+    $script:PcThemeChoice = if (@('auto', 'light', 'dark') -contains $savedTheme) { $savedTheme } else { 'auto' }
+    Set-PcTheme $script:PcThemeChoice
+    $window.Add_SourceInitialized({ Set-PcTitleBarTheme $Ui.Window $script:PcTheme })
+
+    $iconFile = Join-Path $Pc.Root 'assets\pitcrew.ico'
+    if (Test-Path -LiteralPath $iconFile) {
+        try {
+            $window.Icon = [Windows.Media.Imaging.BitmapFrame]::Create((New-Object Uri $iconFile),
+                [Windows.Media.Imaging.BitmapCreateOptions]::None, [Windows.Media.Imaging.BitmapCacheOption]::OnLoad)
+        } catch { Write-PcLog "Window icon not loaded: $($_.Exception.Message)" 'Warn' }
+    }
+    $logo = Get-PcLogoImage
+    if ($logo) { $Ui.LogoImage.Source = $logo; $Ui.AboutIcon.Source = $logo }
 
     $script:PcIsAdmin = Test-PcAdmin
     $script:PcOtherUser = Test-PcUserMismatch
@@ -893,22 +1301,49 @@ function New-PcWindow {
         $code = $Ui.LanguageBox.SelectedItem.Tag
         if (-not $code -or $code -eq $Pc.Language) { return }
         Import-PcLocale $code
+        # Remembered for next time; without a saved choice PitCrew follows the Windows language
+        Set-PcPreference 'Language' $code
         Set-PcStaticTexts
         Show-PcPage $script:PcPage
+    })
+    $Ui.ThemeBox.Add_SelectionChanged({
+        if ($script:PcThemeUpdating) { return }
+        $choice = [string]$Ui.ThemeBox.SelectedItem.Tag
+        if (-not $choice -or $choice -eq $script:PcThemeChoice) { return }
+        Set-PcTheme $choice
+        Set-PcPreference 'Theme' $choice
     })
     $Ui.Nav.Add_SelectionChanged({
         $item = $Ui.Nav.SelectedItem
         if ($item) { Show-PcPage $item.Tag }
     })
     $Ui.SearchBox.Add_TextChanged({ Update-PcFilter })
-    $Ui.HideUnavailable.Add_Checked({ Update-PcFilter })
-    $Ui.HideUnavailable.Add_Unchecked({ Update-PcFilter })
+    $Ui.StatusFilter.Add_SelectionChanged({
+        if ($script:PcFilterUpdating -or -not $Ui.StatusFilter.SelectedItem) { return }
+        $script:PcStatusFilter = [string]$Ui.StatusFilter.SelectedItem.Tag
+        Update-PcFilter
+    })
+    $Ui.SelectVisible.Add_Click({ Select-PcVisibleItems $true })
+    $Ui.ClearSelection.Add_Click({ Select-PcVisibleItems $false })
+    $Ui.RefreshButton.Add_Click({ if ($script:PcPage -eq 'memory') { Invoke-PcLoadMemory } })
+    $Ui.CopyPixKey.Add_Click({ Copy-PcText $script:PcDonation.PixKey })
+    $Ui.CopyPixCode.Add_Click({ Copy-PcText (Get-PcPixPayload) })
     $Ui.PresetBox.Add_SelectionChanged({ Invoke-PcPresetChosen })
     $Ui.ExportProfile.Add_Click({ Invoke-PcExportProfile })
     $Ui.PrimaryAction.Add_Click({ Invoke-PcPrimaryAction })
     $Ui.SecondaryAction.Add_Click({ Invoke-PcSecondaryAction })
     $window.AddHandler([System.Windows.Documents.Hyperlink]::RequestNavigateEvent,
-        [System.Windows.Navigation.RequestNavigateEventHandler] { param($s, $e) Start-Process $e.Uri.AbsoluteUri; $e.Handled = $true })
+        [System.Windows.Navigation.RequestNavigateEventHandler] {
+            param($s, $e)
+            $e.Handled = $true
+            Open-PcWebPage $e.Uri
+        })
+    # A card ticked or unticked updates the "N ticked" count in the footer
+    $window.AddHandler([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent,
+        [System.Windows.RoutedEventHandler] {
+            param($s, $e)
+            if ($e.OriginalSource -is [System.Windows.Controls.CheckBox]) { Update-PcSelectionCount }
+        })
 
     $timer = New-Object System.Windows.Threading.DispatcherTimer
     $timer.Interval = [TimeSpan]::FromMilliseconds(200)
@@ -927,6 +1362,9 @@ function New-PcWindow {
 }
 
 function Show-PcWindow {
+    # Must happen before the first window exists, or the taskbar groups it under PowerShell
+    try { [PitCrew.NativeShell]::SetCurrentProcessExplicitAppUserModelID('JonathanCosta.PitCrew') }
+    catch { Write-PcLog "AppUserModelID not set: $($_.Exception.Message)" 'Warn' }
     $window = New-PcWindow
     [void]$window.ShowDialog()
     $Ui.Timer.Stop()

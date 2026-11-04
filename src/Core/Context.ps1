@@ -1,6 +1,40 @@
 ﻿# Shared state for every PitCrew function. Background runspaces call Initialize-PcContext
 # again with the same values, so nothing here may hold live objects (COM, WPF, handles).
 
+# The one place for the version: the About page, PitCrew.exe and the release zip all read it
+$script:PcVersion = '0.1.0-beta'
+
+# Where the project and its author live (About page). The repository links work once it is public.
+$script:PcLinks = @{
+    Repository     = 'https://github.com/jothank/pitcrew'
+    Issues         = 'https://github.com/jothank/pitcrew/issues'
+    AuthorGitHub   = 'https://github.com/jothank'
+    AuthorLinkedIn = 'https://www.linkedin.com/in/jothank/'
+}
+
+# Donations by Pix (Brazil), shown on the About page. Name and city go into the Pix code (ASCII,
+# at most 25 and 15 characters); the bank app shows the account holder's registered name anyway.
+# After changing them, run tools\Build-PixQr.ps1 to redraw assets\pix-qr.png.
+$script:PcDonation = @{
+    PixKey  = '7405c643-a1be-43dc-97f3-ee468160668a'
+    PixName = 'JONATHAN COSTA'
+    PixCity = 'FLORIANOPOLIS'
+}
+
+# Choices made in the window (language, theme), per Windows user
+$script:PcPreferencesKey = 'HKCU:\Software\PitCrew'
+
+function Get-PcPreference([string]$Name) {
+    try { return [string](Get-ItemPropertyValue -LiteralPath $script:PcPreferencesKey -Name $Name -ErrorAction Stop) } catch { return $null }
+}
+
+function Set-PcPreference([string]$Name, [string]$Value) {
+    try {
+        if (-not (Test-Path -LiteralPath $script:PcPreferencesKey)) { New-Item -Path $script:PcPreferencesKey -Force | Out-Null }
+        Set-ItemProperty -LiteralPath $script:PcPreferencesKey -Name $Name -Value $Value -Type String -ErrorAction Stop
+    } catch { Write-PcLog "Preference $Name not saved: $($_.Exception.Message)" 'Warn' }
+}
+
 function Initialize-PcContext {
     param(
         [Parameter(Mandatory)][string]$Root,

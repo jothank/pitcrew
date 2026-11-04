@@ -39,7 +39,30 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+
+# A 32-bit PowerShell on 64-bit Windows (started by a 32-bit program) would write machine settings
+# into WOW6432Node, where they do nothing: hand over to the 64-bit one with the same arguments.
+if ([Environment]::Is64BitOperatingSystem -and -not [Environment]::Is64BitProcess) {
+    $native = Join-Path ([Environment]::GetFolderPath('Windows')) 'Sysnative\WindowsPowerShell\v1.0\powershell.exe'
+    $forward = @('-NoProfile', '-STA', '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`"")
+    foreach ($p in $PSBoundParameters.GetEnumerator()) {
+        if ($p.Value -is [switch]) { if ($p.Value.IsPresent) { $forward += "-$($p.Key)" } }
+        else { $forward += "-$($p.Key)"; $forward += "`"$(@($p.Value) -join ',')`"" }
+    }
+    # Not -Wait: in Windows PowerShell 5.1 it also waits for everything the child starts (a browser
+    # opened from a link), which would keep this console open
+    $child = Start-Process -FilePath $native -ArgumentList $forward -NoNewWindow -PassThru
+    $null = $child.Handle   # keeps the exit code readable after the process ends
+    $child.WaitForExit()
+    exit $child.ExitCode
+}
+
 . (Join-Path $PSScriptRoot 'src\Load.ps1')
+# Language: -Language, then the one last picked in the window, then Windows' own, then English
+if (-not $Language) {
+    $saved = Get-PcPreference 'Language'
+    if ($saved -match '^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})?$' -and (Test-Path -LiteralPath (Join-Path $PSScriptRoot "locales\$saved.json"))) { $Language = $saved }
+}
 Initialize-PcContext -Root $PSScriptRoot -Language $Language -SkipRestorePoint:$NoRestorePoint
 if (Test-PcAdmin) {
     # Fails closed: if the folder can't be secured, every change is refused (Assert-PcDataTrusted)
@@ -103,5 +126,7 @@ try {
     Write-PcLog "Fatal: $($_.Exception.Message)`n$($_.ScriptStackTrace)" 'Error'
     Add-Type -AssemblyName PresentationFramework
     [void][System.Windows.MessageBox]::Show("PitCrew: $($_.Exception.Message)", 'PitCrew', 'OK', 'Error')
-    exit 1
+    # 2 tells PitCrew.exe the error was already shown; 1 (an error before this point) makes it say so
+    exit 2
 }
+exit 0

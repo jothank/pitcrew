@@ -1,8 +1,13 @@
+<img src="assets/pitcrew.png" alt="PitCrew icon" width="96">
+
 # PitCrew
 
 **Tune-up for Windows 10 and 11. Every change can be undone.**
 
 [Português](README.pt-BR.md)
+
+> **Beta (0.1.0).** This is the first public version. Keep the restore point box ticked when
+> applying, and report anything odd in [Issues](https://github.com/jothank/pitcrew/issues).
 
 PitCrew is a free, open-source maintenance tool for Windows: privacy and performance settings,
 disk cleanup, removal of preinstalled apps and driver updates from Windows Update, in one window.
@@ -16,7 +21,7 @@ disk cleanup, removal of preinstalled apps and driver updates from Windows Updat
   out on purpose: see [docs/NOT-INCLUDED.md](docs/NOT-INCLUDED.md).
 - **Everything can be undone.** Before changing a setting, PitCrew records exactly what was there
   (including "this value didn't exist"). Undo puts it back, and leaves alone anything you changed
-  yourself afterwards. A restore point is created before every batch of changes.
+  yourself afterwards. Before applying, PitCrew offers to create a restore point (ticked by default).
 - **Nothing is preselected.** You see the current state of each item and choose what to change.
 - **Plain language.** Each item says what it does and what you lose.
 - **No telemetry, no ads, no downloads of unknown code.**
@@ -31,7 +36,8 @@ disk cleanup, removal of preinstalled apps and driver updates from Windows Updat
 | Startup apps | Turn programs that open with Windows on or off, the same way Task Manager does |
 | Presets and profiles | "Essentials", "Gaming" and "More privacy" only tick boxes for you to review; export what's applied on one PC and import it on another |
 | Cleanup | Temp files, Windows Update downloads, Delivery Optimization cache, error reports, crash dumps, Recycle Bin, with sizes shown first |
-| Maintenance | Repair system files (DISM + SFC), remove old update files, disk health report, back up all drivers |
+| Memory | How much RAM is in use and which programs use the most, with a polite way to close them (like clicking X); schedules Windows' own memory test. No "RAM cleaner": see why in [docs/NOT-INCLUDED.md](docs/NOT-INCLUDED.md) |
+| Maintenance | Repair system files (DISM + SFC), remove old update files, optimize drives (TRIM on SSDs, defragmentation on hard disks), check drives for errors (read-only), disk health report, clear the DNS cache, back up all drivers |
 | Built-in apps | Remove or reinstall 30 preinstalled apps, each labelled "safe" or "read before removing" |
 | Drivers | Windows Update drivers, with a check that each one is really newer, a backup of the ones replaced, and a link to your motherboard maker |
 | Restore points | See existing points, create one now, open System Restore; before applying, PitCrew offers to create one (checked by default) |
@@ -40,10 +46,25 @@ disk cleanup, removal of preinstalled apps and driver updates from Windows Updat
 Every setting with its source is listed in [docs/CATALOG.md](docs/CATALOG.md) (generated from the
 code); what comes next is in [docs/TWEAKS.md](docs/TWEAKS.md).
 
-## Running it
+## Download and run
 
-Download or clone the repository and double-click **`PitCrew.bat`**. Windows asks for
-administrator rights; answer No to open it read-only.
+1. Download `PitCrew-0.1.0-beta.zip` from [Releases](https://github.com/jothank/pitcrew/releases).
+2. Right-click the zip, choose **Extract All...** and then **Extract**.
+3. In the folder that opens, open the **PitCrew** folder and double-click **`PitCrew.exe`**.
+4. Windows asks for administrator rights. Answer **Yes** to make changes, or **No** to only look
+   around (read-only).
+
+Nothing is installed: PitCrew runs from that folder.
+
+**"Windows protected your PC"?** PitCrew isn't digitally signed yet, so SmartScreen warns about it
+like any new program from an unknown publisher. Click **More info**, then **Run anyway**. You can
+check the download first: the zip's SHA-256 is published next to it, and `PitCrew.exe` is only a
+small launcher whose source is in [`tools/launcher/PitCrew.cs`](tools/launcher/PitCrew.cs).
+
+**Blocked by Smart App Control or your antivirus?** Smart App Control (Windows 11) can block
+programs that aren't signed, with no "run anyway". Use **`PitCrew.bat`** in the same folder instead:
+it does the same thing. Don't turn Smart App Control off for PitCrew: on many Windows versions it
+only comes back with a reinstall. A signed release is planned.
 
 From PowerShell:
 
@@ -55,25 +76,59 @@ From PowerShell:
 
 Logs and the undo journal are kept in `%ProgramData%\PitCrew`.
 
+## Removing PitCrew
+
+First open **History** and undo whatever you want back the way it was: PitCrew can only undo its
+changes while its undo journal exists. Then delete the PitCrew folder. The journal and logs are in
+`C:\ProgramData\PitCrew`; delete that folder last, if you want.
+
 ## Languages
 
 English, Português (Brasil), Español, Français, Deutsch, Русский, Türkçe and 简体中文. The interface
-follows the Windows language and can be switched in the window.
+follows the Windows language (an Argentine Windows gets Spanish, a Portuguese one gets Portuguese)
+and falls back to English. A language picked in the window is remembered. The light and dark themes
+follow Windows too, or can be picked in the window. Lists can be filtered by state (applied, not
+applied, installed...) and every shown item ticked in one click.
 
 Translations other than English and Portuguese were machine-generated. Corrections from native
 speakers are very welcome: each language is one file in [`locales/`](locales), and setting texts
 live next to each setting in [`tweaks/`](tweaks).
 
-## Testing
+## Testing and building
 
 ```powershell
-powershell -File tests\Run-Tests.ps1     # no dependencies; touches only a throwaway registry key
-powershell -File tools\Start-Sandbox.ps1  # try Apply/Undo for real inside Windows Sandbox
+powershell -File tests\Run-Tests.ps1         # no dependencies; touches only a throwaway registry key
+powershell -File tools\Start-Sandbox.ps1      # try Apply/Undo for real inside Windows Sandbox
+powershell -File tools\Build-Release.ps1      # tests, then dist\PitCrew-<version>.zip from the last commit
+powershell -STA -File tools\Build-Icon.ps1    # redraws assets\pitcrew.ico and .png from code
 ```
 
+The release needs nothing beyond Windows: `PitCrew.exe` is compiled with the C# compiler that
+comes with the .NET Framework, and the zip is made by `git archive` from a commit (`-Dev` builds a
+test zip from uncommitted changes).
+
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the engine works and how to add a setting.
+Changes per version are in [CHANGELOG.md](CHANGELOG.md); to report a security problem, see
+[SECURITY.md](SECURITY.md).
+
+## Support the project
+
+PitCrew is free and always will be. If it helped you, you can support it with any amount via Pix
+(Brazil's instant payments): scan the code with your bank app, or use the key below. The same
+code is on the About page.
+
+<img src="assets/pix-qr.png" alt="Pix QR code" width="180">
+
+Pix key: `7405c643-a1be-43dc-97f3-ee468160668a`
+
+## Author
+
+Made by **Jonathan Costa**, data engineer:
+[GitHub](https://github.com/jothank) · [LinkedIn](https://www.linkedin.com/in/jothank/).
+PitCrew started as a small script to update my PC's drivers and grew from there.
 
 ## License and credits
 
-MIT. Before writing PitCrew we studied other open-source tools for ideas; what we took from each
-and why is in [docs/RESEARCH.md](docs/RESEARCH.md). No code was copied from GPL projects.
+MIT © 2026 Jonathan Costa. Before writing PitCrew we studied other open-source tools for ideas;
+what we took from each and why is in [docs/RESEARCH.md](docs/RESEARCH.md). No code was copied from
+GPL projects.

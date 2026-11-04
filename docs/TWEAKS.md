@@ -34,7 +34,9 @@ what comes next. 🧩 = needs a new engine action type, 📋 = only content or U
 | ✅ | Search and "hide not available" filter in long lists |
 | ✅ | Presets (Essentials, Gaming, More privacy) that only pre-tick items; nothing applies without a click |
 | ✅ | Export/import your choices as a profile file |
-| 📋 | Dark theme following Windows |
+| ✅ | Light and dark themes following Windows, PitCrew's own dialogs |
+| ✅ | Status filter (applied, not applied, installed...), tick all shown, ticked count |
+| ✅ | Memory page and more maintenance (optimize drives, read-only disk check, DNS cache) |
 | 📋 | Pre-flight checks before applying: pending restart, third-party antivirus, BitLocker state, settings locked by policy |
 | 📋 | Update installed programs with `winget upgrade` (needs structured output, not the localized table) |
 
@@ -45,9 +47,19 @@ what comes next. 🧩 = needs a new engine action type, 📋 = only content or U
 | 📋 | Journal a "pending" record with the before-state *before* each step, so a kill during `sc.exe`/`powercfg` itself also leaves an Undo |
 | 📋 | At an elevated start, warn if PitCrew's own folder (`src`, `tweaks`) is writable by standard users |
 
+## Release
+
+| Status | Item |
+|---|---|
+| ✅ | `PitCrew.exe` launcher, icon, release zip with SHA-256 (`tools/Build-Release.ps1`) |
+| 📋 | Signed release, so SmartScreen and Smart App Control don't block it |
+| 📋 | Build releases in GitHub Actions with artifact attestations, so anyone can check a zip came from a given commit |
+| 📋 | Start menu shortcut, and a taskbar pin that opens PitCrew (the window's relaunch command) |
+| 📋 | "Check for a new version" on the About page (a link to Releases, nothing downloaded) |
+
 ## Later
 
 | Status | Item |
 |---|---|
 | 📋 | Clean-install answer file generator (see [RESEARCH.md](RESEARCH.md)) |
-| 📋 | Single-file build and a signed release |
+| 📋 | Single-file build |

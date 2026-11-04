@@ -8,10 +8,12 @@ $script:PcSourceFiles = @(
     'Core\Actions.ps1'
     'Core\Tweaks.ps1'
     'Core\RestorePoint.ps1'
+    'Core\Pix.ps1'
     'Modules\Drivers.ps1'
     'Modules\Cleanup.ps1'
     'Modules\Apps.ps1'
     'Modules\Maintenance.ps1'
+    'Modules\Memory.ps1'
     'Modules\Startup.ps1'
 )
 

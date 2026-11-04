@@ -7,11 +7,15 @@
 param(
     [Parameter(Mandatory)][string]$Out,
     [string]$Language = 'en',
-    [ValidateSet('performance', 'privacy', 'explorer', 'startup', 'maintenance', 'history', 'about', 'apply-dialog')][string]$Page = 'performance',
+    [ValidateSet('performance', 'privacy', 'explorer', 'startup', 'cleanup', 'memory', 'maintenance', 'apps', 'history', 'about',
+        'apply-dialog', 'message-dialog', 'confirm-dialog')][string]$Page = 'performance',
     [int]$Width = 1120,
-    [int]$Height = 740,
+    [int]$Height = 760,
     # Draw it as an administrator would see it (no read-only banner); nothing can run anyway
-    [switch]$AsAdmin
+    [switch]$AsAdmin,
+    [ValidateSet('light', 'dark')][string]$Theme = 'light',
+    # Draw the page as it looks while a job runs (navigation and buttons disabled)
+    [switch]$Busy
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
@@ -27,6 +31,8 @@ function Wait-PcJob {
 
 $window = New-PcWindow
 $Ui.Timer.Stop()
+# The theme saved on this PC must not change the picture
+Set-PcTheme $Theme
 Wait-PcJob
 if ($AsAdmin) {
     $script:PcIsAdmin = $true
@@ -36,17 +42,22 @@ if ($Page -eq 'apply-dialog') {
     # The confirmation shown before applying, filled with every tweak of the catalog
     $source = New-PcApplyDialog @($script:PcTweaks | Select-Object -First 4)
     $Height = 0
+} elseif ($Page -eq 'message-dialog' -or $Page -eq 'confirm-dialog') {
+    $text = if ($Page -eq 'message-dialog') { 'Voice Clarity: ' + (Get-PcText 'drivers.result.installed') } else { Get-PcText 'msg.confirmClean' -FormatArgs '1,2 GB' }
+    $source = New-PcMessageDialog $text $(if ($Page -eq 'message-dialog') { 'Information' } else { 'Question' }) -Confirm:($Page -eq 'confirm-dialog')
+    $Height = 0
 } else {
     $Ui.Nav.SelectedItem = $Ui["Nav$((Get-Culture).TextInfo.ToTitleCase($Page))"]
     Wait-PcJob
     if ($AsAdmin) { Show-PcPage $Page; Wait-PcJob }
+    if ($Busy) { Set-PcBusy $true (Get-PcText 'status.creatingRestorePoint') }
     $source = $window
 }
 
 # Lay out the window's content offscreen, without ever showing the window
 $content = $source.Content
 $source.Content = $null
-$content.Resources.MergedDictionaries.Add($window.Resources)
+$content.Resources.MergedDictionaries.Add($source.Resources)
 $content.Background = $source.Background
 if ($Height -eq 0) {
     # Dialogs size to their content

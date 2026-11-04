@@ -1,12 +1,67 @@
-﻿# One-off maintenance jobs: system file repair, component store cleanup, disk health and a full
-# driver backup. Each returns plain result lines for the window to show.
+﻿# One-off maintenance jobs: system file repair, component store cleanup, drive optimization, a
+# read-only disk check, disk health, DNS cache and a full driver backup. Each returns plain result
+# lines for the window to show.
 
 $script:PcMaintenanceTasks = @(
     [pscustomobject]@{ Id = 'repair'; TextKey = 'maintenance.repair'; Long = $true }
     [pscustomobject]@{ Id = 'component-cleanup'; TextKey = 'maintenance.componentCleanup'; Long = $true }
+    [pscustomobject]@{ Id = 'optimize-drives'; TextKey = 'maintenance.optimizeDrives'; Long = $true }
+    [pscustomobject]@{ Id = 'check-disk'; TextKey = 'maintenance.checkDisk'; Long = $true }
     [pscustomobject]@{ Id = 'disk-health'; TextKey = 'maintenance.diskHealth'; Long = $false }
+    [pscustomobject]@{ Id = 'flush-dns'; TextKey = 'maintenance.flushDns'; Long = $false }
     [pscustomobject]@{ Id = 'driver-backup'; TextKey = 'maintenance.driverBackup'; Long = $false }
 )
+
+function Get-PcFixedVolumes {
+    # Local fixed NTFS drives with a letter: the ones both Optimize-Volume and Repair-Volume -Scan handle
+    @(Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and [string]$_.DriveLetter -match '^[A-Z]$' -and $_.FileSystem -eq 'NTFS' } |
+        Sort-Object DriveLetter)
+}
+
+function Invoke-PcOptimizeDrives($Sync) {
+    $volumes = Get-PcFixedVolumes
+    if ($volumes.Count -eq 0) { return Get-PcText 'maintenance.noVolumes' }
+    foreach ($v in $volumes) {
+        $drive = "$($v.DriveLetter):"
+        if ($Sync) { $Sync.Status = Get-PcText 'status.running' -FormatArgs "Optimize-Volume $drive" }
+        try {
+            # No operation flag: Windows picks TRIM for SSDs and defragmentation for hard disks,
+            # the same as its weekly "Optimize drives" task
+            Optimize-Volume -DriveLetter $v.DriveLetter -ErrorAction Stop
+            Write-PcLog "Optimize-Volume $drive done"
+            Get-PcText 'maintenance.optimizeDone' -FormatArgs $drive
+        } catch {
+            Write-PcLog "Optimize-Volume $drive failed: $($_.Exception.Message)" 'Warn'
+            Get-PcText 'maintenance.optimizeFailed' -FormatArgs $drive, $_.Exception.Message
+        }
+    }
+}
+
+function Invoke-PcCheckDisks($Sync) {
+    $volumes = Get-PcFixedVolumes
+    if ($volumes.Count -eq 0) { return Get-PcText 'maintenance.noVolumes' }
+    foreach ($v in $volumes) {
+        $drive = "$($v.DriveLetter):"
+        if ($Sync) { $Sync.Status = Get-PcText 'status.running' -FormatArgs "Repair-Volume -Scan $drive" }
+        try {
+            # -Scan only reads and reports, online; any repair is left to Windows' own tools
+            $result = [string](Repair-Volume -DriveLetter $v.DriveLetter -Scan -ErrorAction Stop)
+            Write-PcLog "Repair-Volume -Scan $drive : $result"
+            if ($result -eq 'NoErrorsFound') { Get-PcText 'maintenance.checkOk' -FormatArgs $drive }
+            else { Get-PcText 'maintenance.checkProblems' -FormatArgs $drive }
+        } catch {
+            Write-PcLog "Repair-Volume -Scan $drive failed: $($_.Exception.Message)" 'Warn'
+            Get-PcText 'maintenance.checkFailed' -FormatArgs $drive, $_.Exception.Message
+        }
+    }
+}
+
+function Invoke-PcFlushDns {
+    try {
+        Clear-DnsClientCache -ErrorAction Stop
+        return Get-PcText 'maintenance.flushDnsDone'
+    } catch { return Get-PcText 'msg.error' -FormatArgs $_.Exception.Message }
+}
 
 function Get-PcCbsLogTail([int64]$FromLength) {
     # CBS.log lines are English on every Windows language, unlike SFC's own (UTF-16) output
@@ -83,7 +138,10 @@ function Invoke-PcMaintenance {
         switch ($id) {
             'repair'            { Invoke-PcSystemRepair $Sync }
             'component-cleanup' { Invoke-PcComponentCleanup $Sync }
+            'optimize-drives'   { Invoke-PcOptimizeDrives $Sync }
+            'check-disk'        { Invoke-PcCheckDisks $Sync }
             'disk-health'       { Get-PcDiskHealth }
+            'flush-dns'         { Invoke-PcFlushDns }
             'driver-backup'     {
                 if (-not $DriverBackupFolder) { $DriverBackupFolder = Get-PcDriverBackupFolder }
                 if ($Sync) { $Sync.Status = Get-PcText 'status.running' -FormatArgs (Get-PcText 'maintenance.driverBackup') }

@@ -35,7 +35,7 @@ evidence that one of them helps on Windows 10/11 today, open an issue with measu
 | TCP "boosts" (`TcpAckFrequency`, `TCPNoDelay`, autotuning off) | Can increase or decrease latency depending on the game's own socket options; autotuning off lowers throughput. |
 | Turn off SysMain (Superfetch) / Prefetcher | Neutral on SSDs, slower app starts on HDDs. |
 | Turn off Windows Search (`WSearch`) | Breaks Start, Settings and File Explorer search. |
-| "RAM cleaners": `EmptyWorkingSet` on all processes, purging the standby list | Windows already reclaims standby memory on demand; trimming just causes page faults and stutter. |
+| "RAM cleaners": `EmptyWorkingSet` on all processes, purging the standby list, or doing either on a timer or above a usage % | Windows already reclaims standby memory on demand; trimming just causes page faults and stutter. The Memory page shows instead what uses the RAM and lets you close programs you don't need. |
 | Disable HPET / `bcdedit useplatformclock` / `disabledynamictick` | `useplatformclock` isn't set by default, so deleting it does nothing; the others are undocumented as performance fixes. |
 | "Unlock all cores" (core parking registry edits) | Only unhides a power plan option; Windows 11 parks cores dynamically. |
 | `SvcHostSplitThresholdInKB` | Trades memory for fewer service processes; no speed gain. |
