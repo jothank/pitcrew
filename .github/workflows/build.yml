@@ -1,0 +1,129 @@
+# Tests and builds PitCrew on a GitHub-hosted Windows runner, for every push to main and every pull
+# request. For a version tag (v1.2.3 or v1.2.3-beta) it also sends PitCrew.exe to SignPath for code
+# signing and attaches the zip with the signed exe to a draft release, to be checked and published
+# by hand. Signing stays off until the repository has the SignPath variables and secret
+# (docs/SIGNING.md); until then a tag only builds the unsigned zip.
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      actions: read   # SignPath fetches the uploaded artifact with this job's token
+    env:
+      SIGN: ${{ startsWith(github.ref, 'refs/tags/v') && vars.SIGNPATH_ORGANIZATION_ID != '' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Check the tag matches the version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: powershell
+        run: |
+          $text = [IO.File]::ReadAllText('src\Core\Context.ps1')
+          $version = [regex]::Match($text, "\`$script:PcVersion\s*=\s*'([^']+)'").Groups[1].Value
+          if ("v$version" -cne $env:GITHUB_REF_NAME) { throw "Tag $env:GITHUB_REF_NAME doesn't match version $version in src\Core\Context.ps1" }
+          "version=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
+
+      - name: Test
+        shell: powershell
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File tests\Run-Tests.ps1
+          exit $LASTEXITCODE
+
+      - name: Build PitCrew.exe
+        shell: powershell
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File tools\Build-Release.ps1 -ExeOnly -OutDir "$env:RUNNER_TEMP\unsigned"
+          exit $LASTEXITCODE
+
+      - name: Upload PitCrew.exe for signing
+        if: env.SIGN == 'true'
+        id: upload-unsigned
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: PitCrew-exe-unsigned
+          path: ${{ runner.temp }}/unsigned/PitCrew.exe
+          if-no-files-found: error
+          retention-days: 7
+
+      # Waits until the signing request is approved on signpath.io (by hand, by a project approver)
+      - name: Sign PitCrew.exe (SignPath)
+        if: env.SIGN == 'true'
+        uses: signpath/github-action-submit-signing-request@f6d04783b4569d051e0c80105fe66e82819d0092 # v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+          github-artifact-id: ${{ steps.upload-unsigned.outputs.artifact-id }}
+          parameters: |
+            version: ${{ toJSON(env.version) }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: ${{ runner.temp }}/signed
+
+      - name: Build the release zip
+        shell: powershell
+        run: |
+          $script = 'tools\Build-Release.ps1'
+          if ($env:SIGN -eq 'true') {
+            powershell -NoProfile -ExecutionPolicy Bypass -File $script -SkipTests -ExeFile "$env:RUNNER_TEMP\signed\PitCrew.exe" -RequireSignature
+          } else {
+            powershell -NoProfile -ExecutionPolicy Bypass -File $script -SkipTests -ExeFile "$env:RUNNER_TEMP\unsigned\PitCrew.exe"
+          }
+          exit $LASTEXITCODE
+
+      - name: Upload the release zip
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: PitCrew-release
+          path: |
+            dist/PitCrew-*.zip
+            dist/PitCrew-*.zip.sha256
+          if-no-files-found: error
+
+  # A separate job, so the only token that can write to the repository never reaches the signing step
+  draft-release:
+    needs: build
+    # The same condition as signing in the build job: only a signed zip becomes a release here
+    if: startsWith(github.ref, 'refs/tags/v') && vars.SIGNPATH_ORGANIZATION_ID != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: PitCrew-release
+          path: dist
+
+      - name: Create a draft release with the signed zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="$GITHUB_REF_NAME"
+          version="${tag#v}"
+          sha256=$(cut -d' ' -f1 dist/PitCrew-"$version".zip.sha256)
+          prerelease=""
+          case "$version" in *-*) prerelease="--prerelease" ;; esac
+          printf '%s\n\n%s\n\n%s\n' \
+            "PitCrew $version. Changes: [CHANGELOG.md](https://github.com/$GITHUB_REPOSITORY/blob/main/CHANGELOG.md)." \
+            "SHA-256 of the zip: \`$sha256\`" \
+            "Code signing policy: free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org)." > notes.md
+          gh release create "$tag" dist/PitCrew-"$version".zip dist/PitCrew-"$version".zip.sha256 \
+            --repo "$GITHUB_REPOSITORY" --draft --verify-tag $prerelease \
+            --title "PitCrew $version" --notes-file notes.md

@@ -14,14 +14,21 @@
        PitCrew.exe straight into Downloads), adds PitCrew.exe, checks every entry against a list of
        what may ship, and writes the SHA-256 next to the zip.
 
+    -ExeFile puts an already built PitCrew.exe in the zip instead of compiling one: the copy that came
+    back from code signing (.github\workflows\build.yml). With -RequireSignature the zip is only
+    built if that exe has a valid, timestamped signature and this version.
+
     powershell -File tools\Build-Release.ps1 [-Dev] [-OutDir dist] [-SkipTests]
     powershell -File tools\Build-Release.ps1 -ExeOnly -OutDir <folder>   (only PitCrew.exe)
+    powershell -File tools\Build-Release.ps1 -ExeFile <signed PitCrew.exe> -RequireSignature
 #>
 param(
     [string]$OutDir,
     [switch]$Dev,
     [switch]$SkipTests,
-    [switch]$ExeOnly
+    [switch]$ExeOnly,
+    [string]$ExeFile,
+    [switch]$RequireSignature
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
@@ -112,7 +119,28 @@ function Test-PcReleaseEntries([string[]]$Entries) {
     $problems
 }
 
+function Test-PcGivenExe([string]$Path, $Version, [switch]$Signed) {
+    # Returns what's wrong with an exe built elsewhere (the signed copy); empty means it can ship
+    $problems = @()
+    $info = [Diagnostics.FileVersionInfo]::GetVersionInfo($Path)
+    if ($info.ProductName -ne 'PitCrew') { $problems += "product name '$($info.ProductName)', expected 'PitCrew'" }
+    if ($info.ProductVersion -ne $Version.Full) { $problems += "version $($info.ProductVersion), expected $($Version.Full)" }
+    if ($Signed) {
+        $signature = Get-AuthenticodeSignature -LiteralPath $Path
+        if ($signature.Status -ne 'Valid') { $problems += "signature: $($signature.Status) ($($signature.StatusMessage))" }
+        elseif (-not $signature.TimeStamperCertificate) { $problems += 'the signature has no timestamp, so it would stop being valid when the certificate expires' }
+    }
+    $problems
+}
+
 $version = Get-PcBuildVersion
+
+if ($ExeFile) {
+    $ExeFile = (Resolve-Path -LiteralPath $ExeFile).ProviderPath
+    $problems = @(Test-PcGivenExe $ExeFile $version -Signed:$RequireSignature)
+    if ($problems) { throw "PitCrew.exe can't ship:`n$($problems -join "`n")" }
+    if ($RequireSignature) { Write-Host "PitCrew.exe signed by: $((Get-AuthenticodeSignature -LiteralPath $ExeFile).SignerCertificate.Subject)" }
+} elseif ($RequireSignature) { throw '-RequireSignature needs -ExeFile: the signed PitCrew.exe' }
 
 if ($ExeOnly) {
     $exe = Join-Path $OutDir 'PitCrew.exe'
@@ -138,7 +166,7 @@ $work = Join-Path ([IO.Path]::GetTempPath()) ('pitcrew-release-' + [guid]::NewGu
 New-Item -ItemType Directory -Path $work | Out-Null
 try {
     $exe = Join-Path $work 'PitCrew.exe'
-    Build-PcLauncher $exe $version
+    if ($ExeFile) { Copy-Item -LiteralPath $ExeFile -Destination $exe } else { Build-PcLauncher $exe $version }
     if (Test-Path -LiteralPath $zipPath) { Remove-Item -LiteralPath $zipPath -Force }
     Invoke-PcGit archive --format=zip --prefix=PitCrew/ -o $zipPath $tree | Out-Null
 

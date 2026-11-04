@@ -12,6 +12,9 @@
     unsigned exe. Those tests are then reported as skipped, not failed: run them in Windows Sandbox.
 #>
 $ErrorActionPreference = 'Stop'
+# GitHub's runners give TEMP as a short 8.3 path (RUNNER~1), which never matches the long paths
+# Windows reports for the same folder; the long form keeps path comparisons in these tests honest
+$env:TEMP = $env:TMP = [IO.Path]::GetFullPath($env:TEMP)
 $root = Split-Path $PSScriptRoot -Parent
 . (Join-Path $root 'src\Core\Context.ps1')
 
@@ -103,6 +106,17 @@ try {
         Assert-Equal 'PitCrew' $info.FileDescription 'description (shown in the UAC prompt)'
         Assert-Equal 'Jonathan Costa' $info.CompanyName 'company'
         Assert-True ($info.LegalCopyright -like '*Jonathan Costa*') 'copyright'
+    }
+
+    Test-Case 'a release that requires a signature refuses an unsigned exe and builds nothing' {
+        $out = Join-Path $tmp 'release'
+        # The build is expected to fail: its error output must be read, not stop this test
+        $ErrorActionPreference = 'Continue'
+        $text = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'tools\Build-Release.ps1') `
+            -ExeFile $exe -RequireSignature -SkipTests -OutDir $out 2>&1 | Out-String
+        Assert-True ($LASTEXITCODE -ne 0) 'the build stopped'
+        Assert-True ($text -match 'signature: NotSigned') "the reason is the missing signature ($($text.Trim()))"
+        Assert-Equal 0 @(Get-ChildItem -LiteralPath $out -File -ErrorAction SilentlyContinue).Count 'files left in the output folder'
     }
 
     if (Test-Path -LiteralPath $exe) {

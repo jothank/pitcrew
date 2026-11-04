@@ -67,7 +67,8 @@ do zip fica publicado ao lado dele, e o `PitCrew.exe` é só um lançador pequen
 Aplicativos (Smart App Control, do Windows 11) pode bloquear programas sem assinatura, sem a opção
 "executar assim mesmo". Use então o **`PitCrew.bat`** da mesma pasta: ele faz a mesma coisa. Não
 desligue esse controle por causa do PitCrew: em muitas versões do Windows ele só volta reinstalando
-o sistema. Uma versão assinada está nos planos.
+o sistema. Uma versão assinada está a caminho: veja a
+[política de assinatura de código](#política-de-assinatura-de-código-code-signing-policy).
 
 Pelo PowerShell:
 
@@ -124,6 +125,24 @@ tela Sobre.
 <img src="assets/pix-qr.png" alt="QR Code do Pix" width="180">
 
 Chave Pix: `7405c643-a1be-43dc-97f3-ee468160668a`
+
+## Política de assinatura de código (Code signing policy)
+
+"Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by
+[SignPath Foundation](https://signpath.org)": assinatura de código gratuita da SignPath.io, com
+certificado da SignPath Foundation. *Ainda não aprovada: até a SignPath Foundation aprovar o
+projeto, o `PitCrew.exe` vai sem assinatura.*
+
+- **O que é assinado:** só o `PitCrew.exe`, e só quando ele foi compilado a partir deste repositório
+  pelo [GitHub Actions](.github/workflows/build.yml) para uma versão marcada (tag). Cada pedido de
+  assinatura é aprovado à mão. Os detalhes estão em [docs/SIGNING.md](docs/SIGNING.md).
+- **Equipe:**
+  - Quem escreve e revisa o código: [Jonathan Costa](https://github.com/jothank).
+  - Quem aprova as assinaturas: [Jonathan Costa](https://github.com/jothank).
+- **Privacidade:** este programa não envia nenhuma informação para outros sistemas na rede, a não ser
+  quando pedido pelo usuário ou por quem instala ou opera o programa. O PitCrew só acessa a internet
+  quando você pede: para procurar drivers no Windows Update, reinstalar um app de fábrica pela
+  Microsoft Store ou abrir um link no navegador.
 
 ## Autor
 

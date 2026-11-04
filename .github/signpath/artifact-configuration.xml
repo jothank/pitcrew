@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SignPath artifact configuration for PitCrew (a copy of what is set on signpath.io; see docs/SIGNING.md).
+  The GitHub artifact sent by .github/workflows/build.yml is a zip holding only PitCrew.exe. Only that
+  file is signed, and only if its product name is PitCrew and its version is the one the workflow
+  passes (the tag without the "v").
+-->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <parameters>
+    <parameter name="version" required="true" />
+  </parameters>
+  <zip-file>
+    <pe-file path="PitCrew.exe" product-name="PitCrew" product-version="${version}">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

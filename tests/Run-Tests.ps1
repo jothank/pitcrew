@@ -7,6 +7,9 @@
     the undo journal in a temp folder. Nothing touches real Windows settings. Exit code = failures.
 #>
 $ErrorActionPreference = 'Stop'
+# GitHub's runners give TEMP as a short 8.3 path (RUNNER~1), which never matches the long paths
+# Windows reports for the same folder; the long form keeps path comparisons in these tests honest
+$env:TEMP = $env:TMP = [IO.Path]::GetFullPath($env:TEMP)
 $root = Split-Path $PSScriptRoot -Parent
 . (Join-Path $root 'src\Load.ps1')
 

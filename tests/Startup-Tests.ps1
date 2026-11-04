@@ -7,6 +7,9 @@
     folders are temp folders. Nothing touches the real startup state.
 #>
 $ErrorActionPreference = 'Stop'
+# GitHub's runners give TEMP as a short 8.3 path (RUNNER~1), which never matches the long paths
+# Windows reports for the same folder; the long form keeps path comparisons in these tests honest
+$env:TEMP = $env:TMP = [IO.Path]::GetFullPath($env:TEMP)
 $root = Split-Path $PSScriptRoot -Parent
 . (Join-Path $root 'src\Load.ps1')
 . (Join-Path $root 'src\Modules\Startup.ps1')

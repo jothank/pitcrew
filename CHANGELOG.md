@@ -1,5 +1,13 @@
 # Changelog
 
+## Not released yet
+
+- **Builds on GitHub Actions:** every push and pull request is tested and built on a GitHub-hosted
+  Windows runner.
+- **Code signing (once SignPath Foundation approves the project):** for a version tag, `PitCrew.exe`
+  is signed, checked and put in a draft release. Only the exe is signed; the scripts stay as they
+  are. See the code signing policy in the README and [docs/SIGNING.md](docs/SIGNING.md).
+
 ## 0.1.0-beta (2026-11-04)
 
 First public version.

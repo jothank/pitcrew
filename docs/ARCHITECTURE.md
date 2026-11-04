@@ -17,7 +17,8 @@ src/UI/Window.xaml|.ps1     the window and PitCrew's own dialogs; slow work runs
 src/UI/Theme.xaml           shared styles and the light palette, put into every window and dialog
 tweaks/<category>.json      the settings catalog (one file per category)
 data/apps.json              removable apps with verified Microsoft Store IDs and safe/caution labels
-data/presets.json           presets: lists of tweak ids that are only pre-ticked, never applied directlylocales/<lang>.json         interface texts
+data/presets.json           presets: lists of tweak ids that are only pre-ticked, never applied directly
+locales/<lang>.json         interface texts
 assets/pitcrew.ico|.png     the icon (window, taskbar, PitCrew.exe, README), drawn by tools/Build-Icon.ps1
 tests/Run-Tests.ps1         dependency-free tests (also runs tests/Startup-Tests.ps1 and Launcher-Tests.ps1)
 tests/Launcher-Tests.ps1    builds PitCrew.exe and checks, with --dry-run, what it would start
@@ -31,6 +32,8 @@ tools/Build-Release.ps1     tests, PitCrew.exe and dist/PitCrew-<version>.zip wi
 tools/launcher/             source and manifest of PitCrew.exe
 tools/Build-PixQr.ps1       draws assets/pix-qr.png (donations) from the Pix data, with tools/QrCode.cs
 src/Core/Pix.ps1            the Pix "copia e cola" code (Banco Central BR Code with its CRC16)
+.github/workflows/build.yml tests and builds on GitHub Actions; signs PitCrew.exe for version tags (docs/SIGNING.md)
+.github/signpath/           copy of the SignPath artifact configuration (what gets signed, and its checks)
 ```
 
 ## A tweak
@@ -209,6 +212,16 @@ Everything sits in a `PitCrew\` folder inside the zip, so "Extract here" never d
 straight into Downloads, where a planted DLL or `PitCrew.exe.config` could be waiting. Every entry
 is checked against a list of what may ship (no stray binaries, keys or archives, nothing twice),
 and the SHA-256 is written next to the zip.
+
+From the first signed version on, official releases are built by `.github/workflows/build.yml` on a
+GitHub-hosted runner (0.1.0-beta was still built locally and is unsigned), since
+SignPath Foundation only signs what a CI built from the public source. For a version tag, the
+workflow builds `PitCrew.exe` (`-ExeOnly`), sends only that file to SignPath, and builds the zip
+around the copy that comes back (`-ExeFile <signed exe> -RequireSignature`). Signing touches no other
+file, so the scripts stay readable and unchanged. Before zipping, the script checks that the exe has
+a valid, timestamped signature, the product name PitCrew and this version. The signed zip ends up in
+a draft release, to be checked and published by hand. Setup and the release steps are in
+[SIGNING.md](SIGNING.md).
 
 The window sets its own AppUserModelID before it is created, so the taskbar shows it as PitCrew
 with its icon instead of grouping it with other PowerShell windows. Links in the window open only

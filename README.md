@@ -64,7 +64,8 @@ small launcher whose source is in [`tools/launcher/PitCrew.cs`](tools/launcher/P
 **Blocked by Smart App Control or your antivirus?** Smart App Control (Windows 11) can block
 programs that aren't signed, with no "run anyway". Use **`PitCrew.bat`** in the same folder instead:
 it does the same thing. Don't turn Smart App Control off for PitCrew: on many Windows versions it
-only comes back with a reinstall. A signed release is planned.
+only comes back with a reinstall. A signed release is on the way: see the
+[code signing policy](#code-signing-policy).
 
 From PowerShell:
 
@@ -120,6 +121,23 @@ code is on the About page.
 <img src="assets/pix-qr.png" alt="Pix QR code" width="180">
 
 Pix key: `7405c643-a1be-43dc-97f3-ee468160668a`
+
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by
+[SignPath Foundation](https://signpath.org). *Not approved yet: until SignPath Foundation approves
+the project, `PitCrew.exe` is unsigned.*
+
+- **What gets signed:** only `PitCrew.exe`, and only when it was built from this repository by
+  [GitHub Actions](.github/workflows/build.yml) for a version tag. Every signing request is approved
+  by hand. Details are in [docs/SIGNING.md](docs/SIGNING.md).
+- **Team:**
+  - Committers and reviewers: [Jonathan Costa](https://github.com/jothank).
+  - Approvers: [Jonathan Costa](https://github.com/jothank).
+- **Privacy:** This program will not transfer any information to other networked systems unless
+  specifically requested by the user or the person installing or operating it. PitCrew goes online
+  only when you ask it to: searching Windows Update for drivers, reinstalling a built-in app from the
+  Microsoft Store, or opening a link in your browser.
 
 ## Author
 
