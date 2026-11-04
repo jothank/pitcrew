@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0-beta (not published yet)
+## 0.1.0-beta (2026-11-04)
 
 First public version.
 
