@@ -21,9 +21,10 @@ data/apps.json              removable apps with verified Microsoft Store IDs and
 data/presets.json           presets: lists of tweak ids that are only pre-ticked, never applied directly
 locales/<lang>.json         interface texts
 assets/pitcrew.ico|.png     the icon (window, taskbar, PitCrew.exe, README), drawn by tools/Build-Icon.ps1
-tests/Run-Tests.ps1         dependency-free tests (also runs Startup-Tests.ps1, Launcher-Tests.ps1 and Setup-Tests.ps1)
+tests/Run-Tests.ps1         dependency-free tests (also runs Startup-Tests, Launcher-Tests, Setup-Tests and Devices-Real)
 tests/Launcher-Tests.ps1    builds PitCrew.exe and checks, with --dry-run, what it would start
 tests/Setup-Tests.ps1       installs and removes PitCrew in temp folders (for real only on GitHub's runners)
+tests/Devices-Real.ps1      flips one device's power box and puts it back (only on GitHub's runners)
 tests/Smoke-Window.ps1      drives every page's read-only jobs without showing the window
 tests/Check-Catalog.ps1     read-only: which catalog targets exist on this PC and their state
 tests/Render-Window.ps1     renders a page or the apply dialog to PNG
@@ -177,6 +178,37 @@ The language and theme picked in the window are saved in `HKCU\Software\PitCrew`
 The list cards carry an untranslated `State` (Applied, NotApplied, Installed, On...) that the status
 filter uses, so filters work the same in every language. Hidden cards are never acted on, and "tick
 all shown" only ticks visible cards that can be acted on.
+
+## Device power
+
+`src/Modules/Devices.ps1` lists the devices whose driver offers Device Manager's "Allow the
+computer to turn off this device to save power" box. Device Manager reads and sets that box
+through the `MSPower_DeviceEnable` WMI class (`root\wmi`, one boolean per device; see
+[WMI and the Power Management tab](https://learn.microsoft.com/windows-hardware/drivers/kernel/wmi-and-the-power-management-tab)),
+and PitCrew does the same. Reading works without administrator rights. Only network, Bluetooth,
+USB, keyboard, mouse and HID devices are shown: GPIO, security processors and the like also offer
+the box, but nothing documents a reason to touch them.
+
+The page shows one card per physical device. The interfaces of a composite USB device (a
+keyboard's two "USB Input Device" entries, IDs with `&MI_xx`) are one card. Names come from what
+the device reports on the bus ("USB Mouse", the keyboard's product name) rather than Windows'
+generic "USB Input Device". A hub shows what is plugged into it, and a controller shows what is
+plugged into its root hub, so identical "USB Root Hub" cards can be told apart (History adds the
+same to the name). Hubs and controllers are recognized by ID and driver (`USB\ROOT_HUB*`,
+`PCI\*`, `USBHUB3`, `USBXHCI`...), never by the name, which Windows translates. PnP properties
+are read one device per call, because `Get-PnpDeviceProperty` given several IDs at once sometimes
+labels a row with the wrong device.
+
+Each card becomes a tweak built on the fly (`device.power.<hash of the device ID>`), with one
+`devicePower` action per WMI instance, so changes use the same engine as everything else. The
+journal records the previous value and the value set (an interface that already had it keeps
+`before` equal to `enabled`, so one can't be worked out from the other), History lists the change
+under the device's name (kept in the entry as `label`), and Undo puts it back. A device that is
+unplugged when undone is skipped and kept to retry. The journal only says which device; the
+action only runs on a device that is plugged in and has the box right now. "Let Windows turn off" on a device PitCrew kept on undoes
+that change instead of stacking a second one. The fakes in `tests/Run-Tests.ps1` cover the
+engine side; `tests/Devices-Real.ps1` flips a real device and puts it back on GitHub's runners,
+when the VM has one.
 
 ## New-version notice
 

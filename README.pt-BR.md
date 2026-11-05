@@ -45,6 +45,7 @@ pelo Windows Update, tudo numa janela só.
 | Manutenção | Reparar arquivos do sistema (DISM + SFC), remover arquivos antigos de atualizações, otimizar unidades (TRIM no SSD, desfragmentação no HD), procurar erros nas unidades (só leitura), saúde dos discos, limpar o cache de DNS, backup de todos os drivers |
 | Apps de fábrica | Remover ou reinstalar 30 apps pré-instalados, cada um marcado "pode remover" ou "leia antes de remover" |
 | Drivers | Drivers do Windows Update, conferindo se cada um é mesmo mais novo, com backup dos trocados e link do fabricante da placa-mãe |
+| Energia dos dispositivos | Todos os dispositivos que o Windows pode desligar para economizar energia (Wi-Fi, rede, Bluetooth, teclado, mouse, USB) numa lista só: deixe sempre ligados os que caem, com Desfazer. É a mesma opção da aba Gerenciamento de Energia do Gerenciador de Dispositivos |
 | Restauração | Ver os pontos existentes, criar um agora, abrir a Restauração do Sistema; antes de aplicar, o PitCrew oferece criar um (já marcado) |
 | Histórico | Tudo o que o PitCrew mudou, com Desfazer |
 

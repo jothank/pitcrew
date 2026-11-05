@@ -9,7 +9,7 @@ what comes next. 🧩 = needs a new engine action type, 📋 = only content or U
 |---|---|---|---|
 | 🧩 | Window and menu animations off (slow PCs) | `UserPreferencesMask` bits + `SystemParametersInfo` | Learn (SystemParametersInfo) |
 | 🧩 | Reserved Storage off (frees ~7 GB; updates may then fail on a full disk) | `Set-WindowsReservedStorageState` | Learn |
-| 🧩 | Network adapter power saving off (desktops) | `Set-NetAdapterPowerManagement` per physical adapter | Learn |
+| ✅ | Network adapter power saving off: done on the Device power page, for network, Bluetooth, keyboard, mouse and USB devices alike | `MSPower_DeviceEnable` (the Device Manager box) | Learn |
 | 🧩 | Remove optional features: PowerShell 2.0, XPS writer, legacy components | `Disable-WindowsOptionalFeature` | Learn |
 | 🧩 | Remove Steps Recorder, IE mode, legacy Media Player (needs Windows Update to re-add) | `Remove-WindowsCapability` | Learn |
 | 🧩 | Remove "Give access to", "Include in library", "Share" from the context menu | delete whole registry keys | community |
@@ -37,6 +37,8 @@ what comes next. 🧩 = needs a new engine action type, 📋 = only content or U
 | ✅ | Light and dark themes following Windows, PitCrew's own dialogs |
 | ✅ | Status filter (applied, not applied, installed...), tick all shown, ticked count |
 | ✅ | Memory page and more maintenance (optimize drives, read-only disk check, DNS cache) |
+| ✅ | Device power page: "Allow the computer to turn off this device" for every device in one list, with Undo in History |
+| 📋 | Dashboard: the PC at a glance, what PitCrew changed (before and now), totals from cleanup, apps and drivers |
 | 📋 | Pre-flight checks before applying: pending restart, third-party antivirus, BitLocker state, settings locked by policy |
 | 📋 | Update installed programs with `winget upgrade` (needs structured output, not the localized table) |
 

@@ -44,6 +44,7 @@ disk cleanup, removal of preinstalled apps and driver updates from Windows Updat
 | Maintenance | Repair system files (DISM + SFC), remove old update files, optimize drives (TRIM on SSDs, defragmentation on hard disks), check drives for errors (read-only), disk health report, clear the DNS cache, back up all drivers |
 | Built-in apps | Remove or reinstall 30 preinstalled apps, each labelled "safe" or "read before removing" |
 | Drivers | Windows Update drivers, with a check that each one is really newer, a backup of the ones replaced, and a link to your motherboard maker |
+| Device power | Every device Windows may turn off to save power (Wi-Fi, network, Bluetooth, keyboard, mouse, USB), in one list: keep the ones that drop out always on, with Undo. The same box as Device Manager's Power Management tab |
 | Restore points | See existing points, create one now, open System Restore; before applying, PitCrew offers to create one (checked by default) |
 | History | Everything PitCrew changed, with Undo |
 

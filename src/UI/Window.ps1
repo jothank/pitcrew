@@ -307,11 +307,13 @@ $script:PcFilterOptions = @{
     tweaks  = @('all', 'available', 'notApplied', 'applied', 'partial', 'selected')
     apps    = @('all', 'installed', 'notInstalled', 'selected')
     startup = @('all', 'on', 'off', 'selected')
+    devices = @('all', 'canTurnOff', 'alwaysOn', 'selected')
 }
 # Options that keep only one State (set on each card, never translated)
 $script:PcFilterStates = @{
     notApplied = 'NotApplied'; applied = 'Applied'; partial = 'Partial'
     installed = 'Installed'; notInstalled = 'NotInstalled'; on = 'On'; off = 'Off'
+    canTurnOff = 'CanTurnOff'; alwaysOn = 'AlwaysOn'
 }
 $script:PcStatusFilter = 'all'
 
@@ -473,6 +475,7 @@ $script:PcPages = @{
     maintenance = @{ Primary = @('button.run', $true, $true) }
     apps        = @{ Primary = @('button.remove', $true, $true); Secondary = @('button.reinstall', $true, $true) }
     drivers     = @{ Primary = @('button.install', $true, $true); Secondary = @('button.search', $false, $false) }
+    devices     = @{ Primary = @('button.keepOn', $true, $true); Secondary = @('button.allowOff', $true, $true) }
     restore     = @{ Primary = @('button.createRestorePoint', $true, $false); Secondary = @('button.openSystemRestore', $false, $false) }
     history     = @{ Primary = @('button.undo', $true, $true) }
     about       = @{}
@@ -516,6 +519,7 @@ function Show-PcPage([string]$Page) {
         'memory'  { Invoke-PcLoadMemory }
         'apps'    { Invoke-PcLoadApps }
         'drivers' { Invoke-PcLoadDriverSummary }
+        'devices' { Invoke-PcLoadDevices }
         'restore' { Invoke-PcLoadRestorePoints }
         'about'   { Show-PcAbout }
         default   { Update-PcCurrentPage }
@@ -712,6 +716,7 @@ function Invoke-PcPrimaryAction {
         'maintenance' { Invoke-PcRunMaintenance }
         'apps'        { Invoke-PcRemoveApps }
         'drivers'     { Invoke-PcInstallDrivers }
+        'devices'     { Invoke-PcSetDevicePower $false }
         'restore'     { Invoke-PcCreateRestorePoint }
         'history'     { Invoke-PcUndoTweaks }
     }
@@ -725,6 +730,7 @@ function Invoke-PcSecondaryAction {
         'memory'  { Invoke-PcMemoryDiagnostic }
         'apps'    { Invoke-PcReinstallApps }
         'drivers' { Invoke-PcSearchDrivers }
+        'devices' { Invoke-PcSetDevicePower $true }
         'restore' { Start-Process rstrui.exe }
     }
 }
@@ -925,7 +931,11 @@ function Invoke-PcUndoTweaks {
         $done = 0; $skipped = 0; $notApplied = 0; $failed = @()
         foreach ($id in $Ids) {
             $t = $tweaks | Where-Object id -eq $id
-            if (-not (Get-PcJournalEntry $t)) { $notApplied++; continue }
+            if (-not $t -and $id -like 'device.power.*') {
+                $entry = @(Get-PcMyJournalEntries) | Where-Object { $_.tweakId -eq $id } | Select-Object -First 1
+                if ($entry) { $t = Get-PcDeviceUndoTweak $entry }
+            }
+            if (-not $t -or -not (Get-PcJournalEntry $t)) { $notApplied++; continue }
             $Sync.Status = '{0} {1}' -f (Get-PcText 'status.undoing'), (Resolve-PcLocalized $t.title)
             try {
                 $u = Undo-PcTweak $t
@@ -952,12 +962,23 @@ function Invoke-PcUndoTweaks {
 # --- History --------------------------------------------------------------------------------------
 
 function Get-PcHistoryItems {
+    # Device states read fresh: an Undo that just ran in a background job didn't clear this
+    # runspace's copy
+    $script:PcDevicePowerCache = $null
     foreach ($e in @(Get-PcMyJournalEntries) | Sort-Object appliedAt -Descending) {
         $t = $script:PcTweaks | Where-Object id -eq $e.tweakId | Select-Object -First 1
         $when = Get-PcText 'history.appliedAt' -FormatArgs ([datetime]::Parse($e.appliedAt).ToString('g'))
         if ($t) {
             $state = Get-PcTweakState $t
             New-PcItem @{ Id = $t.id; Title = Resolve-PcLocalized $t.title; Detail = Resolve-PcLocalized $t.description
+                Badge = Get-PcText "state.$state"; BadgeKind = $(if ($state -eq 'Applied') { 'good' } else { 'warn' }); Meta = $when }
+        } elseif ($e.tweakId -like 'device.power.*') {
+            # Device power changes have no catalog entry; the journal entry describes them
+            $t = Get-PcDeviceUndoTweak $e
+            $state = Get-PcTweakState $t
+            $keptOn = @($t.actions | Where-Object { -not $_.enabled }).Count -gt 0
+            New-PcItem @{ Id = $e.tweakId; Title = Resolve-PcLocalized $t.title
+                Detail = Get-PcText $(if ($keptOn) { 'devices.historyKeptOn' } else { 'devices.historyAllowedOff' })
                 Badge = Get-PcText "state.$state"; BadgeKind = $(if ($state -eq 'Applied') { 'good' } else { 'warn' }); Meta = $when }
         } else {
             # Undo needs the catalog entry to know what to touch
@@ -1144,6 +1165,79 @@ function Invoke-PcSetStartup([bool]$Enabled) {
     }
 }
 
+# --- Device power ---------------------------------------------------------------------------------
+
+$script:PcDevicesLaptop = $false
+
+function Invoke-PcLoadDevices {
+    $work = {
+        param($Sync)
+        $changed = @(Get-PcMyJournalEntries | ForEach-Object tweakId)
+        [pscustomobject]@{
+            Laptop  = (Get-PcFormFactor) -eq 'laptop'
+            Devices = @(foreach ($d in @(Get-PcPowerDevices)) {
+                    $d | Add-Member -NotePropertyName Changed -NotePropertyValue ($changed -contains (Get-PcDeviceTweakId $d.Key)) -PassThru
+                })
+        }
+    }
+    Start-PcJob -Work $work -Status (Get-PcText 'status.loading') -OnDone {
+        param($r)
+        if ($script:PcPage -ne 'devices') { return }
+        $res = $r[-1]
+        $script:PcDevicesLaptop = [bool]$res.Laptop
+        Set-PcPageInfo (Get-PcText $(if ($res.Laptop) { 'devices.infoLaptop' } else { 'devices.infoDesktop' }))
+        Set-PcItems @(foreach ($d in @($res.Devices)) {
+                $detail = Get-PcText "devices.kind.$($d.Kind)"
+                if (@($d.Connected).Count -gt 0) { $detail += '  ·  ' + (Get-PcText 'devices.connected' -FormatArgs (@($d.Connected) -join ', ')) }
+                New-PcItem @{
+                    Id        = $d.Key
+                    State     = $d.State
+                    Title     = $d.Name
+                    Detail    = $detail
+                    Badge     = Get-PcText "devices.state.$($d.State)"
+                    BadgeKind = $(if ($d.State -eq 'Mixed') { 'warn' } elseif ($d.State -eq 'AlwaysOn' -and -not $res.Laptop) { 'good' } else { 'neutral' })
+                    Tag       = $(if ($d.Changed) { Get-PcText 'devices.changed' } else { '' })
+                    Data      = $d.Kind
+                }
+            }) 'devices.empty'
+    }
+}
+
+function Invoke-PcSetDevicePower([bool]$Enabled) {
+    # $true lets Windows turn the devices off again, $false keeps them always on
+    $target = if ($Enabled) { 'CanTurnOff' } else { 'AlwaysOn' }
+    $ticked = @(Get-PcSelectedItems)
+    if ($ticked.Count -eq 0) { Show-PcMessage (Get-PcText 'msg.selectFirst'); return }
+    $selected = @($ticked | Where-Object { $_.State -ne $target })
+    if ($selected.Count -eq 0) { Show-PcMessage (Get-PcText 'devices.alreadySet'); return }
+    $text = Get-PcText $(if ($Enabled) { 'devices.confirmAllowOff' } else { 'devices.confirmKeepOn' }) -FormatArgs $selected.Count
+    if (@($selected | Where-Object { @('wifi', 'ethernet', 'network') -contains $_.Data }).Count -gt 0) { $text += "`n`n" + (Get-PcText 'devices.networkDrop') }
+    if (-not $Enabled -and $script:PcDevicesLaptop) { $text += "`n`n" + (Get-PcText 'devices.laptopBattery') }
+    if (-not (Confirm-PcAction $text)) { return }
+    $work = {
+        param($Sync, $Targets, $Enabled)
+        $devices = @(Get-PcPowerDevices)
+        $ok = 0; $failed = @()
+        foreach ($t in $Targets) {
+            $d = $devices | Where-Object { $_.Key -eq $t.Key } | Select-Object -First 1
+            if (-not $d) { $failed += '{0}: {1}' -f $t.Name, (Get-PcText 'devices.gone'); continue }
+            $Sync.Status = $d.Name
+            try { [void](Set-PcDevicePower $d $Enabled); $ok++ }
+            catch { $failed += '{0}: {1}' -f $d.Name, $_.Exception.Message }
+        }
+        [pscustomobject]@{ Ok = $ok; Failed = $failed }
+    }
+    $targets = @($selected | ForEach-Object { @{ Key = $_.Id; Name = $_.Title } })
+    Start-PcJob -Work $work -Arguments @{ Targets = $targets; Enabled = $Enabled } -Status (Get-PcText 'status.loading') -OnDone {
+        param($r)
+        $res = $r[-1]
+        $text = Get-PcText 'devices.done' -FormatArgs $res.Ok, @($res.Failed).Count
+        if (@($res.Failed).Count -gt 0) { $text += "`n`n" + (@($res.Failed) -join "`n") }
+        Show-PcMessage $text
+        if ($script:PcPage -eq 'devices') { Invoke-PcLoadDevices }
+    }
+}
+
 # --- Cleanup --------------------------------------------------------------------------------------
 
 function Invoke-PcAnalyzeCleanup {
@@ -1312,7 +1406,7 @@ function Set-PcStaticTexts {
     $Ui.ExportProfile.Content = Get-PcText 'button.exportProfile'
     Update-PcPresetBox
     Update-PcThemeBox
-    foreach ($page in 'Performance', 'Privacy', 'Explorer', 'Startup', 'Cleanup', 'Memory', 'Maintenance', 'Apps', 'Drivers', 'Restore', 'History', 'About') {
+    foreach ($page in 'Performance', 'Privacy', 'Explorer', 'Startup', 'Cleanup', 'Memory', 'Maintenance', 'Apps', 'Drivers', 'Devices', 'Restore', 'History', 'About') {
         $Ui["Nav$page"].Content = Get-PcText "nav.$($page.ToLowerInvariant())"
     }
     $Ui.ModeText.Text = if ($script:PcIsAdmin) { Get-PcText 'mode.admin' } else { Get-PcText 'mode.readOnly' }
@@ -1346,7 +1440,7 @@ function New-PcWindow {
     $window = ConvertFrom-PcXaml $xaml
     $script:Ui = @{ Window = $window }
     foreach ($name in 'Tagline', 'ModeText', 'LanguageBox', 'ThemeBox', 'Nav', 'NavPerformance',
-        'NavPrivacy', 'NavExplorer', 'NavStartup', 'NavCleanup', 'NavMemory', 'NavMaintenance', 'NavApps', 'NavDrivers', 'NavRestore', 'NavHistory',
+        'NavPrivacy', 'NavExplorer', 'NavStartup', 'NavCleanup', 'NavMemory', 'NavMaintenance', 'NavApps', 'NavDrivers', 'NavDevices', 'NavRestore', 'NavHistory',
         'NavAbout', 'PageTitle', 'PageIntro', 'RefreshButton', 'Banner', 'BannerText', 'MemoryBar', 'PageInfo', 'Items', 'EmptyText',
         'PrimaryAction', 'SecondaryAction', 'SelectionText', 'Busy', 'StatusText', 'FilterBar', 'SearchBox', 'SearchHint', 'StatusFilter',
         'SelectVisible', 'ClearSelection', 'ExportProfile', 'PresetBox', 'LogoImage', 'AboutPanel', 'AboutIcon', 'AboutVersion', 'AboutTagline', 'AboutBeta',

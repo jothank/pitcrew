@@ -78,6 +78,19 @@ function Set-PcActivePowerScheme([string]$Guid) {
     $script:FakePower.Active = $Guid.ToLowerInvariant()
 }
 function Remove-PcPowerScheme([string]$Guid) { $script:FakePower.Schemes = @($script:FakePower.Schemes | Where-Object { $_ -ne $Guid.ToLowerInvariant() }) }
+# Device power: the "allow the computer to turn off this device" box of each fake device, in memory
+$script:FakeDevicePower = @{}
+function Get-PcDevicePowerStates { $script:FakeDevicePower.Clone() }
+function Set-PcDevicePowerEnabled([string]$InstanceName, [bool]$Enabled) {
+    if (-not $script:FakeDevicePower.ContainsKey($InstanceName)) { throw "fake: no device $InstanceName" }
+    $script:FakeDevicePower[$InstanceName] = $Enabled
+}
+function New-RawDevice([string]$Id, [string]$Class, [string]$Name, [string]$Bus = '', [string]$Parent = '', [string]$ParentBus = '',
+    [string[]]$ChildClasses = @(), [string[]]$ChildNames = @(), $Medium = $null, [bool]$Enabled = $true, [string]$Service = '', [string[]]$ChildIds = @()) {
+    [pscustomobject]@{ InstanceName = "${Id}_0"; InstanceId = $Id.ToUpperInvariant(); Class = $Class; Name = $Name; BusName = $Bus
+        ParentId = $Parent.ToUpperInvariant(); ParentBusName = $ParentBus; ChildClasses = $ChildClasses; ChildNames = $ChildNames
+        NetMedium = $Medium; Enabled = $Enabled; Service = $Service; ChildIds = @($ChildIds | ForEach-Object { $_.ToUpperInvariant() }) }
+}
 function Set-PcHibernation([bool]$Enabled) { [void](Set-PcRegistryValue $script:PcPowerKey 'HibernateEnabled' 'DWord' ([int]$Enabled)) }
 $script:FakeMouseRefreshes = 0
 function Update-PcMouseSettings { $script:FakeMouseRefreshes++ }
@@ -768,6 +781,117 @@ try {
         Assert-True (-not (Select-PcNewerRelease -Tags 'javascript:alert(1)' -Current '0.1.1-beta')) 'a tampered saved tag'
     }
 
+    Test-Case 'device power: one card per physical device, named and sorted, system devices left out' {
+        # Shaped like a real desktop: Ethernet, Wi-Fi, Bluetooth, a keyboard with two HID interfaces,
+        # a mouse, a vendor HID gadget, a USB hub, plus GPIO and PSP entries that must not show
+        # Hub and controller carry French names: the kind must come from the ID and driver
+        $inventory = @(
+            New-RawDevice 'USB\ROOT_HUB30\5&1' 'USB' 'Concentrateur USB racine (USB 3.0)' -ChildNames @('USB Mouse', 'HCT USB Entry Keyboard') -Enabled $false -Service 'USBHUB3'
+            New-RawDevice 'PCI\VEN_1022&DEV_43EC\4&8' 'USB' 'Contrôleur hôte eXtensible USB' -ChildNames @('Concentrateur USB racine (USB 3.0)') -ChildIds @('USB\ROOT_HUB30\5&1') -Enabled $false -Service 'USBXHCI'
+            New-RawDevice 'USB\VID_046D&PID_C08B&MI_00\8&1' 'HIDClass' 'USB Input Device' -Parent 'USB\VID_046D&PID_C08B\7&9' -ParentBus 'G502 HERO' -ChildClasses @('Mouse')
+            New-RawDevice 'USB\VID_046D&PID_C08B&MI_01\8&1' 'HIDClass' 'USB Input Device' -Parent 'USB\VID_046D&PID_C08B\7&9' -ParentBus 'G502 HERO' -ChildClasses @('Keyboard')
+            New-RawDevice 'USB\VID_1A40&PID_0101\7&10' 'HIDClass' 'USB Input Device' -Bus 'HID Device' -Parent 'USB\VID_1A40&PID_0201\6&11' -ParentBus 'USB 2.0 Hub [MTT]' -ChildClasses @('HIDClass')
+            New-RawDevice 'USB\VID_C0F4&PID_0201&MI_00\7&1' 'HIDClass' 'USB Input Device' -Bus 'HCT USB Entry Keyboard' -Parent 'USB\VID_C0F4&PID_0201\6&1' -ParentBus ' HCT USB Entry Keyboard' -ChildClasses @('Keyboard')
+            New-RawDevice 'USB\VID_C0F4&PID_0201&MI_01\7&1' 'HIDClass' 'USB Input Device' -Bus 'HCT USB Entry Keyboard' -Parent 'USB\VID_C0F4&PID_0201\6&1' -ParentBus 'HCT USB Entry Keyboard' -ChildClasses @('HIDClass', 'Keyboard') -Enabled $false
+            New-RawDevice 'USB\VID_1C4F&PID_0048\6&2' 'HIDClass' 'USB Input Device' -Bus 'USB Mouse' -Parent 'USB\ROOT_HUB30\5&1' -ChildClasses @('Mouse')
+            New-RawDevice 'USB\VID_0BDA&PID_1100\7&3' 'HIDClass' 'USB Input Device' -Bus 'HID Device' -Parent 'USB\VID_0BDA&PID_5409\6&4' -ParentBus 'USB2.1 Hub' -ChildClasses @('HIDClass')
+            New-RawDevice 'PCI\VEN_10EC&DEV_8168\4&5' 'Net' 'Realtek PCIe GbE Family Controller' -Medium 14
+            New-RawDevice 'PCI\VEN_8086&DEV_2725\4&6' 'Net' 'Intel(R) Wi-Fi 6E AX210 160MHz' -Medium 9
+            New-RawDevice 'USB\VID_2357&PID_0604\F0' 'Bluetooth' 'TP-Link Bluetooth 5.4 USB Adapter'
+            New-RawDevice 'ACPI\AMDI0030\0' 'System' 'AMD GPIO Controller'
+            New-RawDevice 'PCI\VEN_1022&DEV_15DF\4&7' 'SecurityDevices' 'AMD PSP 10.0 Device'
+        )
+        $devices = @(ConvertTo-PcPowerDevices $inventory)
+        Assert-Equal 'wifi,ethernet,bluetooth,keyboard,mouse,input,input,input,usbHub,usbController' (($devices | ForEach-Object Kind) -join ',') 'kinds, in display order, without system devices'
+        Assert-Equal 'USB Mouse, HCT USB Entry Keyboard' (@(($devices | Where-Object Kind -eq 'usbController').Connected) -join ', ') 'a controller shows what is plugged into its root hub'
+        $gaming = $devices | Where-Object Name -eq 'G502 HERO'
+        Assert-Equal 'input' $gaming.Kind 'a mouse with a keyboard interface is just an input device'
+        Assert-Equal 2 @($gaming.Instances).Count 'both of its interfaces in one card'
+        Assert-Equal 2 @($devices | Where-Object Name -eq 'USB Input Device').Count 'single devices never take their hub''s name, even "USB 2.0 Hub [MTT]"'
+        $hubTweak = Get-PcDeviceTweak ($devices | Where-Object Kind -eq 'usbHub') $false
+        Assert-Equal 'Concentrateur USB racine (USB 3.0) · USB Mouse, HCT USB Entry Keyboard' $hubTweak.label 'History tells identical hubs apart'
+        $keyboard = $devices | Where-Object Kind -eq 'keyboard'
+        Assert-Equal 'HCT USB Entry Keyboard' $keyboard.Name 'the name the keyboard reports, trimmed'
+        Assert-Equal 2 @($keyboard.Instances).Count 'both keyboard interfaces in one card'
+        Assert-Equal 'Mixed' $keyboard.State 'one interface on, one off'
+        Assert-Equal 'USB Mouse' ($devices | Where-Object Kind -eq 'mouse').Name 'mouse named by itself, not grouped under its hub'
+        Assert-Equal 'USB Input Device' ($devices | Where-Object Key -eq 'USB\VID_0BDA&PID_1100\7&3').Name 'a generic name is kept rather than its hub''s'
+        Assert-Equal 'AlwaysOn' ($devices | Where-Object Kind -eq 'usbHub').State 'hub state'
+        Assert-Equal 'USB Mouse, HCT USB Entry Keyboard' (@(($devices | Where-Object Kind -eq 'usbHub').Connected) -join ', ') 'what is plugged into the hub'
+        $ids = @($devices | ForEach-Object { Get-PcDeviceTweakId $_.Key })
+        Assert-Equal $ids.Count @($ids | Select-Object -Unique).Count 'one tweak id per device'
+        Assert-True (@($ids | Where-Object { $_ -notmatch '^device\.power\.[0-9a-f]{16}$' }).Count -eq 0) 'ids are short and plain'
+        Assert-Equal (Get-PcDeviceTweakId 'usb\root_hub30\5&1') (Get-PcDeviceTweakId 'USB\ROOT_HUB30\5&1') 'same id whatever the case'
+        foreach ($k in $script:PcDeviceKinds) { Assert-True ((Get-PcText "devices.kind.$k") -ne "devices.kind.$k") "text for $k" }
+        foreach ($s in 'CanTurnOff', 'AlwaysOn', 'Mixed') { Assert-True ((Get-PcText "devices.state.$s") -ne "devices.state.$s") "text for $s" }
+    }
+
+    Test-Case 'device power: changes go through the journal and History can undo them' {
+        $script:FakeDevicePower = @{ 'USB\KBD&MI_00\1_0' = $true; 'USB\KBD&MI_01\1_0' = $true; 'USB\MOUSE\2_0' = $false }
+        $keyboard = [pscustomobject]@{ Key = 'USB\KBD\1'; Name = 'Test Keyboard'; Instances = @('USB\KBD&MI_00\1_0', 'USB\KBD&MI_01\1_0') }
+        $mouse = [pscustomobject]@{ Key = 'USB\MOUSE\2'; Name = 'Test Mouse'; Instances = @('USB\MOUSE\2_0') }
+        $kbId = Get-PcDeviceTweakId $keyboard.Key
+
+        # Keep the keyboard on: both interfaces change, one journal entry with the device's name
+        Assert-True (Set-PcDevicePower $keyboard $false) 'changed'
+        Assert-Equal $false $script:FakeDevicePower['USB\KBD&MI_00\1_0'] 'interface 0 kept on'
+        Assert-Equal $false $script:FakeDevicePower['USB\KBD&MI_01\1_0'] 'interface 1 kept on'
+        $entry = @(Get-PcMyJournalEntries) | Where-Object tweakId -eq $kbId
+        Assert-Equal 'Test Keyboard' $entry.label 'History names it'
+        Assert-Equal 2 @($entry.actions).Count 'one record per interface'
+        Assert-True (-not (Set-PcDevicePower $keyboard $false)) 'asking again changes nothing'
+
+        # History's Undo: rebuilt from the journal alone
+        $undo = Get-PcDeviceUndoTweak $entry
+        Assert-Equal 'Applied' (Get-PcTweakState $undo) 'History shows it as in place'
+        $u = Undo-PcTweak $undo
+        Assert-Equal 0 $u.Skipped 'nothing skipped'
+        Assert-Equal $true $script:FakeDevicePower['USB\KBD&MI_00\1_0'] 'back as it was'
+        Assert-True (-not (@(Get-PcMyJournalEntries) | Where-Object tweakId -eq $kbId)) 'entry gone'
+
+        # The mouse was already kept on by hand: letting Windows turn it off is a change of its own,
+        # and asking to keep it on again undoes that instead of stacking a second one
+        Assert-True (Set-PcDevicePower $mouse $true) 'let off'
+        Assert-Equal $true $script:FakeDevicePower['USB\MOUSE\2_0'] 'Windows may turn it off'
+        $mouseEntry = @(Get-PcMyJournalEntries) | Where-Object tweakId -eq (Get-PcDeviceTweakId $mouse.Key)
+        Assert-Equal $false (@($mouseEntry.actions)[0].before) 'before: kept on'
+        Assert-True (Set-PcDevicePower $mouse $false) 'kept on again'
+        Assert-Equal $false $script:FakeDevicePower['USB\MOUSE\2_0'] 'kept on'
+        Assert-True (-not (@(Get-PcMyJournalEntries) | Where-Object tweakId -eq (Get-PcDeviceTweakId $mouse.Key))) 'undone, not stacked'
+
+        # Unplugged at undo time: skipped and kept for later; plugged back, it undoes
+        [void](Set-PcDevicePower $keyboard $false)
+        $entry = @(Get-PcMyJournalEntries) | Where-Object tweakId -eq $kbId
+        $script:FakeDevicePower.Remove('USB\KBD&MI_00\1_0'); $script:FakeDevicePower.Remove('USB\KBD&MI_01\1_0')
+        $u = Undo-PcTweak (Get-PcDeviceUndoTweak $entry)
+        Assert-Equal 2 $u.Skipped 'both skipped'
+        Assert-True (@(Get-PcMyJournalEntries) | Where-Object tweakId -eq $kbId) 'kept to retry'
+        $script:FakeDevicePower['USB\KBD&MI_00\1_0'] = $false; $script:FakeDevicePower['USB\KBD&MI_01\1_0'] = $false
+        [void](Undo-PcTweak (Get-PcDeviceUndoTweak (@(Get-PcMyJournalEntries) | Where-Object tweakId -eq $kbId)))
+        Assert-Equal $true $script:FakeDevicePower['USB\KBD&MI_01\1_0'] 'undone once plugged back'
+
+        # Starting half and half: the interface that already had the value is recorded with it, so
+        # the user ticking that box again afterwards is left alone by Undo
+        $script:FakeDevicePower['USB\KBD&MI_00\1_0'] = $true; $script:FakeDevicePower['USB\KBD&MI_01\1_0'] = $false
+        Assert-True (Set-PcDevicePower $keyboard $false) 'mixed device kept on'
+        $entry = @(Get-PcMyJournalEntries) | Where-Object tweakId -eq $kbId
+        Assert-Equal 'False,False' ((@($entry.actions) | Sort-Object target | ForEach-Object { $_.enabled }) -join ',') 'both records hold what PitCrew set'
+        Assert-Equal 'Applied' (Get-PcTweakState (Get-PcDeviceUndoTweak $entry)) 'History shows it in place, not partial'
+        $script:FakeDevicePower['USB\KBD&MI_01\1_0'] = $true    # the user ticks it again in Device Manager
+        $u = Undo-PcTweak (Get-PcDeviceUndoTweak $entry)
+        Assert-Equal 1 $u.Skipped 'the user''s change is skipped'
+        Assert-Equal $true $script:FakeDevicePower['USB\KBD&MI_00\1_0'] 'the one PitCrew changed is put back'
+        Assert-Equal $true $script:FakeDevicePower['USB\KBD&MI_01\1_0'] 'the user''s choice stays'
+
+        # A record naming a device that isn't there, or a "before" that isn't true/false, touches nothing
+        $odd = [pscustomobject]@{ tweakId = 'device.power.0000000000000000'; label = 'x'; actions = @(
+                [pscustomobject]@{ type = 'devicePower'; target = 'USB\NOT\THERE_0'; before = $true; enabled = $false }
+                [pscustomobject]@{ type = 'devicePower'; target = 'USB\MOUSE\2_0'; before = 'yes'; enabled = $false }) }
+        $t = Get-PcDeviceUndoTweak $odd
+        Assert-Equal 1 @($t.actions).Count 'the record with a bad "before" is dropped'
+        Assert-True (-not (Test-PcActionAvailable $t.actions[0])) 'a device that is not plugged in is not available'
+    }
+
     Test-Case 'the Pix code follows the Banco Central format and the QR picture is up to date' {
         # The example from the Pix manual (BR Code, static QR), CRC included
         $example = '00020126580014br.gov.bcb.pix0136123e4567-e12b-12d1-a456-4266554400005204000053039865802BR5913Fulano de Tal6008BRASILIA62070503***63041D3D'
@@ -875,6 +999,12 @@ try {
         foreach ($line in @($out | Select-String '^\s+(ok|skip)\s+a real install')) {
             Write-Host "        installer: $($line.Line.Trim())" -ForegroundColor DarkGray
         }
+    }
+
+    Test-Case 'the real device switch works (tests\Devices-Real.ps1, GitHub-hosted runners only)' {
+        $out = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $root 'tests\Devices-Real.ps1') 2>&1
+        Assert-Equal 0 $LASTEXITCODE ("device switch failed:`n" + (($out | Select-String 'FAIL' -CaseSensitive) -join "`n"))
+        foreach ($line in @($out | Select-String '^\s+(ok|skip|info)\s')) { Write-Host "        devices: $($line.Line.Trim())" -ForegroundColor DarkGray }
     }
 
     Test-Case 'every .ps1 file is saved as UTF-8 with BOM (needed by Windows PowerShell 5.1)' {

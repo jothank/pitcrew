@@ -15,6 +15,8 @@ $script:PcActionTypes = @{
     scheduledTask = @{ Noun = 'ScheduledTask'; MachineOnly = $true }
     powerPlan     = @{ Noun = 'PowerPlan'; MachineOnly = $true }
     hibernation   = @{ Noun = 'Hibernation'; MachineOnly = $true }
+    # Built on the fly by src\Modules\Devices.ps1, never in the catalog
+    devicePower   = @{ Noun = 'DevicePower'; MachineOnly = $true }
 }
 
 function Get-PcActionNoun([string]$Type) {
@@ -320,6 +322,39 @@ function Invoke-PcHibernationAction($Action) {
 function Undo-PcHibernationAction($Action, $Record) {
     if ($Record.before.enabled -isnot [bool]) { throw 'Journal has an invalid hibernation state' }
     Set-PcHibernation $Record.before.enabled
+}
+
+# --- devicePower: "Allow the computer to turn off this device" (src\Modules\Devices.ps1) ----------
+
+function Resolve-PcDevicePowerInstance([string]$Name) {
+    # The live WMI instance with this name (any case), or $null: only a device that is plugged in
+    # and offers the box can be changed, whatever a journal record names
+    $states = Get-PcDevicePowerStates
+    foreach ($key in $states.Keys) { if ($key -eq $Name) { return [pscustomobject]@{ Name = $key; Enabled = $states[$key] } } }
+    return $null
+}
+
+function Test-PcDevicePowerActionAvailable($Action) { [bool](Resolve-PcDevicePowerInstance $Action.instanceName) }
+
+function Test-PcDevicePowerActionApplied($Action) {
+    $live = Resolve-PcDevicePowerInstance $Action.instanceName
+    return $live -and $live.Enabled -eq [bool]$Action.enabled
+}
+
+function Invoke-PcDevicePowerAction($Action) {
+    $live = Resolve-PcDevicePowerInstance $Action.instanceName
+    if (-not $live) { throw (Get-PcText 'devices.gone') }
+    Set-PcDevicePowerEnabled $live.Name ([bool]$Action.enabled)
+    # Also what was set: an interface that already had that value keeps before = enabled, so the
+    # value can't be worked out from "before" alone
+    [pscustomobject]@{ before = [bool]$live.Enabled; enabled = [bool]$Action.enabled }
+}
+
+function Undo-PcDevicePowerAction($Action, $Record) {
+    if ($Record.before -isnot [bool]) { throw 'Journal has an invalid device power state' }
+    $live = Resolve-PcDevicePowerInstance $Action.instanceName
+    if (-not $live) { throw (Get-PcText 'devices.gone') }
+    Set-PcDevicePowerEnabled $live.Name $Record.before
 }
 
 # --- refresh hooks (run after apply and undo) -----------------------------------------------------

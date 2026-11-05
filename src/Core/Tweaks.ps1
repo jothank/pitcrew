@@ -154,6 +154,7 @@ function Get-PcActionTarget($Action) {
         'scheduledTask' { '{0}{1}' -f $Action.path, $Action.name }
         'powerPlan'     { $Action.guid.ToLowerInvariant() }
         'hibernation'   { 'hibernation' }
+        'devicePower'   { $Action.instanceName.ToUpperInvariant() }
     }
 }
 
@@ -258,13 +259,16 @@ function Invoke-PcTweakLocked($Tweak) {
     if ($existing) { foreach ($old in @($existing.actions)) { $records.Add($old) } }
 
     $newEntry = {
-        [pscustomobject]@{
+        $entry = [pscustomobject]@{
             key       = $key
             tweakId   = $Tweak.id
             appliedAt = (Get-Date).ToString('o')
             userSid   = Get-PcCurrentUserSid
             actions   = $records.ToArray()
         }
+        # Tweaks built on the fly (devices) have no catalog entry to name them in History later
+        if ($Tweak.PSObject.Properties['label'] -and $Tweak.label) { $entry | Add-Member -NotePropertyName label -NotePropertyValue ([string]$Tweak.label) }
+        $entry
     }
     try {
         foreach ($item in @(Get-PcAvailableActions $Tweak)) {

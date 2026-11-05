@@ -47,6 +47,13 @@ Test-Page 'performance' { Show-PcPage 'performance' } { param($items) $items.Cou
 Test-Page 'privacy' { Show-PcPage 'privacy' } { param($items) $items.Count -eq @($script:PcTweaks | Where-Object category -eq 'privacy').Count }
 Test-Page 'explorer' { Show-PcPage 'explorer' } { param($items) $items.Count -eq @($script:PcTweaks | Where-Object category -eq 'explorer').Count }
 Test-Page 'startup' { Show-PcPage 'startup' } { param($items) $Ui.EmptyText.Visibility -eq 'Visible' -or $items.Count -gt 0 }
+Test-Page 'device power' { Show-PcPage 'devices' } {
+    param($items)
+    foreach ($i in $items) { Write-Host "    $($i.Title) | $($i.Detail) | $($i.Badge)" }
+    # Read only: every card has a kind and a state in the current language
+    ($Ui.EmptyText.Visibility -eq 'Visible' -or $items.Count -gt 0) -and
+        @($items | Where-Object { $_.Detail -like 'devices.*' -or $_.Badge -like 'devices.*' }).Count -eq 0 -and $Ui.PageInfo.Text -notlike 'devices.*'
+}
 Test-Page 'search filter' { Show-PcPage 'privacy'; Wait-PcJob; $Ui.SearchBox.Text = 'Copilot' } {
     param($items)
     $visible = @($items | Where-Object { Test-PcItemVisible $_ }).Count

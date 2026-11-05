@@ -202,6 +202,7 @@
           <ListBoxItem x:Name="NavMaintenance" Tag="maintenance"/>
           <ListBoxItem x:Name="NavApps" Tag="apps"/>
           <ListBoxItem x:Name="NavDrivers" Tag="drivers"/>
+          <ListBoxItem x:Name="NavDevices" Tag="devices"/>
           <ListBoxItem x:Name="NavRestore" Tag="restore"/>
           <ListBoxItem x:Name="NavHistory" Tag="history"/>
           <ListBoxItem x:Name="NavAbout" Tag="about"/>

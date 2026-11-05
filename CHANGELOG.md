@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **Device power page:** every device Windows may turn off to save power (Wi-Fi and network
+  adapters, Bluetooth, keyboard, mouse, USB hubs and controllers), in one list with friendly names
+  (the keyboard's two entries are one card, a hub shows what is plugged into it). "Keep always on"
+  and "Let Windows turn off" change the same box as Device Manager's Power Management tab, and
+  every change can be undone here or in History. On a laptop the page says it costs battery.
+
 ## 0.1.2-beta (2026-11-05)
 
 - **New-version notice:** the first time it opens, PitCrew asks whether it may check for new

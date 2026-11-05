@@ -16,6 +16,7 @@ $script:PcSourceFiles = @(
     'Modules\Maintenance.ps1'
     'Modules\Memory.ps1'
     'Modules\Startup.ps1'
+    'Modules\Devices.ps1'
 )
 
 foreach ($pcFile in $script:PcSourceFiles) {
