@@ -15,7 +15,9 @@ param(
     [switch]$AsAdmin,
     [ValidateSet('light', 'dark')][string]$Theme = 'light',
     # Draw the page as it looks while a job runs (navigation and buttons disabled)
-    [switch]$Busy
+    [switch]$Busy,
+    # Draw the new-version notice for this version (higher than the running one), e.g. 0.2.0
+    [string]$NewerVersion
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
@@ -51,6 +53,7 @@ if ($Page -eq 'apply-dialog') {
     Wait-PcJob
     if ($AsAdmin) { Show-PcPage $Page; Wait-PcJob }
     if ($Busy) { Set-PcBusy $true (Get-PcText 'status.creatingRestorePoint') }
+    if ($NewerVersion) { Show-PcUpdateNotice (Select-PcNewerRelease -Tags "v$NewerVersion") }
     $source = $window
 }
 

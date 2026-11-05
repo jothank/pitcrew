@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **New-version notice:** the first time it opens, PitCrew asks whether it may check for new
+  versions (the answer is No unless you click Yes). With yes, it reads the public list of releases
+  on GitHub when it opens, at most once a day, and a bar at the top of the window links to the new
+  release's page. Nothing about you or the PC is sent, and nothing is downloaded or installed. The
+  About page has the switch and a "Check now" button. Versions up to 0.1.1-beta don't have this, so
+  update those by hand once.
+
 ## 0.1.1-beta (2026-11-04)
 
 - **Installer:** `Install.bat` installs PitCrew into Program Files, with a shortcut on the desktop

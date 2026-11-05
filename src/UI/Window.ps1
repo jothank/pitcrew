@@ -562,8 +562,94 @@ function Show-PcAbout {
     $Ui.AboutCredits.Text = Get-PcText 'about.credits'
     $Ui.AboutTranslations.Text = Get-PcText 'about.translations'
     $Ui.AboutDataDir.Text = Get-PcText 'about.dataDir' -FormatArgs $Pc.DataDir
+    $Ui.UpdateTitle.Text = Get-PcText 'update.title'
+    $Ui.UpdateAutoText.Text = Get-PcText 'update.auto'
+    $Ui.UpdateAuto.IsChecked = (Get-PcPreference 'UpdateCheck') -eq 'on'
+    $Ui.UpdateCheckNow.Content = Get-PcText 'update.checkNow'
+    $status = $script:PcUpdateStatus
+    if ($status) { Set-PcUpdateStatus $status[0] $status[1] } else { Set-PcUpdateStatus '' }
     Show-PcSupport
     $Ui.AboutPanel.Visibility = 'Visible'
+}
+
+# --- New-version notice (the check itself is in src\Core\Update.ps1) ---------------------------------
+
+$script:PcUpdateCheck = $null    # the request in flight, finished by the window's timer
+$script:PcUpdateFound = $null    # the newer release shown at the top of the window, or $null
+$script:PcUpdateStatus = $null   # the About page's line after "Check now": text key and value
+$script:PcUpdateStartPending = $false   # set by Show-PcWindow; the timer then runs Initialize-PcUpdateCheck
+
+function Initialize-PcUpdateCheck {
+    # Once the window is on screen. The first time, ask: No, Esc or closing the question mean off.
+    $choice = Get-PcPreference 'UpdateCheck'
+    if (@('on', 'off') -notcontains $choice) {
+        $choice = if (Confirm-PcAction (Get-PcText 'update.ask')) { 'on' } else { 'off' }
+        Set-PcPreference 'UpdateCheck' $choice
+    }
+    if ($choice -ne 'on') { return }
+    # What the last check found stays up until the next one answers
+    $last = Get-PcPreference 'UpdateLatest'
+    if ($last) { Show-PcUpdateNotice (Select-PcNewerRelease -Tags $last) }
+    # Noted before asking, so a failed check (offline, a proxy) also waits for tomorrow
+    $today = Get-Date -Format 'yyyy-MM-dd'
+    if ((Get-PcPreference 'UpdateCheckedOn') -ne $today) {
+        Set-PcPreference 'UpdateCheckedOn' $today
+        Start-PcUpdateCheck
+    }
+}
+
+function Start-PcUpdateCheck([switch]$Manual) {
+    # Not a Start-PcJob job: it runs beside page loads and never holds up the window or its closing
+    if ($script:PcUpdateCheck) {
+        if ($Manual) { $script:PcUpdateCheck.Manual = $true }
+        return
+    }
+    $ps = [powershell]::Create()
+    $ps.Runspace = [runspacefactory]::CreateRunspace()
+    $ps.Runspace.Open()
+    [void]$ps.AddScript(${function:Get-PcReleaseList}.ToString()).AddArgument($script:PcReleasesApi)
+    $script:PcUpdateCheck = @{ PS = $ps; Handle = $ps.BeginInvoke(); Manual = [bool]$Manual }
+}
+
+function Complete-PcUpdateCheck {
+    # Called by the dispatcher timer, like Complete-PcJob
+    $check = $script:PcUpdateCheck
+    if (-not $check -or -not $check.Handle.IsCompleted) { return }
+    $script:PcUpdateCheck = $null
+    try {
+        $found = Find-PcNewerRelease -Json (-join @($check.PS.EndInvoke($check.Handle)))
+        Set-PcPreference 'UpdateLatest' $(if ($found) { $found.Tag } else { '' })
+        # Turned off while the request was out: only an explicit "Check now" still shows it
+        if ($check.Manual -or (Get-PcPreference 'UpdateCheck') -eq 'on') { Show-PcUpdateNotice $found }
+        $status = if ($found) { @('update.found', $found.Version) } else { @('update.upToDate', $script:PcVersion) }
+    } catch {
+        # Offline, a proxy, GitHub's hourly limit: logged, and tried again the next time
+        $e = $_.Exception
+        while ($e.InnerException) { $e = $e.InnerException }
+        # A parse error quotes the whole answer; one short line is enough here
+        $reason = ($e.Message -replace '\s+', ' ').Trim()
+        if ($reason.Length -gt 200) { $reason = $reason.Substring(0, 200) + '...' }
+        Write-PcLog "New-version check failed: $reason" 'Warn'
+        $status = @('update.failed', $reason)
+    } finally {
+        $check.PS.Runspace.Dispose()
+        $check.PS.Dispose()
+    }
+    if ($check.Manual) { Set-PcUpdateStatus $status[0] $status[1] }
+}
+
+function Show-PcUpdateNotice($Found) {
+    $script:PcUpdateFound = $Found
+    $Ui.UpdateBar.Visibility = if ($Found) { 'Visible' } else { 'Collapsed' }
+    if (-not $Found) { return }
+    $Ui.UpdateText.Text = Get-PcText 'update.available' -FormatArgs $Found.Version, $script:PcVersion
+    $Ui.UpdateLinkText.Text = Get-PcText 'update.open'
+    $Ui.UpdateLink.NavigateUri = [Uri]$Found.Url
+}
+
+function Set-PcUpdateStatus([string]$Key, [string]$Value) {
+    $script:PcUpdateStatus = if ($Key) { @($Key, $Value) } else { $null }
+    $Ui.UpdateStatus.Text = if ($Key) { Get-PcText $Key -FormatArgs $Value } else { '' }
 }
 
 function Show-PcSupport {
@@ -1238,6 +1324,8 @@ function Set-PcStaticTexts {
     if ($script:PcIsAdmin -and -not $Pc.RegistryRedirect -and -not (Test-PcPathTrusted $Pc.DataDir)) { $banner += Get-PcText 'error.dataUntrusted' }
     $Ui.BannerText.Text = $banner -join "`n"
     $Ui.Banner.Visibility = if ($banner) { 'Visible' } else { 'Collapsed' }
+    # In the language just picked
+    Show-PcUpdateNotice $script:PcUpdateFound
 }
 
 function Update-PcThemeBox {
@@ -1266,7 +1354,8 @@ function New-PcWindow {
         'AboutAuthorBio', 'LinkGitHub', 'LinkGitHubText', 'LinkLinkedIn', 'LinkLinkedInText',
         'SupportCard', 'PixQrFrame', 'PixQr', 'SupportTitle', 'SupportText', 'PixKeyLabel', 'PixKey', 'CopyPixKey', 'CopyPixCode',
         'AboutProjectTitle', 'AboutRepoText', 'LinkRepo', 'LinkRepoText', 'LinkIssues', 'LinkIssuesText', 'AboutCredits',
-        'AboutTranslations', 'AboutDataDir') {
+        'AboutTranslations', 'AboutDataDir', 'UpdateBar', 'UpdateText', 'UpdateLink', 'UpdateLinkText', 'UpdateTitle', 'UpdateAuto',
+        'UpdateAutoText', 'UpdateCheckNow', 'UpdateStatus') {
         $Ui[$name] = $window.FindName($name)
     }
 
@@ -1328,6 +1417,16 @@ function New-PcWindow {
     $Ui.RefreshButton.Add_Click({ if ($script:PcPage -eq 'memory') { Invoke-PcLoadMemory } })
     $Ui.CopyPixKey.Add_Click({ Copy-PcText $script:PcDonation.PixKey })
     $Ui.CopyPixCode.Add_Click({ Copy-PcText (Get-PcPixPayload) })
+    $Ui.UpdateAuto.Add_Click({
+        $on = [bool]$Ui.UpdateAuto.IsChecked
+        Set-PcPreference 'UpdateCheck' $(if ($on) { 'on' } else { 'off' })
+        # Off also takes down what an earlier check found
+        if (-not $on) { Show-PcUpdateNotice $null }
+    })
+    $Ui.UpdateCheckNow.Add_Click({
+        Set-PcUpdateStatus 'update.checking'
+        Start-PcUpdateCheck -Manual
+    })
     $Ui.PresetBox.Add_SelectionChanged({ Invoke-PcPresetChosen })
     $Ui.ExportProfile.Add_Click({ Invoke-PcExportProfile })
     $Ui.PrimaryAction.Add_Click({ Invoke-PcPrimaryAction })
@@ -1347,7 +1446,15 @@ function New-PcWindow {
 
     $timer = New-Object System.Windows.Threading.DispatcherTimer
     $timer.Interval = [TimeSpan]::FromMilliseconds(200)
-    $timer.Add_Tick({ Complete-PcJob })
+    $timer.Add_Tick({
+        Complete-PcJob
+        Complete-PcUpdateCheck
+        # The first-time question waits until the window is up and the first page has loaded
+        if ($script:PcUpdateStartPending -and -not $script:PcJob -and $Ui.Window.IsVisible) {
+            $script:PcUpdateStartPending = $false
+            try { Initialize-PcUpdateCheck } catch { Write-PcLog "New-version check not started: $($_.Exception.Message)" 'Warn' }
+        }
+    })
     $timer.Start()
     $Ui.Timer = $timer
     $window.Add_Closing({
@@ -1370,6 +1477,9 @@ function Show-PcWindow {
     try { $script:PcWindowMarker = New-Object System.Threading.Mutex($false, $script:PcWindowMutexName) }
     catch { Write-PcLog "Window mutex not created: $($_.Exception.Message)" 'Warn' }
     $window = New-PcWindow
+    # The timer runs Initialize-PcUpdateCheck once the window is up (tests build the window
+    # without this, so they never ask or go online)
+    $script:PcUpdateStartPending = $true
     [void]$window.ShowDialog()
     $Ui.Timer.Stop()
 }

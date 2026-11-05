@@ -113,6 +113,68 @@ Test-Page 'language box remembers' {
     Write-Host "    switched to '$($Pc.Language)', saved '$saved', title '$($Ui.PageTitle.Text)'"
     $saved -eq $Pc.Language -and $Pc.Language -ne $startLanguage -and $Ui.PageTitle.Text -notlike 'page.*'
 }
+# New-version notice, never on the network: the request is replaced by a counter, the question by
+# a fixed answer, and a completed check is faked with a canned list
+$script:UpdateRequests = 0
+function Start-PcUpdateCheck([switch]$Manual) { $script:UpdateRequests++ }
+$script:UpdateAnswer = $false
+function Confirm-PcAction([string]$Text) { $script:UpdateAsked = $Text; return $script:UpdateAnswer }
+Test-Page 'new-version question: No' {
+    Remove-ItemProperty -LiteralPath $script:PcPreferencesKey -Name 'UpdateCheck', 'UpdateCheckedOn', 'UpdateLatest' -ErrorAction SilentlyContinue
+    Initialize-PcUpdateCheck
+    Initialize-PcUpdateCheck
+} {
+    param($items)
+    Write-Host "    asked: '$($script:UpdateAsked.Split("`n")[0])', saved '$(Get-PcPreference 'UpdateCheck')', requests $script:UpdateRequests"
+    # Asked once; the second opening neither asks again nor goes online
+    $script:UpdateAsked -eq (Get-PcText 'update.ask') -and (Get-PcPreference 'UpdateCheck') -eq 'off' -and $script:UpdateRequests -eq 0
+}
+Test-Page 'new-version question: Yes' {
+    Remove-ItemProperty -LiteralPath $script:PcPreferencesKey -Name 'UpdateCheck' -ErrorAction SilentlyContinue
+    $script:UpdateAnswer = $true
+    Initialize-PcUpdateCheck
+    Initialize-PcUpdateCheck
+} {
+    param($items)
+    Write-Host "    saved '$(Get-PcPreference 'UpdateCheck')', checked on '$(Get-PcPreference 'UpdateCheckedOn')', requests $script:UpdateRequests"
+    # One request a day, even if it fails
+    (Get-PcPreference 'UpdateCheck') -eq 'on' -and $script:UpdateRequests -eq 1 -and (Get-PcPreference 'UpdateCheckedOn') -eq (Get-Date -Format 'yyyy-MM-dd')
+}
+Test-Page 'new-version notice' {
+    Set-PcPreference 'UpdateCheck' 'on'
+    Set-PcPreference 'UpdateCheckedOn' (Get-Date -Format 'yyyy-MM-dd')
+    Set-PcPreference 'UpdateLatest' 'v99.0.0'
+    Initialize-PcUpdateCheck
+} {
+    param($items)
+    Write-Host "    '$($Ui.UpdateText.Text) $($Ui.UpdateLinkText.Text)' -> $($Ui.UpdateLink.NavigateUri)"
+    # Checked today already: the saved answer shows, and no request goes out
+    $Ui.UpdateBar.Visibility -eq 'Visible' -and -not $script:PcUpdateCheck -and $Ui.UpdateText.Text -notlike 'update.*' -and
+        "$($Ui.UpdateLink.NavigateUri)" -eq "$($script:PcLinks.Repository)/releases/tag/v99.0.0"
+}
+Test-Page 'new-version check answers' {
+    Show-PcPage 'about'
+    $ps = [powershell]::Create()
+    $ps.Runspace = [runspacefactory]::CreateRunspace()
+    $ps.Runspace.Open()
+    [void]$ps.AddScript("'[{`"tag_name`":`"v0.0.1`"}]'")
+    $script:PcUpdateCheck = @{ PS = $ps; Handle = $ps.BeginInvoke(); Manual = $true }
+    while (-not $script:PcUpdateCheck.Handle.IsCompleted) { Start-Sleep -Milliseconds 50 }
+    Complete-PcUpdateCheck
+} {
+    param($items)
+    Write-Host "    About: '$($Ui.UpdateStatus.Text)', box ticked: $($Ui.UpdateAuto.IsChecked)"
+    $Ui.UpdateBar.Visibility -eq 'Collapsed' -and (Get-PcPreference 'UpdateLatest') -eq '' -and $Ui.UpdateAuto.IsChecked -and
+        $Ui.UpdateStatus.Text -eq (Get-PcText 'update.upToDate' -FormatArgs $script:PcVersion) -and $Ui.UpdateTitle.Text -notlike 'update.*'
+}
+Test-Page 'new-version box unticked' {
+    Show-PcUpdateNotice (Select-PcNewerRelease -Tags 'v99.0.0')
+    $Ui.UpdateAuto.IsChecked = $false
+    $Ui.UpdateAuto.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent)))
+} {
+    param($items)
+    (Get-PcPreference 'UpdateCheck') -eq 'off' -and $Ui.UpdateBar.Visibility -eq 'Collapsed'
+}
 Remove-Item -LiteralPath $script:PcPreferencesKey -Recurse -Force -ErrorAction SilentlyContinue
 Test-Page 'disk health' {
     $script:SmokeDisk = @()

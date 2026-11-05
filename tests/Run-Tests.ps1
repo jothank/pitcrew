@@ -718,6 +718,56 @@ try {
         }
     }
 
+    Test-Case 'new-version check: versions are ordered like Semantic Versioning' {
+        $order = '0.1.0-beta', '0.1.1-alpha', '0.1.1-beta', '0.1.1-beta.2', '0.1.1-beta.10', '0.1.1', '0.1.2-beta', '0.2.0', '1.0.0'
+        for ($i = 0; $i -lt $order.Count; $i++) {
+            for ($j = 0; $j -lt $order.Count; $j++) {
+                $c = Compare-PcVersion (ConvertTo-PcVersion $order[$i]) (ConvertTo-PcVersion $order[$j])
+                Assert-Equal ([Math]::Sign($i - $j)) $c "$($order[$i]) vs $($order[$j])"
+            }
+        }
+        Assert-Equal 0 (Compare-PcVersion (ConvertTo-PcVersion 'v0.1.1-beta') (ConvertTo-PcVersion '0.1.1-beta')) 'a leading v'
+        Assert-True (ConvertTo-PcVersion $script:PcVersion) 'the running version parses'
+        # A tag ends up in a link, so anything but a plain version is refused
+        foreach ($bad in 'v0.1', '0.1.1.1', 'v0.1.1-', 'v0.1.1-beta/../x', "v0.1.1`n", 'v0.1.1 ', ' v0.1.1', 'V0.1.1', 'vv0.1.1',
+            'v0.1.1+build', 'v0.1.1-bet a', ('v0.1.' + [char]0x0663), '') {
+            Assert-True (-not (ConvertTo-PcVersion $bad)) "'$bad' refused"
+        }
+    }
+
+    Test-Case 'new-version check: picks the newest release above this one from the GitHub list' {
+        $list = ConvertTo-Json -Depth 3 @(
+            @{ tag_name = 'v0.3.0-beta'; draft = $true; prerelease = $true }     # a draft is not out yet
+            @{ tag_name = 'v0.2.1-beta'; draft = $false; prerelease = $true }
+            @{ tag_name = 'v0.2.0'; draft = $false; prerelease = $false }
+            @{ tag_name = 'v9.9.9/../../evil'; draft = $false; prerelease = $false }
+            @{ tag_name = 'nightly'; draft = $false; prerelease = $true }
+            @{ tag_name = 5; draft = $false; prerelease = $false }
+            @{ tag_name = 'v0.1.1-beta'; draft = $false; prerelease = $true }
+        )
+        $found = Find-PcNewerRelease -Json $list -Current '0.1.1-beta'
+        Assert-Equal '0.2.1-beta' $found.Version 'a beta hears about the newest beta'
+        Assert-Equal "$($script:PcLinks.Repository)/releases/tag/v0.2.1-beta" $found.Url 'the link is built from the repository address'
+        Assert-Equal '0.2.0' (Find-PcNewerRelease -Json $list -Current '0.1.1').Version 'a release only hears about releases'
+        Assert-True (-not (Find-PcNewerRelease -Json $list -Current '0.2.1-beta')) 'already the newest'
+        Assert-True (-not (Find-PcNewerRelease -Json $list -Current '0.3.0-dev')) 'a build ahead of every release'
+        Assert-True (-not (Find-PcNewerRelease -Json $list -Current 'dev')) 'a running version that does not parse'
+        Assert-True (-not (Find-PcNewerRelease -Json '[]' -Current '0.1.1-beta')) 'no releases'
+        Assert-Equal '0.2.0' (Find-PcNewerRelease -Json '[{"tag_name":"v0.2.0"}]' -Current '0.1.1-beta').Version 'a list of one'
+        # Anything but the list (a proxy's empty page, an error object) is an error, never "up to date"
+        foreach ($odd in '<html>rate limited</html>', '', 'null', '{"message":"Not Found"}', '{"tag_name":"v0.2.0"}', '[{"name":"x"}]') {
+            $threw = $false
+            try { [void](Find-PcNewerRelease -Json $odd -Current '0.1.1-beta') } catch { $threw = $true }
+            Assert-True $threw "'$odd' is an error"
+        }
+        # The window sends only this function's body to the background runspace
+        $body = [scriptblock]::Create(${function:Get-PcReleaseList}.ToString())
+        Assert-True (@($body.Ast.ParamBlock.Parameters | ForEach-Object { $_.Name.VariablePath.UserPath }) -contains 'Url') 'the URL parameter survives in the body'
+        # Between checks the window keeps a tag in the preferences; it goes through the same filter
+        Assert-Equal '0.2.0' (Select-PcNewerRelease -Tags 'v0.2.0' -Current '0.1.1-beta').Version 'saved tag'
+        Assert-True (-not (Select-PcNewerRelease -Tags 'javascript:alert(1)' -Current '0.1.1-beta')) 'a tampered saved tag'
+    }
+
     Test-Case 'the Pix code follows the Banco Central format and the QR picture is up to date' {
         # The example from the Pix manual (BR Code, static QR), CRC included
         $example = '00020126580014br.gov.bcb.pix0136123e4567-e12b-12d1-a456-4266554400005204000053039865802BR5913Fulano de Tal6008BRASILIA62070503***63041D3D'

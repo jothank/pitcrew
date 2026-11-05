@@ -61,6 +61,9 @@ code); what comes next is in [docs/TWEAKS.md](docs/TWEAKS.md).
    around (read-only). Opened from the shortcut, the prompt names Windows PowerShell, which is what
    runs PitCrew's scripts.
 
+To update, do the same with the new zip: `Install.bat` replaces the installed copy and keeps your
+undo history. PitCrew can tell you when a new version is out: it asks the first time it opens.
+
 **"Windows protected your PC"?** PitCrew isn't digitally signed yet, so SmartScreen warns about it
 like any new program from an unknown publisher. Click **More info**, then **Run anyway**. You can
 check the download first: the zip's SHA-256 is published next to it, and `PitCrew.exe` is only a
@@ -148,7 +151,10 @@ the project, `PitCrew.exe` is unsigned.*
 - **Privacy:** This program will not transfer any information to other networked systems unless
   specifically requested by the user or the person installing or operating it. PitCrew goes online
   only when you ask it to: searching Windows Update for drivers, reinstalling a built-in app from the
-  Microsoft Store, or opening a link in your browser.
+  Microsoft Store, opening a link in your browser, or checking for a new version. The first time it
+  opens, PitCrew asks whether it may check (the answer can be changed on the About page). With yes,
+  it reads the public list of releases on GitHub when it opens, at most once a day, and sends
+  nothing about you or the PC (GitHub sees an ordinary request, like a visit to a web page).
 
 ## Author
 

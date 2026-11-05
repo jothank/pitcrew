@@ -34,6 +34,7 @@ tools/Build-Release.ps1     tests, PitCrew.exe and dist/PitCrew-<version>.zip wi
 tools/launcher/             source and manifest of PitCrew.exe
 tools/Build-PixQr.ps1       draws assets/pix-qr.png (donations) from the Pix data, with tools/QrCode.cs
 src/Core/Pix.ps1            the Pix "copia e cola" code (Banco Central BR Code with its CRC16)
+src/Core/Update.ps1         the new-version check: GitHub's list of releases, version order, the link
 .github/workflows/build.yml tests and builds on GitHub Actions; signs PitCrew.exe for version tags (docs/SIGNING.md)
 .github/signpath/           copy of the SignPath artifact configuration (what gets signed, and its checks)
 ```
@@ -176,6 +177,34 @@ The language and theme picked in the window are saved in `HKCU\Software\PitCrew`
 The list cards carry an untranslated `State` (Applied, NotApplied, Installed, On...) that the status
 filter uses, so filters work the same in every language. Hidden cards are never acted on, and "tick
 all shown" only ticks visible cards that can be acted on.
+
+## New-version notice
+
+PitCrew never goes online on its own, so the first time the window opens (once it is up and the
+first page has loaded) it asks whether it may check for new versions. No is the default answer, and
+the About page changes it later. The answer is kept in `HKCU\Software\PitCrew` as `UpdateCheck`
+(`on` or `off`).
+
+With `on`, at most once a calendar day, `Get-PcReleaseList` asks GitHub for the public list of
+releases. The day is saved (`UpdateCheckedOn`) before the request goes out, so a failed one also
+waits for the next day. The request goes to `api.github.com/repos/jothank/pitcrew/releases`, with
+no sign-in and the user agent `PitCrew`. It runs in its own runspace, apart from `Start-PcJob`, so it never holds up a page or the closing of
+the window; the dispatcher timer collects it. `/releases/latest` isn't used because it leaves out
+prereleases, and every PitCrew release so far is one.
+
+`Find-PcNewerRelease` only accepts a JSON list of releases; anything else (an empty page from a
+proxy, an error object) is an error, never "up to date". It skips drafts and keeps tags that are
+plain versions (`v1.2.3` or `v1.2.3-beta.4`, ASCII only), compares them in Semantic Versioning order
+and returns the newest one above the running version. Someone on a release only hears about
+releases; someone on a beta hears about betas too. That tag is saved as `UpdateLatest` (empty when
+there is none), so the notice stays up between checks. The notice is a bar at the top of the
+window, linking to the release page. `Select-PcNewerRelease` builds that link from
+`$PcLinks.Repository` and the checked tag; no address from GitHub's answer is ever opened. Nothing
+is downloaded or installed: updating is the same as installing (download the zip, run
+`Install.bat` as administrator).
+
+Failures (offline, a proxy, GitHub's limit of 60 anonymous requests an hour) are only logged. "Check
+now" on the About page runs the same check whenever it is clicked and shows its result there.
 
 ## Launcher and release
 

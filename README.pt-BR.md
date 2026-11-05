@@ -62,6 +62,10 @@ que vem a seguir está em [docs/TWEAKS.md](docs/TWEAKS.md).
    para só olhar (modo somente leitura). Aberto pelo atalho, o pedido cita o Windows PowerShell,
    que é quem roda os scripts do PitCrew.
 
+Para atualizar, faça o mesmo com o zip novo: o `Install.bat` substitui a cópia instalada e mantém o
+histórico de desfazer. O PitCrew pode avisar quando sair uma versão nova: ele pergunta na primeira
+vez que abre.
+
 **Apareceu "O Windows protegeu o computador"?** O PitCrew ainda não tem assinatura digital, então o
 SmartScreen avisa como faz com qualquer programa novo de editor desconhecido. Clique em **Mais
 informações** e depois em **Executar assim mesmo**. Dá para conferir o download antes: o SHA-256
@@ -152,7 +156,10 @@ projeto, o `PitCrew.exe` vai sem assinatura.*
 - **Privacidade:** este programa não envia nenhuma informação para outros sistemas na rede, a não ser
   quando pedido pelo usuário ou por quem instala ou opera o programa. O PitCrew só acessa a internet
   quando você pede: para procurar drivers no Windows Update, reinstalar um app de fábrica pela
-  Microsoft Store ou abrir um link no navegador.
+  Microsoft Store, abrir um link no navegador ou procurar uma versão nova. Na primeira vez que abre,
+  o PitCrew pergunta se pode procurar (a resposta pode ser mudada na tela Sobre). Com sim, ele lê a
+  lista pública de versões no GitHub ao abrir, no máximo uma vez por dia, e não envia nada sobre você
+  ou o PC (o GitHub vê um pedido comum, como a visita a uma página).
 
 ## Autor
 
