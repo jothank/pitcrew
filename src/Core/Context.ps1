@@ -21,6 +21,12 @@ $script:PcDonation = @{
     PixCity = 'FLORIANOPOLIS'
 }
 
+# The taskbar ID of PitCrew's window, also given to the shortcuts src\Setup.ps1 creates, so the
+# taskbar shows a running PitCrew and its pinned shortcut as one app
+$script:PcAppId = 'JonathanCosta.PitCrew'
+# Exists while a PitCrew window is open; src\Setup.ps1 won't replace or remove the files under it
+$script:PcWindowMutexName = 'Global\PitCrew.Window'
+
 # Choices made in the window (language, theme), per Windows user
 $script:PcPreferencesKey = 'HKCU:\Software\PitCrew'
 

@@ -2,6 +2,10 @@
 
 ## Not released yet
 
+- **Installer:** `Install.bat` installs PitCrew into Program Files, with a shortcut on the desktop
+  and in the Start menu, and lists it in Settings > Apps, where it can be removed (the undo journal
+  stays). No exe is involved, so Smart App Control has nothing unsigned to block. It won't update
+  or remove PitCrew while it is open.
 - **Builds on GitHub Actions:** every push and pull request is tested and built on a GitHub-hosted
   Windows runner.
 - **Code signing (once SignPath Foundation approves the project):** for a version tag, `PitCrew.exe`

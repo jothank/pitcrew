@@ -311,5 +311,17 @@
   "about.pixKey": "Clé Pix",
   "about.copyPixKey": "Copier la clé",
   "about.copyPixCode": "Copier le code Pix (copia e cola)",
-  "about.copied": "Copié."
+  "about.copied": "Copié.",
+  "setup.title": "Installation de PitCrew",
+  "setup.confirmInstall": "Installer PitCrew {0} dans {1} ?\n\nUn raccourci PitCrew est ajouté au bureau et au menu Démarrer, pour toutes les personnes qui utilisent ce PC. Pour supprimer PitCrew plus tard, passez par Paramètres > Applications, comme pour tout autre programme.\n\nWindows va demander les droits d'administrateur.",
+  "setup.installed": "PitCrew {0} est installé. Il s'ouvre avec le raccourci PitCrew du bureau ou du menu Démarrer.\n\nL'ouvrir maintenant ?",
+  "setup.confirmUninstall": "Supprimer PitCrew de ce PC ?\n\nLes modifications faites par PitCrew restent telles quelles. Pour les annuler d'abord, ouvrez PitCrew, allez dans Historique et utilisez Annuler.\n\nFermez PitCrew avant de continuer.",
+  "setup.uninstalled": "PitCrew a été supprimé. Les données d'annulation et les journaux restent dans {0} : si vous réinstallez PitCrew, il pourra encore annuler ses modifications. Ne supprimez ce dossier que si vous n'en aurez pas besoin.",
+  "setup.needsAdmin": "Sans droits d'administrateur, rien n'a été modifié.",
+  "setup.failed": "L'installation ou la suppression de PitCrew n'a pas pu se terminer :\n\n{0}",
+  "setup.notPitCrew": "{0} existe déjà et n'est pas un dossier PitCrew ; il a été laissé tel quel.",
+  "setup.alreadyHere": "PitCrew est déjà dans {0}. Pour l'installer ou le mettre à jour, extrayez le zip ailleurs, par exemple dans Téléchargements, et lancez Install.bat depuis ce dossier.",
+  "setup.notExtracted": "Des fichiers de PitCrew manquent dans {0}. Extrayez à nouveau tout le zip et lancez Install.bat depuis le dossier PitCrew extrait.",
+  "setup.confirmUpdate": "PitCrew {2} est installé dans {1}. Le remplacer par la version {0} ?\n\nLes modifications faites par PitCrew et ses données d'annulation sont conservées. Fermez PitCrew avant de continuer.",
+  "setup.inUse": "PitCrew est ouvert, une autre installation de PitCrew est en cours, ou l'un de ses fichiers ou dossiers est utilisé (par une fenêtre de l'Explorateur de fichiers, par exemple). Fermez-les et réessayez ; rien n'a été modifié."
 }

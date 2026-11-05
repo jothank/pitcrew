@@ -311,5 +311,17 @@
   "about.pixKey": "Pix-Schlüssel",
   "about.copyPixKey": "Schlüssel kopieren",
   "about.copyPixCode": "Pix-Code kopieren (copia e cola)",
-  "about.copied": "Kopiert."
+  "about.copied": "Kopiert.",
+  "setup.title": "PitCrew-Installation",
+  "setup.confirmInstall": "PitCrew {0} in {1} installieren?\n\nDabei wird eine PitCrew-Verknüpfung auf dem Desktop und im Startmenü angelegt, für alle, die diesen PC nutzen. Später entfernen Sie PitCrew wie jedes andere Programm unter Einstellungen > Apps.\n\nWindows fragt nach Administratorrechten.",
+  "setup.installed": "PitCrew {0} ist installiert. Es startet über die PitCrew-Verknüpfung auf dem Desktop oder im Startmenü.\n\nJetzt öffnen?",
+  "setup.confirmUninstall": "PitCrew von diesem PC entfernen?\n\nÄnderungen, die PitCrew vorgenommen hat, bleiben, wie sie sind. Um sie vorher zurückzusetzen, öffnen Sie PitCrew, gehen Sie zu Verlauf und verwenden Sie Rückgängig.\n\nSchließen Sie PitCrew, bevor Sie fortfahren.",
+  "setup.uninstalled": "PitCrew wurde entfernt. Die Rückgängig-Daten und Protokolle liegen weiterhin in {0}: Wenn Sie PitCrew erneut installieren, kann es seine Änderungen noch rückgängig machen. Löschen Sie den Ordner nur, wenn Sie das nicht brauchen.",
+  "setup.needsAdmin": "Ohne Administratorrechte wurde nichts geändert.",
+  "setup.failed": "Die Installation oder Entfernung von PitCrew konnte nicht abgeschlossen werden:\n\n{0}",
+  "setup.notPitCrew": "{0} existiert bereits und ist kein PitCrew-Ordner, daher wurde er nicht verändert.",
+  "setup.alreadyHere": "PitCrew befindet sich bereits in {0}. Zum Installieren oder Aktualisieren entpacken Sie die ZIP-Datei an einem anderen Ort, etwa unter Downloads, und starten Sie Install.bat von dort.",
+  "setup.notExtracted": "In {0} fehlen Dateien von PitCrew. Entpacken Sie die ganze ZIP-Datei erneut und starten Sie Install.bat aus dem entpackten Ordner PitCrew.",
+  "setup.confirmUpdate": "PitCrew {2} ist in {1} installiert. Durch Version {0} ersetzen?\n\nÄnderungen, die PitCrew vorgenommen hat, und seine Rückgängig-Daten bleiben erhalten. Schließen Sie PitCrew, bevor Sie fortfahren.",
+  "setup.inUse": "PitCrew ist geöffnet, eine andere PitCrew-Installation läuft, oder eine seiner Dateien oder Ordner wird verwendet (zum Beispiel von einem Datei-Explorer-Fenster). Schließen Sie diese und versuchen Sie es erneut; es wurde nichts geändert."
 }

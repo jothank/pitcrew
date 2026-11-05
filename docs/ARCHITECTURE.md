@@ -6,6 +6,7 @@ no binaries, nothing downloaded at run time.
 ```
 PitCrew.bat / PitCrew.ps1   entry point: window by default, -List / -Apply / -Undo for scripts
 PitCrew.exe                 (release zip only) double-click launcher built from tools/launcher/PitCrew.cs
+Install.bat / src/Setup.ps1 installer: Program Files, desktop and Start menu shortcuts, removal from Settings > Apps
 src/Load.ps1                dot-sources every file below, in order (a future single-file build = concat)
 src/Core/Context.ps1        version and links, shared state ($Pc), admin and user checks, logging, JSON helpers
 src/Core/I18n.ps1           locales/<lang>.json, English fallback, per-tweak localized texts
@@ -20,8 +21,9 @@ data/apps.json              removable apps with verified Microsoft Store IDs and
 data/presets.json           presets: lists of tweak ids that are only pre-ticked, never applied directly
 locales/<lang>.json         interface texts
 assets/pitcrew.ico|.png     the icon (window, taskbar, PitCrew.exe, README), drawn by tools/Build-Icon.ps1
-tests/Run-Tests.ps1         dependency-free tests (also runs tests/Startup-Tests.ps1 and Launcher-Tests.ps1)
+tests/Run-Tests.ps1         dependency-free tests (also runs Startup-Tests.ps1, Launcher-Tests.ps1 and Setup-Tests.ps1)
 tests/Launcher-Tests.ps1    builds PitCrew.exe and checks, with --dry-run, what it would start
+tests/Setup-Tests.ps1       installs and removes PitCrew in temp folders (for real only on GitHub's runners)
 tests/Smoke-Window.ps1      drives every page's read-only jobs without showing the window
 tests/Check-Catalog.ps1     read-only: which catalog targets exist on this PC and their state
 tests/Render-Window.ps1     renders a page or the apply dialog to PNG
@@ -227,6 +229,52 @@ The window sets its own AppUserModelID before it is created, so the taskbar show
 with its icon instead of grouping it with other PowerShell windows. Links in the window open only
 `http`/`https` addresses; as administrator they go through `explorer.exe`, which hands them to the
 desktop's shell, so the browser doesn't start as administrator too.
+
+## Installer
+
+`Install.bat` runs `src\Setup.ps1 -Install` with the 64-bit Windows PowerShell (through `Sysnative`
+when a 32-bit program opened it, or it would install into Program Files (x86)). Setup.ps1:
+
+1. asks first (showing the installed version when it replaces one), then starts itself again
+   through UAC with `-Confirmed`. Program Files is used because PitCrew runs as administrator: its
+   scripts, in a folder any program can write to, could be changed to run something else elevated;
+2. refuses while a PitCrew window is open: the window holds the mutex `Global\PitCrew.Window`
+   (`$script:PcWindowMutexName`), and replacing the files under it would leave it loading a mix of
+   versions into its background jobs. It also refuses while another setup holds
+   `Global\PitCrew.Setup`, since each one clears the other's work folders. It works from System32,
+   whatever folder it was started in, so it never holds the program folder itself;
+3. checks the zip folder is complete (every item but `PitCrew.exe`, plus key files), then copies
+   the program files (not `tests\`, `tools\` or `Install.bat`) byte by byte into
+   `<Program Files>\PitCrew.new`, so the zip's "downloaded from the internet" mark doesn't come
+   along. A junction or symlink met on the way stops the copy (OneDrive's synced files are reparse
+   points too, but not links, so they are copied). A failed copy changes nothing;
+4. renames the old copy to `PitCrew.old` and the new one into place. A folder can't be renamed
+   while anything holds a file in it, so a copy in use stops the update with nothing changed; if
+   the second rename fails, the old copy is put back;
+5. puts a `PitCrew.lnk` on the public desktop and in the all-users Start menu. It opens
+   `PitCrew.bat` minimized, from System32 (a process started in the program folder would hold it),
+   so there is no unsigned exe for Smart App Control to block. It carries the window's
+   AppUserModelID (`$script:PcAppId`), so the taskbar can treat the shortcut and the window as one
+   app;
+6. registers `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\PitCrew`, whose command runs
+   the installed `src\Setup.ps1 -Uninstall`.
+
+Removal also refuses while a window is open. It first renames the program folder to `PitCrew.old`:
+if something holds a file in it, that fails and nothing has changed. Then it deletes the shortcuts
+that open this copy, the renamed folder (a link inside it is removed as a link, never followed) and
+the Settings entry. A leftover `PitCrew.old` is taken by the next install or removal.
+`%ProgramData%\PitCrew`, with the undo journal and logs, stays. Setup.ps1 loads only `Context.ps1`
+and `I18n.ps1` and doesn't log: as administrator, logs go to that data folder, which only PitCrew
+itself sets up. When the UAC prompt is answered No, it says nothing was changed; a failure of the
+elevated copy before it can show anything (exit code other than 0 or 2 within 15 seconds) is
+reported by the first one.
+
+Tests pass `-InstallDir`, `-DesktopDir` and `-StartMenuDir` (inside the temp folder) and
+`-UninstallKey` (under `HKCU:\Software\PitCrewTest\`) together, and `-WindowMutex` to stand in for
+an open window; anything else and nothing runs. On a GitHub-hosted runner, which is administrator
+without UAC, `tests\Setup-Tests.ps1` also installs with `Install.bat` and removes with the saved
+command, for real. Once `PitCrew.exe` is signed, the shortcuts could open it instead of
+`PitCrew.bat`, so the UAC prompt would name PitCrew rather than Windows PowerShell.
 
 ## Encoding
 

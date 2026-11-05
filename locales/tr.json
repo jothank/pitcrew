@@ -311,5 +311,17 @@
   "about.pixKey": "Pix anahtarı",
   "about.copyPixKey": "Anahtarı kopyala",
   "about.copyPixCode": "Pix kodunu kopyala (copia e cola)",
-  "about.copied": "Kopyalandı."
+  "about.copied": "Kopyalandı.",
+  "setup.title": "PitCrew kurulumu",
+  "setup.confirmInstall": "PitCrew {0}, {1} konumuna kurulsun mu?\n\nBu bilgisayarı kullanan herkes için masaüstüne ve Başlat menüsüne bir PitCrew kısayolu eklenir. PitCrew'u daha sonra kaldırmak için, diğer programlarda olduğu gibi Ayarlar > Uygulamalar'ı kullanın.\n\nWindows yönetici izni isteyecek.",
+  "setup.installed": "PitCrew {0} kuruldu. Masaüstündeki veya Başlat menüsündeki PitCrew kısayoluyla açılır.\n\nŞimdi açılsın mı?",
+  "setup.confirmUninstall": "PitCrew bu bilgisayardan kaldırılsın mı?\n\nPitCrew'un yaptığı değişiklikler olduğu gibi kalır. Önce geri almak için PitCrew'u açın, Geçmiş'e gidin ve Geri al'ı kullanın.\n\nDevam etmeden önce PitCrew'u kapatın.",
+  "setup.uninstalled": "PitCrew kaldırıldı. Geri alma verileri ve günlükler {0} içinde duruyor: PitCrew'u yeniden kurarsanız değişikliklerini yine geri alabilir. Bu klasörü yalnızca buna ihtiyacınız olmayacaksa silin.",
+  "setup.needsAdmin": "Yönetici izni olmadığı için hiçbir şey değiştirilmedi.",
+  "setup.failed": "PitCrew kurulumu veya kaldırılması tamamlanamadı:\n\n{0}",
+  "setup.notPitCrew": "{0} zaten var ve bir PitCrew klasörü değil, bu yüzden olduğu gibi bırakıldı.",
+  "setup.alreadyHere": "PitCrew zaten {0} içinde. Kurmak veya güncellemek için zip dosyasını İndirilenler gibi başka bir yere çıkarın ve Install.bat'ı oradan çalıştırın.",
+  "setup.notExtracted": "{0} içinde PitCrew dosyaları eksik. Zip dosyasının tamamını yeniden çıkarın ve Install.bat'ı çıkarılan PitCrew klasöründen çalıştırın.",
+  "setup.confirmUpdate": "PitCrew {2}, {1} konumunda kurulu. {0} sürümüyle değiştirilsin mi?\n\nPitCrew'un yaptığı değişiklikler ve geri alma verileri korunur. Devam etmeden önce PitCrew'u kapatın.",
+  "setup.inUse": "PitCrew açık, başka bir PitCrew kurulumu sürüyor veya dosyalarından ya da klasörlerinden biri kullanılıyor (örneğin bir Dosya Gezgini penceresi). Bunları kapatıp tekrar deneyin; hiçbir şey değiştirilmedi."
 }

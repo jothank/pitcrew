@@ -49,13 +49,17 @@ que vem a seguir está em [docs/TWEAKS.md](docs/TWEAKS.md).
 
 ## Baixar e usar
 
-1. Baixe o `PitCrew-0.1.0-beta.zip` em [Releases](https://github.com/jothank/pitcrew/releases).
+1. Baixe o `PitCrew-<versão>.zip` mais recente em [Releases](https://github.com/jothank/pitcrew/releases).
 2. Clique com o botão direito no zip, escolha **Extrair tudo...** e depois **Extrair**.
-3. Na pasta que abrir, entre na pasta **PitCrew** e dê dois cliques em **`PitCrew.exe`**.
+3. Na pasta que abrir, entre na pasta **PitCrew**. Depois, escolha:
+   - **Instalar:** dê dois cliques em **`Install.bat`**. O PitCrew vai para `C:\Program Files\PitCrew`,
+     com um atalho na área de trabalho e no menu Iniciar, e pode ser removido em Configurações >
+     Aplicativos, como qualquer outro programa. *O `Install.bat` vem nas versões depois da 0.1.0-beta.*
+   - **Ou usar sem instalar:** dê dois cliques em **`PitCrew.exe`**. Nada é instalado: o PitCrew
+     roda a partir dessa pasta.
 4. O Windows pede permissão de administrador. Responda **Sim** para fazer mudanças, ou **Não**
-   para só olhar (modo somente leitura).
-
-Nada é instalado: o PitCrew roda a partir dessa pasta.
+   para só olhar (modo somente leitura). Aberto pelo atalho, o pedido cita o Windows PowerShell,
+   que é quem roda os scripts do PitCrew.
 
 **Apareceu "O Windows protegeu o computador"?** O PitCrew ainda não tem assinatura digital, então o
 SmartScreen avisa como faz com qualquer programa novo de editor desconhecido. Clique em **Mais
@@ -65,7 +69,8 @@ do zip fica publicado ao lado dele, e o `PitCrew.exe` é só um lançador pequen
 
 **Bloqueado pelo Controle Inteligente de Aplicativos ou pelo antivírus?** O Controle Inteligente de
 Aplicativos (Smart App Control, do Windows 11) pode bloquear programas sem assinatura, sem a opção
-"executar assim mesmo". Use então o **`PitCrew.bat`** da mesma pasta: ele faz a mesma coisa. Não
+"executar assim mesmo". Instale o PitCrew pelo **`Install.bat`** ou abra o **`PitCrew.bat`** da
+mesma pasta: nenhum dos dois usa um `.exe`, só o Windows PowerShell que vem com o Windows. Não
 desligue esse controle por causa do PitCrew: em muitas versões do Windows ele só volta reinstalando
 o sistema. Uma versão assinada está a caminho: veja a
 [política de assinatura de código](#política-de-assinatura-de-código-code-signing-policy).
@@ -83,9 +88,13 @@ Logs e o diário de desfazer ficam em `%ProgramData%\PitCrew`.
 ## Remover o PitCrew
 
 Primeiro abra o **Histórico** e desfaça o que quiser que volte a ser como era: o PitCrew só
-consegue desfazer as mudanças dele enquanto o diário de desfazer existir. Depois apague a pasta do
-PitCrew. O diário e os logs ficam em `C:\ProgramData\PitCrew`; apague essa pasta por último, se
-quiser.
+consegue desfazer as mudanças dele enquanto o diário de desfazer existir. Depois:
+
+- se você instalou, remova o **PitCrew** em Configurações > Aplicativos > Aplicativos instalados
+  (Aplicativos e recursos no Windows 10);
+- se não instalou, apague a pasta do PitCrew.
+
+O diário e os logs continuam em `C:\ProgramData\PitCrew`; apague essa pasta por último, se quiser.
 
 ## Idiomas
 

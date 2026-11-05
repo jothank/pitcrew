@@ -311,5 +311,17 @@
   "about.pixKey": "Pix key",
   "about.copyPixKey": "Copy key",
   "about.copyPixCode": "Copy Pix code (copia e cola)",
-  "about.copied": "Copied."
+  "about.copied": "Copied.",
+  "setup.title": "PitCrew setup",
+  "setup.confirmInstall": "Install PitCrew {0} in {1}?\n\nThis adds a PitCrew shortcut to the desktop and the Start menu, for everyone who uses this PC. To remove PitCrew later, use Settings > Apps, like any other program.\n\nWindows will ask for administrator rights.",
+  "setup.installed": "PitCrew {0} is installed. It opens from the PitCrew shortcut on the desktop or in the Start menu.\n\nOpen it now?",
+  "setup.confirmUninstall": "Remove PitCrew from this PC?\n\nChanges PitCrew made stay as they are. To put them back first, open PitCrew, go to History and use Undo.\n\nClose PitCrew before you continue.",
+  "setup.uninstalled": "PitCrew was removed. Its undo journal and logs are still in {0}: if you install PitCrew again, it can still undo its changes. Delete that folder only if you won't need that.",
+  "setup.needsAdmin": "Without administrator rights, nothing was changed.",
+  "setup.failed": "PitCrew setup could not finish:\n\n{0}",
+  "setup.notPitCrew": "{0} already exists and is not a PitCrew folder, so it was left as it is.",
+  "setup.alreadyHere": "PitCrew is already in {0}. To install or update it, extract the zip somewhere else, such as Downloads, and run Install.bat from there.",
+  "setup.notExtracted": "Some of PitCrew's files are missing from {0}. Extract the whole zip again and run Install.bat from the extracted PitCrew folder.",
+  "setup.confirmUpdate": "PitCrew {2} is installed in {1}. Replace it with version {0}?\n\nChanges PitCrew made and its undo journal are kept. Close PitCrew before you continue.",
+  "setup.inUse": "PitCrew is open, another PitCrew setup is running, or one of its files or folders is in use (by a File Explorer window, for example). Close them and try again; nothing was changed."
 }

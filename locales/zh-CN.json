@@ -311,5 +311,17 @@
   "about.pixKey": "Pix 密钥",
   "about.copyPixKey": "复制密钥",
   "about.copyPixCode": "复制 Pix 代码（copia e cola）",
-  "about.copied": "已复制。"
+  "about.copied": "已复制。",
+  "setup.title": "PitCrew 安装",
+  "setup.confirmInstall": "要将 PitCrew {0} 安装到 {1} 吗？\n\n这会在桌面和“开始”菜单中为这台电脑的所有用户添加 PitCrew 快捷方式。以后要删除 PitCrew，可以像其他程序一样在“设置 > 应用”中卸载。\n\nWindows 会请求管理员权限。",
+  "setup.installed": "PitCrew {0} 已安装。可以通过桌面或“开始”菜单中的 PitCrew 快捷方式打开它。\n\n现在打开吗？",
+  "setup.confirmUninstall": "要从这台电脑删除 PitCrew 吗？\n\nPitCrew 做过的更改会保持原样。如果想先恢复它们，请打开 PitCrew，进入“历史记录”并使用“撤销”。\n\n继续之前请先关闭 PitCrew。",
+  "setup.uninstalled": "PitCrew 已删除。撤销记录和日志仍保留在 {0} 中：如果重新安装 PitCrew，它仍能撤销之前的更改。只有在不再需要时才删除该文件夹。",
+  "setup.needsAdmin": "没有管理员权限，因此未做任何更改。",
+  "setup.failed": "PitCrew 的安装或卸载未能完成：\n\n{0}",
+  "setup.notPitCrew": "{0} 已存在且不是 PitCrew 文件夹，因此保持原样。",
+  "setup.alreadyHere": "PitCrew 已位于 {0}。要安装或更新，请将 zip 解压到其他位置（例如“下载”文件夹），然后从那里运行 Install.bat。",
+  "setup.notExtracted": "{0} 中缺少 PitCrew 的文件。请重新解压整个 zip，并从解压出的 PitCrew 文件夹运行 Install.bat。",
+  "setup.confirmUpdate": "{1} 中已安装 PitCrew {2}。要替换为版本 {0} 吗？\n\nPitCrew 做过的更改和撤销记录都会保留。继续之前请先关闭 PitCrew。",
+  "setup.inUse": "PitCrew 正在运行、另一个 PitCrew 安装正在进行，或它的某个文件或文件夹正在使用中（例如被文件资源管理器窗口占用）。请关闭后重试；未做任何更改。"
 }

@@ -37,7 +37,7 @@ New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 $OutDir = (Resolve-Path -LiteralPath $OutDir).ProviderPath
 
 # Everything a release may contain at its top level; anything else stops the build
-$script:ReleaseTop = 'PitCrew.exe', 'PitCrew.ps1', 'PitCrew.bat', 'README.md', 'README.pt-BR.md', 'LICENSE',
+$script:ReleaseTop = 'PitCrew.exe', 'PitCrew.ps1', 'PitCrew.bat', 'Install.bat', 'README.md', 'README.pt-BR.md', 'LICENSE',
     'CHANGELOG.md', 'SECURITY.md', 'assets', 'data', 'docs', 'locales', 'src', 'tests', 'tools', 'tweaks'
 
 function Get-PcBuildVersion {
@@ -112,7 +112,7 @@ function Test-PcReleaseEntries([string[]]$Entries) {
         # Binaries, keys and archives never ship by accident; the only exe is the launcher
         if ($e -ne 'PitCrew/PitCrew.exe' -and $e -match '\.(exe|dll|sys|msi|pfx|p12|snk|key|pem|zip|7z|config)$|/\.env$') { $problems += "not allowed: $e" }
     }
-    foreach ($required in 'PitCrew.exe', 'PitCrew.ps1', 'PitCrew.bat', 'LICENSE', 'README.md', 'src/Load.ps1', 'src/UI/Window.xaml',
+    foreach ($required in 'PitCrew.exe', 'PitCrew.ps1', 'PitCrew.bat', 'Install.bat', 'LICENSE', 'README.md', 'src/Load.ps1', 'src/Setup.ps1', 'src/UI/Window.xaml',
         'assets/pitcrew.ico', 'assets/pitcrew.png', 'locales/en.json', 'tweaks/privacy.json', 'data/apps.json') {
         if ($files -notcontains "PitCrew/$required") { $problems += "missing: $required" }
     }

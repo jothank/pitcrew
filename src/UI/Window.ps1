@@ -1363,8 +1363,12 @@ function New-PcWindow {
 
 function Show-PcWindow {
     # Must happen before the first window exists, or the taskbar groups it under PowerShell
-    try { [PitCrew.NativeShell]::SetCurrentProcessExplicitAppUserModelID('JonathanCosta.PitCrew') }
+    try { [PitCrew.NativeShell]::SetCurrentProcessExplicitAppUserModelID($script:PcAppId) }
     catch { Write-PcLog "AppUserModelID not set: $($_.Exception.Message)" 'Warn' }
+    # Only its existence matters: it tells src\Setup.ps1 a window is open, and goes away with this
+    # process. Opening one an elevated PitCrew made can fail here; that window already counts.
+    try { $script:PcWindowMarker = New-Object System.Threading.Mutex($false, $script:PcWindowMutexName) }
+    catch { Write-PcLog "Window mutex not created: $($_.Exception.Message)" 'Warn' }
     $window = New-PcWindow
     [void]$window.ShowDialog()
     $Ui.Timer.Stop()

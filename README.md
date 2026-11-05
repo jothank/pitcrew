@@ -48,13 +48,17 @@ code); what comes next is in [docs/TWEAKS.md](docs/TWEAKS.md).
 
 ## Download and run
 
-1. Download `PitCrew-0.1.0-beta.zip` from [Releases](https://github.com/jothank/pitcrew/releases).
+1. Download the latest `PitCrew-<version>.zip` from [Releases](https://github.com/jothank/pitcrew/releases).
 2. Right-click the zip, choose **Extract All...** and then **Extract**.
-3. In the folder that opens, open the **PitCrew** folder and double-click **`PitCrew.exe`**.
+3. In the folder that opens, open the **PitCrew** folder. Then either:
+   - **Install it:** double-click **`Install.bat`**. PitCrew goes into `C:\Program Files\PitCrew`,
+     with a shortcut on the desktop and in the Start menu, and can be removed in Settings > Apps
+     like any other program. *`Install.bat` comes with the versions after 0.1.0-beta.*
+   - **Or run it without installing:** double-click **`PitCrew.exe`**. Nothing is installed:
+     PitCrew runs from that folder.
 4. Windows asks for administrator rights. Answer **Yes** to make changes, or **No** to only look
-   around (read-only).
-
-Nothing is installed: PitCrew runs from that folder.
+   around (read-only). Opened from the shortcut, the prompt names Windows PowerShell, which is what
+   runs PitCrew's scripts.
 
 **"Windows protected your PC"?** PitCrew isn't digitally signed yet, so SmartScreen warns about it
 like any new program from an unknown publisher. Click **More info**, then **Run anyway**. You can
@@ -62,9 +66,10 @@ check the download first: the zip's SHA-256 is published next to it, and `PitCre
 small launcher whose source is in [`tools/launcher/PitCrew.cs`](tools/launcher/PitCrew.cs).
 
 **Blocked by Smart App Control or your antivirus?** Smart App Control (Windows 11) can block
-programs that aren't signed, with no "run anyway". Use **`PitCrew.bat`** in the same folder instead:
-it does the same thing. Don't turn Smart App Control off for PitCrew: on many Windows versions it
-only comes back with a reinstall. A signed release is on the way: see the
+programs that aren't signed, with no "run anyway". Install PitCrew with **`Install.bat`**, or open
+**`PitCrew.bat`** from the same folder: neither uses an exe, only the Windows PowerShell that comes
+with Windows. Don't turn Smart App Control off for PitCrew: on many Windows versions it only comes
+back with a reinstall. A signed release is on the way: see the
 [code signing policy](#code-signing-policy).
 
 From PowerShell:
@@ -80,8 +85,13 @@ Logs and the undo journal are kept in `%ProgramData%\PitCrew`.
 ## Removing PitCrew
 
 First open **History** and undo whatever you want back the way it was: PitCrew can only undo its
-changes while its undo journal exists. Then delete the PitCrew folder. The journal and logs are in
-`C:\ProgramData\PitCrew`; delete that folder last, if you want.
+changes while its undo journal exists. Then:
+
+- if you installed it, remove **PitCrew** in Settings > Apps > Installed apps (Apps & features on
+  Windows 10);
+- otherwise, delete the PitCrew folder.
+
+The journal and logs stay in `C:\ProgramData\PitCrew`; delete that folder last, if you want.
 
 ## Languages
 

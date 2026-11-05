@@ -35,8 +35,7 @@ On signpath.io, after the project is accepted:
   It signs only `PitCrew.exe`, and only when its product name is PitCrew and its version is the one
   the workflow sends.
 - Create a release-signing policy with manual approval. In its GitHub build policies:
-  - require GitHub-hosted runners (`runners.required_github_hosted`; check the exact name in the
-    policy editor);
+  - require GitHub-hosted runners (`runners.require_github_hosted: true`);
   - turn on `disallow_reruns`, so a re-run of an old build can't be signed again.
 - Create a CI user with submitter rights and an API token for it.
 

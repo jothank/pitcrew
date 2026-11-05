@@ -311,5 +311,17 @@
   "about.pixKey": "Clave Pix",
   "about.copyPixKey": "Copiar clave",
   "about.copyPixCode": "Copiar código Pix (copia e cola)",
-  "about.copied": "Copiado."
+  "about.copied": "Copiado.",
+  "setup.title": "Instalación de PitCrew",
+  "setup.confirmInstall": "¿Instalar PitCrew {0} en {1}?\n\nSe crea un acceso directo de PitCrew en el escritorio y en el menú Inicio, para todos los que usan este PC. Para quitar PitCrew más adelante, usa Configuración > Aplicaciones, como cualquier otro programa.\n\nWindows pedirá permisos de administrador.",
+  "setup.installed": "PitCrew {0} está instalado. Se abre con el acceso directo PitCrew del escritorio o del menú Inicio.\n\n¿Abrirlo ahora?",
+  "setup.confirmUninstall": "¿Quitar PitCrew de este PC?\n\nLos cambios que hizo PitCrew se quedan como están. Para revertirlos antes, abre PitCrew, ve a Historial y usa Deshacer.\n\nCierra PitCrew antes de continuar.",
+  "setup.uninstalled": "PitCrew se quitó. Los datos para deshacer y los registros siguen en {0}: si vuelves a instalar PitCrew, podrá deshacer sus cambios. Borra esa carpeta solo si no lo vas a necesitar.",
+  "setup.needsAdmin": "Sin permisos de administrador, no se cambió nada.",
+  "setup.failed": "La instalación o desinstalación de PitCrew no pudo terminar:\n\n{0}",
+  "setup.notPitCrew": "{0} ya existe y no es una carpeta de PitCrew, así que se dejó como estaba.",
+  "setup.alreadyHere": "PitCrew ya está en {0}. Para instalarlo o actualizarlo, extrae el zip en otro lugar, como Descargas, y ejecuta Install.bat desde allí.",
+  "setup.notExtracted": "Faltan archivos de PitCrew en {0}. Vuelve a extraer el zip completo y ejecuta Install.bat desde la carpeta PitCrew extraída.",
+  "setup.confirmUpdate": "PitCrew {2} está instalado en {1}. ¿Reemplazarlo por la versión {0}?\n\nLos cambios que hizo PitCrew y sus datos para deshacer se conservan. Cierra PitCrew antes de continuar.",
+  "setup.inUse": "PitCrew está abierto, otra instalación de PitCrew está en curso, o uno de sus archivos o carpetas está en uso (por ejemplo, una ventana del Explorador de archivos). Ciérralos y vuelve a intentarlo; no se cambió nada."
 }

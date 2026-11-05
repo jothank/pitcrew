@@ -54,7 +54,7 @@ what comes next. 🧩 = needs a new engine action type, 📋 = only content or U
 | ✅ | `PitCrew.exe` launcher, icon, release zip with SHA-256 (`tools/Build-Release.ps1`) |
 | 📋 | Signed release, so SmartScreen and Smart App Control don't block it |
 | 📋 | Build releases in GitHub Actions with artifact attestations, so anyone can check a zip came from a given commit |
-| 📋 | Start menu shortcut, and a taskbar pin that opens PitCrew (the window's relaunch command) |
+| ✅ | Start menu and desktop shortcuts (`Install.bat`), carrying the window's taskbar ID for pinning (pinning not yet tried by hand) |
 | 📋 | "Check for a new version" on the About page (a link to Releases, nothing downloaded) |
 
 ## Later

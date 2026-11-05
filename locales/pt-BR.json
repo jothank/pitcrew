@@ -311,5 +311,17 @@
   "about.pixKey": "Chave Pix",
   "about.copyPixKey": "Copiar chave",
   "about.copyPixCode": "Copiar Pix copia e cola",
-  "about.copied": "Copiado."
+  "about.copied": "Copiado.",
+  "setup.title": "Instalação do PitCrew",
+  "setup.confirmInstall": "Instalar o PitCrew {0} em {1}?\n\nIsso cria um atalho do PitCrew na área de trabalho e no menu Iniciar, para todos que usam este PC. Para remover o PitCrew depois, use Configurações > Aplicativos, como qualquer outro programa.\n\nO Windows vai pedir permissão de administrador.",
+  "setup.installed": "O PitCrew {0} foi instalado. Ele abre pelo atalho PitCrew na área de trabalho ou no menu Iniciar.\n\nAbrir agora?",
+  "setup.confirmUninstall": "Remover o PitCrew deste PC?\n\nAs mudanças que o PitCrew fez continuam como estão. Para desfazê-las antes, abra o PitCrew, vá ao Histórico e use Desfazer.\n\nFeche o PitCrew antes de continuar.",
+  "setup.uninstalled": "O PitCrew foi removido. O diário de desfazer e os logs continuam em {0}: se você instalar o PitCrew de novo, ele ainda consegue desfazer as mudanças. Só apague essa pasta se não for precisar disso.",
+  "setup.needsAdmin": "Sem permissão de administrador, nada foi mudado.",
+  "setup.failed": "A instalação ou remoção do PitCrew não terminou:\n\n{0}",
+  "setup.notPitCrew": "{0} já existe e não é uma pasta do PitCrew, então ficou como estava.",
+  "setup.alreadyHere": "O PitCrew já está em {0}. Para instalar ou atualizar, extraia o zip em outro lugar, como Downloads, e rode o Install.bat de lá.",
+  "setup.notExtracted": "Faltam arquivos do PitCrew em {0}. Extraia o zip inteiro de novo e rode o Install.bat da pasta PitCrew extraída.",
+  "setup.confirmUpdate": "O PitCrew {2} está instalado em {1}. Substituir pela versão {0}?\n\nAs mudanças que o PitCrew fez e o diário de desfazer continuam. Feche o PitCrew antes de continuar.",
+  "setup.inUse": "O PitCrew está aberto, outra instalação do PitCrew está em andamento, ou um arquivo ou pasta dele está em uso (por uma janela do Explorador de Arquivos, por exemplo). Feche-os e tente de novo; nada foi mudado."
 }

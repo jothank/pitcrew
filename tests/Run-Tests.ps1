@@ -818,6 +818,11 @@ try {
         }
     }
 
+    Test-Case 'installer tests pass (tests\Setup-Tests.ps1)' {
+        $out = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $root 'tests\Setup-Tests.ps1') 2>&1
+        Assert-Equal 0 $LASTEXITCODE ("installer tests failed:`n" + (($out | Select-String 'FAIL' -CaseSensitive -Context 0, 1) -join "`n"))
+    }
+
     Test-Case 'every .ps1 file is saved as UTF-8 with BOM (needed by Windows PowerShell 5.1)' {
         $bad = @(Get-ChildItem $root -Recurse -Filter *.ps1 | Where-Object {
             $b = [IO.File]::ReadAllBytes($_.FullName)
