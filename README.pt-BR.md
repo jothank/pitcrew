@@ -6,7 +6,7 @@
 
 [English](README.md)
 
-> **Beta (0.1.0).** Esta é a primeira versão pública. Deixe marcada a opção de ponto de
+> **Beta (0.1.1).** O PitCrew ainda está em beta. Deixe marcada a opção de ponto de
 > restauração ao aplicar e conte o que der errado em [Issues](https://github.com/jothank/pitcrew/issues).
 
 O PitCrew é uma ferramenta gratuita e de código aberto para cuidar do Windows: ajustes de
@@ -52,9 +52,10 @@ que vem a seguir está em [docs/TWEAKS.md](docs/TWEAKS.md).
 1. Baixe o `PitCrew-<versão>.zip` mais recente em [Releases](https://github.com/jothank/pitcrew/releases).
 2. Clique com o botão direito no zip, escolha **Extrair tudo...** e depois **Extrair**.
 3. Na pasta que abrir, entre na pasta **PitCrew**. Depois, escolha:
-   - **Instalar:** dê dois cliques em **`Install.bat`**. O PitCrew vai para `C:\Program Files\PitCrew`,
+   - **Instalar:** clique com o botão direito em **`Install.bat`** e escolha **Executar como
+     administrador**. O PitCrew vai para `C:\Program Files\PitCrew`,
      com um atalho na área de trabalho e no menu Iniciar, e pode ser removido em Configurações >
-     Aplicativos, como qualquer outro programa. *O `Install.bat` vem nas versões depois da 0.1.0-beta.*
+     Aplicativos, como qualquer outro programa.
    - **Ou usar sem instalar:** dê dois cliques em **`PitCrew.exe`**. Nada é instalado: o PitCrew
      roda a partir dessa pasta.
 4. O Windows pede permissão de administrador. Responda **Sim** para fazer mudanças, ou **Não**
@@ -68,11 +69,11 @@ do zip fica publicado ao lado dele, e o `PitCrew.exe` é só um lançador pequen
 [`tools/launcher/PitCrew.cs`](tools/launcher/PitCrew.cs).
 
 **Bloqueado pelo Controle Inteligente de Aplicativos ou pelo antivírus?** O Controle Inteligente de
-Aplicativos (Smart App Control, do Windows 11) pode bloquear programas sem assinatura, sem a opção
-"executar assim mesmo". Instale o PitCrew pelo **`Install.bat`** ou abra o **`PitCrew.bat`** da
-mesma pasta: nenhum dos dois usa um `.exe`, só o Windows PowerShell que vem com o Windows. Não
-desligue esse controle por causa do PitCrew: em muitas versões do Windows ele só volta reinstalando
-o sistema. Uma versão assinada está a caminho: veja a
+Aplicativos (Smart App Control, do Windows 11) bloqueia programas sem assinatura, sem a opção
+"executar assim mesmo", e também scripts baixados da internet abertos com dois cliques. Clique com o
+botão direito em **`Install.bat`** e escolha **Executar como administrador**: ele instala o PitCrew,
+e daí em diante o PitCrew abre normalmente pelo atalho. Não desligue esse controle por causa do
+PitCrew: em muitas versões do Windows ele só volta reinstalando o sistema. Uma versão assinada está a caminho: veja a
 [política de assinatura de código](#política-de-assinatura-de-código-code-signing-policy).
 
 Pelo PowerShell:

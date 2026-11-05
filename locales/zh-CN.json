@@ -140,7 +140,7 @@
   "drivers.problem.code": "错误代码 {0}",
 
   "about.version": "版本 {0}",
-  "about.beta": "这是测试版，也是第一个公开版本。应用设置时请保持勾选创建还原点的选项；如有问题，请在 Issues 中告诉我们。",
+  "about.beta": "这是测试版。应用设置时请保持勾选创建还原点的选项；如有问题，请在 Issues 中告诉我们。",
   "about.whatTitle": "这是什么",
   "about.what": "PitCrew 是一款免费、开源的程序，让 Windows 10 和 11 更快、更干净、更注重隐私，而且没有隐藏的风险。名字来自赛车的维修站团队：他们能在几秒钟内更换轮胎、调校赛车，而不让赛车退出比赛。",
   "about.featuresTitle": "它能做什么",

@@ -821,6 +821,10 @@ try {
     Test-Case 'installer tests pass (tests\Setup-Tests.ps1)' {
         $out = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $root 'tests\Setup-Tests.ps1') 2>&1
         Assert-Equal 0 $LASTEXITCODE ("installer tests failed:`n" + (($out | Select-String 'FAIL' -CaseSensitive -Context 0, 1) -join "`n"))
+        # Whether the real install (GitHub-hosted runners only) ran or was skipped, so a build log shows it
+        foreach ($line in @($out | Select-String '^\s+(ok|skip)\s+a real install')) {
+            Write-Host "        installer: $($line.Line.Trim())" -ForegroundColor DarkGray
+        }
     }
 
     Test-Case 'every .ps1 file is saved as UTF-8 with BOM (needed by Windows PowerShell 5.1)' {

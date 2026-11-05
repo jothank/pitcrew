@@ -140,7 +140,7 @@
   "drivers.problem.code": "error code {0}",
 
   "about.version": "Version {0}",
-  "about.beta": "This is a beta, the first public version. Keep the restore point option ticked when applying, and tell us in Issues if something doesn't work.",
+  "about.beta": "This is a beta. Keep the restore point option ticked when applying, and tell us in Issues if something doesn't work.",
   "about.whatTitle": "What it is",
   "about.what": "PitCrew is a free, open-source program that makes Windows 10 and 11 faster, cleaner and more private, without hidden risks. The name comes from the racing pit crew: in a few seconds they change the tires and tune the car without taking it out of the race.",
   "about.featuresTitle": "What it does",

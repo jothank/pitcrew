@@ -140,7 +140,7 @@
   "drivers.problem.code": "código de error {0}",
 
   "about.version": "Versión {0}",
-  "about.beta": "Esta es una versión beta, la primera pública. Deja marcada la opción de punto de restauración al aplicar y cuéntanos en Issues si algo no funciona.",
+  "about.beta": "Esta es una versión beta. Deja marcada la opción de punto de restauración al aplicar y cuéntanos en Issues si algo no funciona.",
   "about.whatTitle": "Qué es",
   "about.what": "PitCrew es un programa gratuito y de código abierto que hace que Windows 10 y 11 sea más rápido, más limpio y más privado, sin riesgos ocultos. El nombre viene del equipo de boxes de las carreras: en pocos segundos cambia los neumáticos y pone a punto el coche sin sacarlo de la carrera.",
   "about.featuresTitle": "Qué hace",

@@ -140,7 +140,7 @@
   "drivers.problem.code": "hata kodu {0}",
 
   "about.version": "Sürüm {0}",
-  "about.beta": "Bu bir beta, ilk herkese açık sürüm. Uygularken geri yükleme noktası seçeneğini işaretli bırakın ve bir şey çalışmazsa Issues bölümünde bize bildirin.",
+  "about.beta": "Bu bir beta sürümü. Uygularken geri yükleme noktası seçeneğini işaretli bırakın ve bir şey çalışmazsa Issues bölümünde bize bildirin.",
   "about.whatTitle": "Nedir",
   "about.what": "PitCrew, Windows 10 ve 11'i gizli riskler olmadan daha hızlı, daha temiz ve gizliliğe daha saygılı hale getiren ücretsiz, açık kaynaklı bir programdır. Adı yarışlardaki pit ekibinden gelir: birkaç saniye içinde lastikleri değiştirir ve aracı yarıştan çıkarmadan ayarlar.",
   "about.featuresTitle": "Ne yapar",

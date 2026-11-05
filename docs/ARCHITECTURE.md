@@ -215,8 +215,9 @@ straight into Downloads, where a planted DLL or `PitCrew.exe.config` could be wa
 is checked against a list of what may ship (no stray binaries, keys or archives, nothing twice),
 and the SHA-256 is written next to the zip.
 
-From the first signed version on, official releases are built by `.github/workflows/build.yml` on a
-GitHub-hosted runner (0.1.0-beta was still built locally and is unsigned), since
+Official releases are built by `.github/workflows/build.yml` on a GitHub-hosted runner (0.1.0-beta
+was still built locally; 0.1.1-beta was built there but is unsigned, since SignPath had not approved
+the project yet). Signing needs that too, since
 SignPath Foundation only signs what a CI built from the public source. For a version tag, the
 workflow builds `PitCrew.exe` (`-ExeOnly`), sends only that file to SignPath, and builds the zip
 around the copy that comes back (`-ExeFile <signed exe> -RequireSignature`). Signing touches no other
@@ -253,7 +254,10 @@ when a 32-bit program opened it, or it would install into Program Files (x86)). 
    the second rename fails, the old copy is put back;
 5. puts a `PitCrew.lnk` on the public desktop and in the all-users Start menu. It opens
    `PitCrew.bat` minimized, from System32 (a process started in the program folder would hold it),
-   so there is no unsigned exe for Smart App Control to block. It carries the window's
+   so there is no unsigned exe for Smart App Control to block, and the installed files carry no
+   download mark. (With Smart App Control on, a `.bat` that still has the mark is blocked when File
+   Explorer opens it with a double click; started with Run as administrator it is not, which is
+   why the README says to start `Install.bat` that way.) It carries the window's
    AppUserModelID (`$script:PcAppId`), so the taskbar can treat the shortcut and the window as one
    app;
 6. registers `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\PitCrew`, whose command runs

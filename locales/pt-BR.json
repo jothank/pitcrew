@@ -140,7 +140,7 @@
   "drivers.problem.code": "erro código {0}",
 
   "about.version": "Versão {0}",
-  "about.beta": "Esta é uma versão beta, a primeira pública. Deixe marcada a opção de ponto de restauração ao aplicar e conte em Issues se algo não funcionar.",
+  "about.beta": "Esta é uma versão beta. Deixe marcada a opção de ponto de restauração ao aplicar e conte em Issues se algo não funcionar.",
   "about.whatTitle": "O que é",
   "about.what": "O PitCrew é um programa gratuito e de código aberto que deixa o Windows 10 e 11 mais rápido, mais limpo e mais privado, sem riscos escondidos. O nome vem da equipe de box das corridas: em poucos segundos ela troca os pneus e acerta o carro sem tirá-lo da prova.",
   "about.featuresTitle": "O que ele faz",

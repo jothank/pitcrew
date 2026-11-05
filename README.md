@@ -6,7 +6,7 @@
 
 [Português](README.pt-BR.md)
 
-> **Beta (0.1.0).** This is the first public version. Keep the restore point box ticked when
+> **Beta (0.1.1).** PitCrew is still a beta. Keep the restore point box ticked when
 > applying, and report anything odd in [Issues](https://github.com/jothank/pitcrew/issues).
 
 PitCrew is a free, open-source maintenance tool for Windows: privacy and performance settings,
@@ -51,9 +51,10 @@ code); what comes next is in [docs/TWEAKS.md](docs/TWEAKS.md).
 1. Download the latest `PitCrew-<version>.zip` from [Releases](https://github.com/jothank/pitcrew/releases).
 2. Right-click the zip, choose **Extract All...** and then **Extract**.
 3. In the folder that opens, open the **PitCrew** folder. Then either:
-   - **Install it:** double-click **`Install.bat`**. PitCrew goes into `C:\Program Files\PitCrew`,
+   - **Install it:** right-click **`Install.bat`** and choose **Run as administrator**. PitCrew
+     goes into `C:\Program Files\PitCrew`,
      with a shortcut on the desktop and in the Start menu, and can be removed in Settings > Apps
-     like any other program. *`Install.bat` comes with the versions after 0.1.0-beta.*
+     like any other program.
    - **Or run it without installing:** double-click **`PitCrew.exe`**. Nothing is installed:
      PitCrew runs from that folder.
 4. Windows asks for administrator rights. Answer **Yes** to make changes, or **No** to only look
@@ -65,11 +66,11 @@ like any new program from an unknown publisher. Click **More info**, then **Run 
 check the download first: the zip's SHA-256 is published next to it, and `PitCrew.exe` is only a
 small launcher whose source is in [`tools/launcher/PitCrew.cs`](tools/launcher/PitCrew.cs).
 
-**Blocked by Smart App Control or your antivirus?** Smart App Control (Windows 11) can block
-programs that aren't signed, with no "run anyway". Install PitCrew with **`Install.bat`**, or open
-**`PitCrew.bat`** from the same folder: neither uses an exe, only the Windows PowerShell that comes
-with Windows. Don't turn Smart App Control off for PitCrew: on many Windows versions it only comes
-back with a reinstall. A signed release is on the way: see the
+**Blocked by Smart App Control or your antivirus?** Smart App Control (Windows 11) blocks programs
+that aren't signed, with no "run anyway", and also scripts downloaded from the internet when you
+double-click them. Right-click **`Install.bat`** and choose **Run as administrator**: it installs
+PitCrew, and from then on PitCrew opens normally from its shortcut. Don't turn Smart App Control off
+for PitCrew: on many Windows versions it only comes back with a reinstall. A signed release is on the way: see the
 [code signing policy](#code-signing-policy).
 
 From PowerShell:

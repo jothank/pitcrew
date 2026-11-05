@@ -1,16 +1,19 @@
 # Changelog
 
-## Not released yet
+## 0.1.1-beta (2026-11-04)
 
 - **Installer:** `Install.bat` installs PitCrew into Program Files, with a shortcut on the desktop
   and in the Start menu, and lists it in Settings > Apps, where it can be removed (the undo journal
-  stays). No exe is involved, so Smart App Control has nothing unsigned to block. It won't update
-  or remove PitCrew while it is open.
+  stays). Run it as administrator (right-click): with Smart App Control on, Windows blocks a
+  downloaded script opened with a double click, but not this way, and the installed copy opens
+  normally from its shortcut. It won't update or remove PitCrew while it is open.
 - **Builds on GitHub Actions:** every push and pull request is tested and built on a GitHub-hosted
   Windows runner.
-- **Code signing (once SignPath Foundation approves the project):** for a version tag, `PitCrew.exe`
-  is signed, checked and put in a draft release. Only the exe is signed; the scripts stay as they
-  are. See the code signing policy in the README and [docs/SIGNING.md](docs/SIGNING.md).
+- **Code signing, prepared (once SignPath Foundation approves the project):** for a version tag,
+  `PitCrew.exe` is signed, checked and put in a draft release. Only the exe is signed; the scripts
+  stay as they are. See the code signing policy in the README and [docs/SIGNING.md](docs/SIGNING.md).
+  This version's `PitCrew.exe` is not signed yet.
+- **About page:** no longer calls this the first public version.
 
 ## 0.1.0-beta (2026-11-04)
 
