@@ -2,7 +2,7 @@
 # again with the same values, so nothing here may hold live objects (COM, WPF, handles).
 
 # The one place for the version: the About page, PitCrew.exe and the release zip all read it
-$script:PcVersion = '0.1.1-beta'
+$script:PcVersion = '0.1.2-beta'
 
 # Where the project and its author live (About page). The repository links work once it is public.
 $script:PcLinks = @{

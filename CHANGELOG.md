@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.2-beta (2026-11-05)
 
 - **New-version notice:** the first time it opens, PitCrew asks whether it may check for new
   versions (the answer is No unless you click Yes). With yes, it reads the public list of releases
@@ -8,6 +8,7 @@
   release's page. Nothing about you or the PC is sent, and nothing is downloaded or installed. The
   About page has the switch and a "Check now" button. Versions up to 0.1.1-beta don't have this, so
   update those by hand once.
+- **README:** the 7-minute video tour on YouTube (in Portuguese), and how to update.
 
 ## 0.1.1-beta (2026-11-04)
 

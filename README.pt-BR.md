@@ -6,7 +6,7 @@
 
 [English](README.md)
 
-> **Beta (0.1.1).** O PitCrew ainda está em beta. Deixe marcada a opção de ponto de
+> **Beta (0.1.2).** O PitCrew ainda está em beta. Deixe marcada a opção de ponto de
 > restauração ao aplicar e conte o que der errado em [Issues](https://github.com/jothank/pitcrew/issues).
 
 O PitCrew é uma ferramenta gratuita e de código aberto para cuidar do Windows: ajustes de
@@ -14,6 +14,10 @@ privacidade e desempenho, limpeza de disco, remoção de apps de fábrica e atua
 pelo Windows Update, tudo numa janela só.
 
 ![PitCrew](docs/screenshot-pt-BR.png)
+
+**Vídeo** (7 minutos): o que o PitCrew faz e como usar. Clique para assistir no YouTube.
+
+<a href="https://www.youtube.com/watch?v=-7_mUV2bkMo"><img src="https://img.youtube.com/vi/-7_mUV2bkMo/maxresdefault.jpg" alt="Vídeo: Deixe o Windows mais rápido e privado SEM RISCO: conheça o PitCrew" width="560"></a>
 
 ## Princípios
 

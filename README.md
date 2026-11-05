@@ -6,13 +6,17 @@
 
 [Português](README.pt-BR.md)
 
-> **Beta (0.1.1).** PitCrew is still a beta. Keep the restore point box ticked when
+> **Beta (0.1.2).** PitCrew is still a beta. Keep the restore point box ticked when
 > applying, and report anything odd in [Issues](https://github.com/jothank/pitcrew/issues).
 
 PitCrew is a free, open-source maintenance tool for Windows: privacy and performance settings,
 disk cleanup, removal of preinstalled apps and driver updates from Windows Update, in one window.
 
 ![PitCrew](docs/screenshot.png)
+
+**Video tour** (7 minutes, in Portuguese): what PitCrew does and how to use it. Click to watch on YouTube.
+
+<a href="https://www.youtube.com/watch?v=-7_mUV2bkMo"><img src="https://img.youtube.com/vi/-7_mUV2bkMo/maxresdefault.jpg" alt="Video: Deixe o Windows mais rápido e privado SEM RISCO: conheça o PitCrew" width="560"></a>
 
 ## Principles
 
