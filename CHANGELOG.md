@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.4-beta (2026-11-06)
 
 - **Automatic analysis:** a new page, also opened from the dashboard. Pick one or more profiles
   (Essentials, Gaming, More privacy) and PitCrew checks the tweak, cleanup, built-in apps and
