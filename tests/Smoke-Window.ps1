@@ -16,6 +16,15 @@ function Show-PcMessage([string]$Text, [string]$Icon = 'Information') { Write-Ho
 $failures = 0
 # Choices made in the window go to a throwaway key, never to the real preferences
 $script:PcPreferencesKey = 'HKCU:\Software\PitCrewTest\smoke-' + [guid]::NewGuid().ToString('N')
+# The data folder as it is before the window opens on the dashboard, which must only read it
+function Get-DataFolderPrint {
+    $files = foreach ($name in 'stats.json', 'journal.json') {
+        $f = Get-Item -LiteralPath (Join-Path $Pc.DataDir $name) -ErrorAction SilentlyContinue
+        if ($f) { '{0}={1}' -f $name, $f.LastWriteTimeUtc.Ticks } else { "$name=none" }
+    }
+    '{0}|{1}' -f (Test-Path -LiteralPath $Pc.DataDir), ($files -join '|')
+}
+$dataBefore = Get-DataFolderPrint
 $window = New-PcWindow
 $Ui.Timer.Stop()
 
@@ -25,7 +34,7 @@ function Wait-PcJob([int]$TimeoutSec = 300) {
     if ($script:PcJob) { throw 'job timed out' }
 }
 
-# The window opens on the first page, which loads in the background
+# The window opens on the first page (the dashboard), which loads in the background
 Wait-PcJob
 
 function Test-Page([string]$Name, [scriptblock]$Start, [scriptblock]$Check) {
@@ -39,6 +48,23 @@ function Test-Page([string]$Name, [scriptblock]$Start, [scriptblock]$Check) {
     if (-not $ok) { $script:failures++ }
 }
 
+Test-Page 'dashboard' { Show-PcPage 'dashboard' } {
+    param($items)
+    $rows = @($Ui.DashSystem.ItemsSource)
+    $tiles = @($Ui.DashOptimized.ItemsSource) + @($Ui.DashTotals.ItemsSource)
+    foreach ($r in $rows) { Write-Host "    $($r.Title): $($r.Detail -replace "`n", ' | ')" }
+    foreach ($t in $tiles) { Write-Host "    [$($t.Badge)] $($t.Title) $($t.Detail)" }
+    foreach ($i in $items) { Write-Host "    $($i.Title) | $($i.Badge) | $($i.Detail -replace "`n", ' | ')" }
+    # Every text in the current language, and opening it wrote nothing
+    $texts = @($rows | ForEach-Object { $_.Title; $_.Detail }) + @($tiles | ForEach-Object { $_.Title; $_.Detail }) + @($items | ForEach-Object { $_.Detail; $_.Badge; $_.Meta }) +
+        @($Ui.DashSystemTitle.Text, $Ui.DashOptimizedTitle.Text, $Ui.DashOptimizedNote.Text, $Ui.DashTotalsTitle.Text, $Ui.DashTotalsNote.Text, $Ui.DashChangesTitle.Text, $Ui.DashChangesIntro.Text)
+    $untranslated = @($texts | Where-Object { $_ -match '^(dashboard|nav|state|history|disk)\.' })
+    if ($untranslated) { Write-Host "    untranslated: $($untranslated -join ', ')" }
+    $Ui.DashboardPanel.Visibility -eq 'Visible' -and $rows.Count -ge 5 -and @($Ui.DashOptimized.ItemsSource).Count -eq 4 -and
+        @($Ui.DashTotals.ItemsSource).Count -eq 4 -and $untranslated.Count -eq 0 -and (Get-DataFolderPrint) -eq $dataBefore -and
+        @($items | Where-Object Selectable).Count -eq 0
+}
+Test-Page 'leaving dashboard' { Show-PcPage 'maintenance' } { param($items) $Ui.DashboardPanel.Visibility -eq 'Collapsed' }
 Test-Page 'cleanup' { Show-PcPage 'cleanup' } { param($items) $items.Count -eq @($script:PcCleanupTargets).Count }
 Test-Page 'apps' { Show-PcPage 'apps' } { param($items) $items.Count -eq @(Get-PcAppCatalog).Count }
 Test-Page 'drivers summary' { Show-PcPage 'drivers' } { param($items) [bool]$Ui.PageInfo.Text }

@@ -48,19 +48,32 @@ function Assert-PcAppsAllowed {
     if (Test-PcUserMismatch) { throw (Get-PcText 'error.otherUser') }
 }
 
+function Remove-PcAppxPackage([string]$FullName) {
+    # The one place an app is removed, so tests can replace it; with a test redirect it refuses
+    Assert-PcRealSystem "app $FullName"
+    Remove-AppxPackage -Package $FullName -ErrorAction Stop
+}
+
 function Remove-PcApps {
     param([Parameter(Mandatory)][string[]]$Packages)
     Assert-PcAppsAllowed
     $catalog = @(Get-PcAppCatalog | ForEach-Object package)
-    foreach ($name in $Packages) {
-        if ($catalog -notcontains $name -or (Test-PcProtectedPackage $name)) { throw "Not removable: $name" }
-        $ok = $true
-        foreach ($pkg in @(Get-AppxPackage -Name $name -ErrorAction SilentlyContinue)) {
-            try { Remove-AppxPackage -Package $pkg.PackageFullName -ErrorAction Stop }
-            catch { $ok = $false; Write-PcLog "Remove $name failed: $($_.Exception.Message)" 'Warn' }
+    $removed = 0   # for the dashboard's totals: apps that were installed and are gone now
+    try {
+        foreach ($name in $Packages) {
+            if ($catalog -notcontains $name -or (Test-PcProtectedPackage $name)) { throw "Not removable: $name" }
+            $ok = $true
+            $found = @(Get-AppxPackage -Name $name -ErrorAction SilentlyContinue)
+            foreach ($pkg in $found) {
+                try { Remove-PcAppxPackage $pkg.PackageFullName }
+                catch { $ok = $false; Write-PcLog "Remove $name failed: $($_.Exception.Message)" 'Warn' }
+            }
+            if ($ok -and $found.Count -gt 0) { $removed++ }
+            Write-PcLog "Removed app $name : $ok"
+            [pscustomobject]@{ Package = $name; Removed = $ok }
         }
-        Write-PcLog "Removed app $name : $ok"
-        [pscustomobject]@{ Package = $name; Removed = $ok }
+    } finally {
+        if ($removed -gt 0) { Add-PcStats @{ appsRemoved = $removed } }
     }
 }
 

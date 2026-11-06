@@ -7,7 +7,7 @@
 param(
     [Parameter(Mandatory)][string]$Out,
     [string]$Language = 'en',
-    [ValidateSet('performance', 'privacy', 'explorer', 'startup', 'cleanup', 'memory', 'maintenance', 'apps', 'devices', 'history', 'about',
+    [ValidateSet('dashboard', 'performance', 'privacy', 'explorer', 'startup', 'cleanup', 'memory', 'maintenance', 'apps', 'devices', 'history', 'about',
         'apply-dialog', 'message-dialog', 'confirm-dialog')][string]$Page = 'performance',
     [int]$Width = 1120,
     [int]$Height = 760,

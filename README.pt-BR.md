@@ -35,6 +35,7 @@ pelo Windows Update, tudo numa janela só.
 
 | Área | O que faz |
 |---|---|
+| Painel | A primeira página: o PC num relance (Windows, processador, memória, discos, última inicialização completa), o que o PitCrew mudou e continua valendo, cada mudança antes e agora, e totais daí em diante (espaço liberado, apps removidos, drivers instalados, ajustes aplicados). Só fatos: sem nota |
 | Desempenho | Planos de energia (PC de mesa), hibernação e Inicialização Rápida, gravação de jogos, aceleração do mouse, jogos em janela, agendamento de GPU, apps em segundo plano e mais |
 | Privacidade | Dados de diagnóstico, serviço e tarefas de telemetria, anúncios e sugestões, Copilot, Recall, Widgets, localização, coleta de dados do Edge/Firefox/Brave e mais |
 | Explorer e barra de tarefas | Extensões de arquivo, menu de contexto clássico, alinhamento e botões da barra, Finalizar tarefa, modo escuro e mais |

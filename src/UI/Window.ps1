@@ -466,6 +466,7 @@ $script:PcTweakCategories = @('performance', 'privacy', 'explorer')
 
 # For each button: its text, whether it needs administrator rights and whether it needs items
 $script:PcPages = @{
+    dashboard   = @{}
     performance = @{ Primary = @('button.apply', $true, $true); Secondary = @('button.undo', $true, $true) }
     privacy     = @{ Primary = @('button.apply', $true, $true); Secondary = @('button.undo', $true, $true) }
     explorer    = @{ Primary = @('button.apply', $true, $true); Secondary = @('button.undo', $true, $true) }
@@ -510,10 +511,12 @@ function Show-PcPage([string]$Page) {
     Set-PcItems @()
     $Ui.EmptyText.Visibility = 'Collapsed'
     $Ui.AboutPanel.Visibility = 'Collapsed'
+    $Ui.DashboardPanel.Visibility = 'Collapsed'
     $Ui.MemoryBar.Visibility = 'Collapsed'
-    $Ui.RefreshButton.Visibility = if ($Page -eq 'memory') { 'Visible' } else { 'Collapsed' }
+    $Ui.RefreshButton.Visibility = if (@('memory', 'dashboard') -contains $Page) { 'Visible' } else { 'Collapsed' }
     $Ui.StatusText.Text = Get-PcText 'status.ready'
     switch ($Page) {
+        'dashboard' { Invoke-PcLoadDashboard }
         'startup' { Invoke-PcLoadStartup }
         'cleanup' { Invoke-PcAnalyzeCleanup }
         'memory'  { Invoke-PcLoadMemory }
@@ -733,6 +736,34 @@ function Invoke-PcSecondaryAction {
         'devices' { Invoke-PcSetDevicePower $true }
         'restore' { Start-Process rstrui.exe }
     }
+}
+
+# --- Dashboard ------------------------------------------------------------------------------------
+
+function Invoke-PcLoadDashboard {
+    # Reads only: the PC, the journal and the totals file (src\Modules\Dashboard.ps1)
+    Start-PcJob -Work { param($Sync) Get-PcDashboard } -Status (Get-PcText 'status.loading') -OnDone {
+        param($r)
+        if ($script:PcPage -ne 'dashboard') { return }
+        Show-PcDashboard $r[-1]
+    }
+}
+
+function Show-PcDashboard($Data) {
+    $Ui.DashSystemTitle.Text = Get-PcText 'dashboard.systemTitle'
+    $Ui.DashSystem.ItemsSource = @(foreach ($row in @(ConvertTo-PcSummaryRows $Data.Summary)) { New-PcItem @{ Title = $row.Label; Detail = $row.Value } })
+    $tile = { param($t) New-PcItem @{ Badge = $t.Value; Title = $t.Label; Detail = $t.Note } }
+    $Ui.DashOptimizedTitle.Text = Get-PcText 'dashboard.optimizedTitle'
+    $Ui.DashOptimized.ItemsSource = @(foreach ($t in @(ConvertTo-PcOptimizedTiles @($Data.Changes) $Data.Startup $Data.Apps)) { & $tile $t })
+    $Ui.DashOptimizedNote.Text = Get-PcText 'dashboard.optimizedNote'
+    $stats = $Data.Stats
+    $Ui.DashTotalsTitle.Text = if ($stats -and $stats.Since) { Get-PcText 'dashboard.totalsSince' -FormatArgs $stats.Since.ToString('d') } else { Get-PcText 'dashboard.totalsTitle' }
+    $Ui.DashTotals.ItemsSource = @(foreach ($t in @(ConvertTo-PcTotalsTiles $stats)) { & $tile $t })
+    $Ui.DashTotalsNote.Text = Get-PcText $(if ($stats) { 'dashboard.totalsNote' } else { 'dashboard.totalsEmpty' })
+    $Ui.DashChangesTitle.Text = Get-PcText 'dashboard.changesTitle'
+    $Ui.DashChangesIntro.Text = Get-PcText 'dashboard.changesIntro'
+    $Ui.DashboardPanel.Visibility = 'Visible'
+    Set-PcItems @(foreach ($c in @(ConvertTo-PcChangeCards @($Data.Changes))) { New-PcItem $c }) 'history.empty'
 }
 
 # --- Tweaks ---------------------------------------------------------------------------------------
@@ -1406,7 +1437,7 @@ function Set-PcStaticTexts {
     $Ui.ExportProfile.Content = Get-PcText 'button.exportProfile'
     Update-PcPresetBox
     Update-PcThemeBox
-    foreach ($page in 'Performance', 'Privacy', 'Explorer', 'Startup', 'Cleanup', 'Memory', 'Maintenance', 'Apps', 'Drivers', 'Devices', 'Restore', 'History', 'About') {
+    foreach ($page in 'Dashboard', 'Performance', 'Privacy', 'Explorer', 'Startup', 'Cleanup', 'Memory', 'Maintenance', 'Apps', 'Drivers', 'Devices', 'Restore', 'History', 'About') {
         $Ui["Nav$page"].Content = Get-PcText "nav.$($page.ToLowerInvariant())"
     }
     $Ui.ModeText.Text = if ($script:PcIsAdmin) { Get-PcText 'mode.admin' } else { Get-PcText 'mode.readOnly' }
@@ -1439,7 +1470,7 @@ function New-PcWindow {
     $xaml = [IO.File]::ReadAllText((Join-Path $Pc.Root 'src\UI\Window.xaml'))
     $window = ConvertFrom-PcXaml $xaml
     $script:Ui = @{ Window = $window }
-    foreach ($name in 'Tagline', 'ModeText', 'LanguageBox', 'ThemeBox', 'Nav', 'NavPerformance',
+    foreach ($name in 'Tagline', 'ModeText', 'LanguageBox', 'ThemeBox', 'Nav', 'NavDashboard', 'NavPerformance',
         'NavPrivacy', 'NavExplorer', 'NavStartup', 'NavCleanup', 'NavMemory', 'NavMaintenance', 'NavApps', 'NavDrivers', 'NavDevices', 'NavRestore', 'NavHistory',
         'NavAbout', 'PageTitle', 'PageIntro', 'RefreshButton', 'Banner', 'BannerText', 'MemoryBar', 'PageInfo', 'Items', 'EmptyText',
         'PrimaryAction', 'SecondaryAction', 'SelectionText', 'Busy', 'StatusText', 'FilterBar', 'SearchBox', 'SearchHint', 'StatusFilter',
@@ -1449,7 +1480,8 @@ function New-PcWindow {
         'SupportCard', 'PixQrFrame', 'PixQr', 'SupportTitle', 'SupportText', 'PixKeyLabel', 'PixKey', 'CopyPixKey', 'CopyPixCode',
         'AboutProjectTitle', 'AboutRepoText', 'LinkRepo', 'LinkRepoText', 'LinkIssues', 'LinkIssuesText', 'AboutCredits',
         'AboutTranslations', 'AboutDataDir', 'UpdateBar', 'UpdateText', 'UpdateLink', 'UpdateLinkText', 'UpdateTitle', 'UpdateAuto',
-        'UpdateAutoText', 'UpdateCheckNow', 'UpdateStatus') {
+        'UpdateAutoText', 'UpdateCheckNow', 'UpdateStatus', 'DashboardPanel', 'DashSystemTitle', 'DashSystem', 'DashOptimizedTitle',
+        'DashOptimized', 'DashOptimizedNote', 'DashTotalsTitle', 'DashTotals', 'DashTotalsNote', 'DashChangesTitle', 'DashChangesIntro') {
         $Ui[$name] = $window.FindName($name)
     }
 
@@ -1508,7 +1540,12 @@ function New-PcWindow {
     })
     $Ui.SelectVisible.Add_Click({ Select-PcVisibleItems $true })
     $Ui.ClearSelection.Add_Click({ Select-PcVisibleItems $false })
-    $Ui.RefreshButton.Add_Click({ if ($script:PcPage -eq 'memory') { Invoke-PcLoadMemory } })
+    $Ui.RefreshButton.Add_Click({
+        switch ($script:PcPage) {
+            'memory'    { Invoke-PcLoadMemory }
+            'dashboard' { Invoke-PcLoadDashboard }
+        }
+    })
     $Ui.CopyPixKey.Add_Click({ Copy-PcText $script:PcDonation.PixKey })
     $Ui.CopyPixCode.Add_Click({ Copy-PcText (Get-PcPixPayload) })
     $Ui.UpdateAuto.Add_Click({

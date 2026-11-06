@@ -224,7 +224,11 @@ function Invoke-PcTweakRefresh($Tweak) {
 function Invoke-PcTweak($Tweak) {
     # Returns $true when something changed, $false when it was already in place
     Assert-PcCanChange $Tweak
-    Use-PcJournalLock { Invoke-PcTweakLocked $Tweak }
+    $changed = Use-PcJournalLock { Invoke-PcTweakLocked $Tweak }
+    # Counted only when something really changed: "already applied" isn't an optimization. Device
+    # power changes have their own tile on the dashboard and aren't catalog tweaks.
+    if ($changed -eq $true -and $Tweak.category -ne 'devices') { Add-PcStats @{ tweaksApplied = 1 } }
+    return $changed
 }
 
 function Invoke-PcTweakLocked($Tweak) {

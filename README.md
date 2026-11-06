@@ -34,6 +34,7 @@ disk cleanup, removal of preinstalled apps and driver updates from Windows Updat
 
 | Area | What it does |
 |---|---|
+| Dashboard | The first page: the PC at a glance (Windows, processor, memory, drives, last full start), what PitCrew changed and is still in place, each change before and now, and totals from then on (space freed, apps removed, drivers installed, tweaks applied). Facts only: no score |
 | Performance | Power plans (desktops), hibernation and Fast Startup, game recording, mouse acceleration, windowed games, GPU scheduling, background apps and more |
 | Privacy | Diagnostic data, telemetry service and tasks, ads and suggestions, Copilot, Recall, Widgets, location, Edge/Firefox/Brave data collection and more |
 | Explorer & taskbar | File extensions, classic context menu, taskbar alignment and buttons, End Task, dark mode and more |

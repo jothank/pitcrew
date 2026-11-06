@@ -892,6 +892,191 @@ try {
         Assert-True (-not (Test-PcActionAvailable $t.actions[0])) 'a device that is not plugged in is not available'
     }
 
+    Write-Host "`nDashboard" -ForegroundColor Cyan
+
+    Test-Case 'dashboard totals: only real changes count, from the first one on' {
+        $statsFile = Get-PcStatsPath
+        if (Test-Path -LiteralPath $statsFile) { Remove-Item -LiteralPath $statsFile }
+        Assert-Equal $null (Get-PcStats) 'nothing counted yet'
+        Assert-Equal '0 B|0|0|0' ((@(ConvertTo-PcTotalsTiles $null) | ForEach-Object Value) -join '|') 'tiles start at zero'
+        $t = New-TestTweak 't.stats' @(New-RegAction 'HKLM:\SOFTWARE\PcStats' 'V' 'DWord' 1)
+        Assert-True (Invoke-PcTweak $t) 'applied'
+        Assert-True (-not (Invoke-PcTweak $t)) 'asked again: nothing changed'
+        $s = Get-PcStats
+        Assert-Equal 1 $s.tweaksApplied 'the no-op apply is not counted'
+        Assert-True ($s.Since -is [datetime]) 'the count has a start date'
+        [void](Undo-PcTweak $t)
+        Add-PcStats @{ cleanups = 1; cleanupBytes = 1500 }
+        Add-PcStats @{ cleanupBytes = 500; appsRemoved = 2; driversInstalled = 1 }
+        $s2 = Get-PcStats
+        Assert-Equal '1|1|2000|2|1' (($script:PcStatNames | ForEach-Object { $s2.$_ }) -join '|') 'added up'
+        Assert-Equal $s.Since $s2.Since 'the start date stays'
+        Assert-True (-not (Test-Path -LiteralPath "$statsFile.tmp")) 'no temp file left'
+
+        # A file that isn't JSON starts over instead of failing the action; odd values read as 0
+        [IO.File]::WriteAllText($statsFile, 'not json')
+        Add-PcStats @{ appsRemoved = 1 }
+        Assert-Equal 1 (Get-PcStats).appsRemoved 'started over'
+        Assert-Equal 'not json' ([IO.File]::ReadAllText("$statsFile.bad")) 'the bad file is kept aside'
+        # A swap cut short leaves only the new copy: it is picked up, not lost
+        Move-Item -LiteralPath $statsFile -Destination "$statsFile.tmp"
+        Add-PcStats @{ appsRemoved = 1 }
+        Assert-Equal 2 (Get-PcStats).appsRemoved 'the leftover copy was used'
+        Assert-True (-not (Test-Path -LiteralPath "$statsFile.tmp")) 'and is gone'
+        $odd = ConvertTo-PcStats ([pscustomobject]@{ since = 'yesterday-ish'; cleanups = -5; appsRemoved = 'many'; tweaksApplied = 3 })
+        Assert-Equal '3|0|0|0|0' (($script:PcStatNames | ForEach-Object { $odd.$_ }) -join '|') 'negative and text counters are 0'
+        Assert-Equal $null $odd.Since 'a date that does not parse is left out'
+    }
+
+    Test-Case 'dashboard totals: cleanup and app removal count what really went away' {
+        $statsFile = Get-PcStatsPath
+        if (Test-Path -LiteralPath $statsFile) { Remove-Item -LiteralPath $statsFile }
+        $script:DashTempFolder = Join-Path $testData 'stats-temp'
+        New-Item -ItemType Directory -Force -Path $script:DashTempFolder | Out-Null
+        [IO.File]::WriteAllBytes((Join-Path $script:DashTempFolder 'old.tmp'), (New-Object byte[] 4096))
+        (Get-Item (Join-Path $script:DashTempFolder 'old.tmp')).LastWriteTime = (Get-Date).AddDays(-3)
+        $script:DashApps = @(Get-PcAppCatalog | ForEach-Object package)
+        $script:DashRemoved = @()
+        # Replaced in the script's own scope, where the real ones live, and put back in finally.
+        # Remove-PcAppxPackage refuses to run under the test redirect anyway.
+        $realFolders = ${function:Get-PcCleanupFolders}
+        $realRemove = ${function:Remove-PcAppxPackage}
+        try {
+            function script:Get-PcCleanupFolders([string]$Id) { if ($Id -eq 'user-temp') { $script:DashTempFolder } }
+            function script:Get-AppxPackage { [CmdletBinding()] param([string]$Name) if ($script:DashApps[0, 2] -contains $Name) { [pscustomobject]@{ PackageFullName = "$($Name)_1.0_x64" } } }
+            function script:Remove-PcAppxPackage([string]$FullName) {
+                if ($FullName -like "$($script:DashApps[2])_*") { throw 'fake: removal refused' }
+                $script:DashRemoved += $FullName
+            }
+            Assert-Equal $script:DashTempFolder (Get-PcCleanupFolders 'user-temp') 'cleanup points at the test folder'
+            # All targets failing writes nothing
+            $none = @(Invoke-PcCleanup -Ids 'nope')
+            Assert-True $none[0].Error 'unknown target failed'
+            Assert-Equal $null (Get-PcStats) 'a cleanup where nothing worked is not counted'
+            # User temp points at a test folder; an unknown target fails and adds nothing
+            $r = @(Invoke-PcCleanup -Ids 'user-temp', 'nope')
+            Assert-Equal 4096 ($r | Where-Object Id -eq 'user-temp').FreedBytes 'freed'
+            # Removed: counted. Not installed, or removal refused: not counted.
+            $apps = @(Remove-PcApps -Packages $script:DashApps[0], $script:DashApps[1], $script:DashApps[2])
+            Assert-Equal 'True|True|False' (($apps | ForEach-Object Removed) -join '|') 'reported per app'
+            Assert-Equal 1 $script:DashRemoved.Count 'one package really removed'
+        } finally {
+            Set-Item -LiteralPath 'function:script:Get-PcCleanupFolders' -Value $realFolders
+            Set-Item -LiteralPath 'function:script:Remove-PcAppxPackage' -Value $realRemove
+            Remove-Item -LiteralPath 'function:script:Get-AppxPackage' -ErrorAction SilentlyContinue
+        }
+        $s = Get-PcStats
+        Assert-Equal '1|4096|1' ('{0}|{1}|{2}' -f $s.cleanups, $s.cleanupBytes, $s.appsRemoved) 'cleanups, bytes, apps'
+        Assert-True ((${function:Remove-PcAppxPackage}).ToString() -match 'Assert-PcRealSystem') 'the real removal is back'
+        # Device power changes have their own tile, not "tweaks applied"
+        $script:FakeDevicePower = @{ 'USB\STATSDEV\1_0' = $true }
+        Assert-True (Set-PcDevicePower ([pscustomobject]@{ Key = 'USB\STATSDEV\1'; Name = 'Stats device'; Instances = @('USB\STATSDEV\1_0') }) $false) 'device kept on'
+        Assert-Equal 0 (Get-PcStats).tweaksApplied 'not counted as a tweak'
+        [void](Set-PcDevicePower ([pscustomobject]@{ Key = 'USB\STATSDEV\1'; Name = 'Stats device'; Instances = @('USB\STATSDEV\1_0') }) $true)
+    }
+
+    Test-Case 'dashboard before and now: each kind of change, read live, and only PitCrew''s changes count' {
+        $journal = Get-PcJournalPath
+        $saved = if (Test-Path -LiteralPath $journal) { [IO.File]::ReadAllText($journal) } else { $null }
+        $realNames = ${function:Get-PcPowerSchemeNames}
+        try {
+            Save-PcJournal @()
+            function script:Get-PcPowerSchemeNames { @{ 'aaaaaaaa-0000-0000-0000-000000000001' = 'Balanced'; 'bbbbbbbb-0000-0000-0000-000000000009' = 'Top speed' } }
+            [void](Set-PcRegistryValue (Get-PcServiceKey 'PcDashSvc') 'Start' 'DWord' 2)
+            $script:FakeTasks['\Pc\DashTask'] = $true
+            [void](Set-PcRegistryValue 'HKLM:\SOFTWARE\PcDash' 'Old' 'DWord' 5)
+            $script:FakePower.Active = 'aaaaaaaa-0000-0000-0000-000000000001'
+            $perf = New-TestTweak 't.dash.perf' @(
+                (New-RegAction 'HKLM:\SOFTWARE\PcDash' 'New' 'DWord' 1),
+                (New-RegAction 'HKLM:\SOFTWARE\PcDash' 'Old' 'DWord' 0),
+                [pscustomobject]@{ type = 'service'; name = 'PcDashSvc'; startupType = 'Disabled' },
+                [pscustomobject]@{ type = 'scheduledTask'; path = '\Pc\'; name = 'DashTask'; enabled = $false },
+                [pscustomobject]@{ type = 'powerPlan'; guid = 'bbbbbbbb-0000-0000-0000-000000000009'; source = 'cccccccc-0000-0000-0000-000000000003' })
+            $perf | Add-Member -NotePropertyName category -NotePropertyValue 'performance'
+            # Partly in place: the value that already had the target is recorded but isn't PitCrew's change
+            [void](Set-PcRegistryValue 'HKCU:\Software\PcDash' 'Already' 'DWord' 0)
+            $privacy = New-TestTweak 't.dash.privacy' @((New-RegAction 'HKCU:\Software\PcDash' 'Already' 'DWord' 0), (New-RegAction 'HKCU:\Software\PcDash' 'Text' 'String' 'off'))
+            $privacy | Add-Member -NotePropertyName category -NotePropertyValue 'privacy'
+            # Already in place before PitCrew: not PitCrew's, so neither listed nor counted
+            [void](Set-PcRegistryValue 'HKLM:\SOFTWARE\PcDashOther' 'V' 'DWord' 1)
+            $other = New-TestTweak 't.dash.other' @(New-RegAction 'HKLM:\SOFTWARE\PcDashOther' 'V' 'DWord' 1)
+            $other | Add-Member -NotePropertyName category -NotePropertyValue 'privacy'
+            [void](Invoke-PcTweak $perf); [void](Invoke-PcTweak $privacy); [void](Invoke-PcTweak $other)
+            # Changed by someone else afterwards: shows as it is now
+            [void](Set-PcRegistryValue 'HKCU:\Software\PcDash' 'Text' 'String' 'back on')
+            $script:FakeDevicePower = @{ 'USB\DASHKBD&MI_00\1_0' = $true; 'USB\DASHKBD&MI_01\1_0' = $true }
+            [void](Set-PcDevicePower ([pscustomobject]@{ Key = 'USB\DASHKBD\1'; Name = 'Dash Keyboard'; Instances = @('USB\DASHKBD&MI_00\1_0', 'USB\DASHKBD&MI_01\1_0') }) $false)
+
+            $report = @(Get-PcChangeReport -Catalog @($perf, $privacy, $other))
+            Assert-Equal 3 $report.Count 'one line per PitCrew change, the tweak already in place left out'
+            $p = $report | Where-Object TweakId -eq 't.dash.perf'
+            $a = [string][char]0x2192
+            Assert-Equal 'Applied' $p.State 'perf in place'
+            Assert-Equal (@(
+                    "Registry New: not set $a 1"
+                    "Registry Old: 5 $a 0"
+                    "Service PcDashSvc: Automatic $a Disabled"
+                    "Task DashTask: on $a off"
+                    "Power plan: Balanced $a Top speed") -join '|') (@($p.Lines) -join '|') 'perf lines'
+            $q = $report | Where-Object TweakId -eq 't.dash.privacy'
+            Assert-Equal 'Partial' $q.State 'changed by someone else'
+            Assert-Equal 2 @((Get-PcJournalEntry $privacy).actions).Count 'both values are in the journal'
+            Assert-Equal "Registry Text: not set $a `"back on`"" (@($q.Lines) -join '|') 'now is read live, and the value that was already set is not listed'
+            $d = $report | Where-Object Category -eq 'devices'
+            Assert-Equal 'Dash Keyboard' $d.Title 'device named'
+            Assert-Equal "Windows may turn it off to save power: yes $a no" (@($d.Lines) -join '|') 'one line per device'
+
+            $tiles = @(ConvertTo-PcOptimizedTiles $report ([pscustomobject]@{ Total = 9; Off = 4 }) ([pscustomobject]@{ Total = 30; NotInstalled = 12 }))
+            Assert-Equal '1|1|4|12' (($tiles | ForEach-Object Value) -join '|') 'kept tweaks, devices, startup off, apps gone'
+            Assert-Equal 'Performance: 1 · changed later: 1' $tiles[0].Note 'per page, and what changed later'
+            # Not applicable (unplugged, another edition) or unreadable is not "changed later"
+            $odd = @(ConvertTo-PcOptimizedTiles @(
+                    [pscustomobject]@{ Category = 'performance'; State = 'Applied' }
+                    [pscustomobject]@{ Category = 'performance'; State = 'NotApplicable' }
+                    [pscustomobject]@{ Category = 'privacy'; State = 'Error' }
+                    [pscustomobject]@{ Category = 'devices'; State = 'NotApplicable' }) $null $null)
+            Assert-Equal 'Performance: 1' $odd[0].Note 'no "changed later" for not applicable or unreadable'
+            Assert-Equal '' $odd[1].Note 'an unplugged device did not change'
+            Assert-Equal 2 $odd.Count 'startup and apps left out when they could not be read'
+            $cards = @(ConvertTo-PcChangeCards $report)
+            Assert-True (@($cards | Where-Object { $_.Selectable }).Count -eq 0) 'read only: Undo stays in History'
+            Assert-Equal 'warn' ($cards | Where-Object Id -eq 't.dash.privacy').BadgeKind 'changed later is flagged'
+
+            # Unplugged now: the device line says so; a tweak no longer in the catalog has no lines
+            $script:FakeDevicePower = @{}
+            $script:PcDevicePowerCache = $null
+            $gone = @(Get-PcChangeReport -Catalog @($perf, $other))
+            Assert-Equal "Windows may turn it off to save power: yes $a unplugged" (@(($gone | Where-Object Category -eq 'devices').Lines) -join '|') 'unplugged'
+            $removed = $gone | Where-Object TweakId -eq 't.dash.privacy'
+            Assert-Equal '' $removed.Category 'removed from the catalog'
+            Assert-Equal (Get-PcText 'history.removedTweak') (ConvertTo-PcChangeCards @($removed)).Detail 'says why there is nothing to compare'
+        } finally {
+            Set-Item -LiteralPath 'function:script:Get-PcPowerSchemeNames' -Value $realNames
+            $script:FakePower.Active = 'aaaaaaaa-0000-0000-0000-000000000001'
+            if ($null -ne $saved) { [IO.File]::WriteAllText($journal, $saved) } else { Remove-Item -LiteralPath $journal -ErrorAction SilentlyContinue }
+        }
+    }
+
+    Test-Case 'dashboard PC summary: rows from what was read, nothing invented' {
+        $s = [pscustomobject]@{ Windows = 'Windows 11 Pro'; DisplayVersion = '25H2'; Build = '26300.100'; Maker = 'Gigabyte'; Model = 'A520M K V2'
+            FormFactor = 'desktop'; Cpu = 'AMD Ryzen 5 5600G'; CpuCount = 1; Cores = 6; Threads = 12; MemoryBytes = 32GB; MemoryUsedPercent = 41
+            Gpus = @('NVIDIA GeForce RTX 3060'); Volumes = @([pscustomobject]@{ Letter = 'C:'; FreeBytes = 62GB; SizeBytes = 465GB })
+            Disks = @([pscustomobject]@{ Name = 'KINGSTON SNVS500G'; Media = 'SSD'; Nvme = $true; Usb = $false; SizeBytes = 500GB; Health = 'Healthy' })
+            LastBoot = [datetime]'2026-11-04T08:14:00' }
+        $rows = @(ConvertTo-PcSummaryRows $s ([datetime]'2026-11-05T12:30:00'))
+        Assert-Equal 'Windows|Computer|Processor|Memory|Graphics card|Disk space|Drives|Last full start' (($rows | ForEach-Object Label) -join '|') 'labels'
+        Assert-Equal 'Windows 11 Pro, version 25H2 (build 26300.100)' $rows[0].Value 'Windows'
+        Assert-Equal 'Gigabyte A520M K V2 · desktop' $rows[1].Value 'computer'
+        Assert-Equal '32 GB · 41% in use now' $rows[3].Value 'memory in whole gigabytes'
+        Assert-True ($rows[6].Value -like 'KINGSTON SNVS500G · SSD NVMe · * · healthy') "drive: $($rows[6].Value)"
+        Assert-True ($rows[7].Value -like '*, 1 d 4 h ago') "uptime: $($rows[7].Value)"
+        # Missing facts are left out rather than shown empty
+        $bare = @(ConvertTo-PcSummaryRows ([pscustomobject]@{ Windows = 'Windows 10 Home'; Maker = ''; Model = ''; Gpus = @(); Volumes = @(); Disks = @() }))
+        Assert-Equal 'Windows' (($bare | ForEach-Object Label) -join '|') 'only what was read'
+        Assert-Equal 'Gigabyte' (Get-PcCompanyName 'Gigabyte Technology Co., Ltd.') 'maker suffixes'
+        Assert-Equal 'Dell|ASUSTeK|Micro-Star International|LENOVO' (@('Dell Inc.', 'ASUSTeK COMPUTER INC.', 'Micro-Star International Co., Ltd.', 'LENOVO') | ForEach-Object { Get-PcCompanyName $_ }) 'other makers'
+    }
+
     Test-Case 'the Pix code follows the Banco Central format and the QR picture is up to date' {
         # The example from the Pix manual (BR Code, static QR), CRC included
         $example = '00020126580014br.gov.bcb.pix0136123e4567-e12b-12d1-a456-4266554400005204000053039865802BR5913Fulano de Tal6008BRASILIA62070503***63041D3D'

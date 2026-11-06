@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Dashboard, the new first page:** a summary of the PC (Windows version, computer, processor,
+  memory, graphics card, free space, drives and their health, last full start); what PitCrew
+  changed and is still in place, plus how many startup apps are off and built-in apps are gone;
+  each change before and now, read on the spot, so a change made later by someone else shows up;
+  and totals from this version on: space freed by cleanup, apps removed, drivers installed and
+  tweaks applied. Only facts: no score and no promise about speed. Opening it changes nothing.
 - **Device power page:** every device Windows may turn off to save power (Wi-Fi and network
   adapters, Bluetooth, keyboard, mouse, USB hubs and controllers), in one list with friendly names
   (the keyboard's two entries are one card, a hub shows what is plugged into it). "Keep always on"

@@ -10,6 +10,7 @@ $script:PcSourceFiles = @(
     'Core\RestorePoint.ps1'
     'Core\Pix.ps1'
     'Core\Update.ps1'
+    'Core\Stats.ps1'
     'Modules\Drivers.ps1'
     'Modules\Cleanup.ps1'
     'Modules\Apps.ps1'
@@ -17,6 +18,7 @@ $script:PcSourceFiles = @(
     'Modules\Memory.ps1'
     'Modules\Startup.ps1'
     'Modules\Devices.ps1'
+    'Modules\Dashboard.ps1'
 )
 
 foreach ($pcFile in $script:PcSourceFiles) {

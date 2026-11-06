@@ -86,6 +86,33 @@
         <Setter Property="Margin" Value="0,10,0,0"/>
       </Style>
 
+      <!-- Dashboard: one fact per line (label, value) and number tiles; both bind PitCrew.ListItem
+           (Title = label, Detail = value or note, Badge = the number) -->
+      <DataTemplate x:Key="FactRow">
+        <Grid Margin="0,3">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+          </Grid.ColumnDefinitions>
+          <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Muted}" TextWrapping="Wrap" Margin="0,0,12,0"/>
+          <TextBlock Grid.Column="1" Text="{Binding Detail}" Foreground="{DynamicResource Ink}" TextWrapping="Wrap" LineHeight="20"/>
+        </Grid>
+      </DataTemplate>
+      <DataTemplate x:Key="StatTile">
+        <Border Width="180" MinHeight="92" Background="{DynamicResource Bg}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,0,10,10">
+          <StackPanel>
+            <TextBlock Text="{Binding Badge}" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource Ink}"/>
+            <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Body}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+            <TextBlock x:Name="Note" Text="{Binding Detail}" FontSize="11.5" Foreground="{DynamicResource Faint}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+          </StackPanel>
+        </Border>
+        <DataTemplate.Triggers>
+          <DataTrigger Binding="{Binding Detail}" Value="">
+            <Setter TargetName="Note" Property="Visibility" Value="Collapsed"/>
+          </DataTrigger>
+        </DataTemplate.Triggers>
+      </DataTemplate>
+
       <Style x:Key="Pill" TargetType="Border">
         <Setter Property="CornerRadius" Value="10"/>
         <Setter Property="Padding" Value="8,2"/>
@@ -193,6 +220,7 @@
           <ComboBox x:Name="ThemeBox" Style="{StaticResource SidebarBox}"/>
         </StackPanel>
         <ListBox x:Name="Nav" Style="{StaticResource NavList}" ItemContainerStyle="{StaticResource NavItem}" FontSize="14">
+          <ListBoxItem x:Name="NavDashboard" Tag="dashboard"/>
           <ListBoxItem x:Name="NavPerformance" Tag="performance"/>
           <ListBoxItem x:Name="NavPrivacy" Tag="privacy"/>
           <ListBoxItem x:Name="NavExplorer" Tag="explorer"/>
@@ -263,6 +291,36 @@
             <ProgressBar x:Name="MemoryBar" Height="10" Minimum="0" Maximum="100" Margin="0,0,0,10" Visibility="Collapsed"
                          Foreground="{DynamicResource Accent}" Background="{DynamicResource Line}" BorderThickness="0"/>
             <TextBlock x:Name="PageInfo" Foreground="{DynamicResource Muted}" TextWrapping="Wrap" Margin="0,0,0,10" Visibility="Collapsed"/>
+            <!-- Dashboard: filled by Show-PcDashboard from src\Modules\Dashboard.ps1; the before/now cards
+                 that follow are the Items list below -->
+            <StackPanel x:Name="DashboardPanel" Visibility="Collapsed">
+              <Border Style="{StaticResource AboutCard}">
+                <StackPanel>
+                  <TextBlock x:Name="DashSystemTitle" Style="{StaticResource AboutHeading}"/>
+                  <ItemsControl x:Name="DashSystem" Focusable="False" ItemTemplate="{StaticResource FactRow}"/>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource AboutCard}">
+                <StackPanel>
+                  <TextBlock x:Name="DashOptimizedTitle" Style="{StaticResource AboutHeading}"/>
+                  <ItemsControl x:Name="DashOptimized" Focusable="False" ItemTemplate="{StaticResource StatTile}" Margin="0,6,0,0">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                  </ItemsControl>
+                  <TextBlock x:Name="DashOptimizedNote" Style="{StaticResource AboutNote}" Margin="0,0,0,0"/>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource AboutCard}">
+                <StackPanel>
+                  <TextBlock x:Name="DashTotalsTitle" Style="{StaticResource AboutHeading}"/>
+                  <ItemsControl x:Name="DashTotals" Focusable="False" ItemTemplate="{StaticResource StatTile}" Margin="0,6,0,0">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                  </ItemsControl>
+                  <TextBlock x:Name="DashTotalsNote" Style="{StaticResource AboutNote}" Margin="0,0,0,0"/>
+                </StackPanel>
+              </Border>
+              <TextBlock x:Name="DashChangesTitle" Style="{StaticResource AboutHeading}" Margin="0,10,0,4"/>
+              <TextBlock x:Name="DashChangesIntro" Foreground="{DynamicResource Muted}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+            </StackPanel>
             <!-- About page: filled by Show-PcAbout; links come from $script:PcLinks -->
             <StackPanel x:Name="AboutPanel" Visibility="Collapsed" MaxWidth="860" HorizontalAlignment="Left" Margin="0,0,0,8">
               <Border Background="{DynamicResource Hero}" CornerRadius="10" Padding="22,18" Margin="0,0,0,12">

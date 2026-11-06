@@ -13,7 +13,7 @@ src/Core/I18n.ps1           locales/<lang>.json, English fallback, per-tweak loc
 src/Core/Registry.ps1       registry reads/writes, type-exact comparison, test redirect
 src/Core/Tweaks.ps1         declarative tweak engine and the undo journal
 src/Core/RestorePoint.ps1   verified restore point creation
-src/Modules/*.ps1           drivers, cleanup, maintenance, memory, apps, startup: task-style features that aren't simple settings
+src/Modules/*.ps1           drivers, cleanup, maintenance, memory, apps, startup, devices: task-style features that aren't simple settings
 src/UI/Window.xaml|.ps1     the window and PitCrew's own dialogs; slow work runs in a background runspace
 src/UI/Theme.xaml           shared styles and the light palette, put into every window and dialog
 tweaks/<category>.json      the settings catalog (one file per category)
@@ -36,6 +36,8 @@ tools/launcher/             source and manifest of PitCrew.exe
 tools/Build-PixQr.ps1       draws assets/pix-qr.png (donations) from the Pix data, with tools/QrCode.cs
 src/Core/Pix.ps1            the Pix "copia e cola" code (Banco Central BR Code with its CRC16)
 src/Core/Update.ps1         the new-version check: GitHub's list of releases, version order, the link
+src/Core/Stats.ps1          the dashboard's running totals (stats.json next to the journal)
+src/Modules/Dashboard.ps1   the dashboard: PC summary, before and now from the journal, tiles
 .github/workflows/build.yml tests and builds on GitHub Actions; signs PitCrew.exe for version tags (docs/SIGNING.md)
 .github/signpath/           copy of the SignPath artifact configuration (what gets signed, and its checks)
 ```
@@ -209,6 +211,44 @@ action only runs on a device that is plugged in and has the box right now. "Let 
 that change instead of stacking a second one. The fakes in `tests/Run-Tests.ps1` cover the
 engine side; `tests/Devices-Real.ps1` flips a real device and puts it back on GitHub's runners,
 when the VM has one.
+
+## Dashboard
+
+The first page. It only reads, in one background job (`Get-PcDashboard`, about 3 seconds), and
+each part is read on its own, so one that fails is left out and the rest still shows:
+
+- **PC summary:** CIM classes (`Win32_OperatingSystem`, `Win32_ComputerSystem`, `Win32_Processor`,
+  `Win32_PhysicalMemory`, `Win32_VideoController`, `Win32_LogicalDisk`) and `MSFT_PhysicalDisk`
+  queried directly, which is seconds faster than `Get-PhysicalDisk`. A board that reports
+  "System Product Name" is named by its motherboard. "Last full start" is `LastBootUpTime`; with
+  Fast Startup on, shutting down doesn't reset it, so it's labelled as a full start.
+- **What has been optimized:** only journal entries count as PitCrew's work, never a setting that
+  was already in place (on a typical PC most "Applied" states were set by Windows or another tool).
+  Startup apps and built-in apps show how things are now, whoever changed them. Counting every
+  catalog state would take about ten seconds, so the dashboard doesn't.
+- **Before and now:** one card per journal entry. "Before" is the journal's snapshot; "now" is
+  read live by type (registry value, service start type, task on/off, power plan name from
+  `powercfg /list`, hibernation, device power box), so a change someone made later shows up.
+  Applying a tweak that was partly in place records every action, also the ones that already had
+  the value; those lines are left out (`Test-PcRecordChanged`), since PitCrew didn't change them.
+  "Changed later" on the tiles means the entry now reads Not applied or Partial; Not applicable
+  (an unplugged device, another edition) and unreadable aren't counted as changes. Undo stays in
+  History.
+- **Totals:** `src/Core/Stats.ps1` keeps `stats.json` in the data folder. The actions add to it
+  themselves, only for what really happened: an apply that changed something (`Invoke-PcTweak`
+  returned true; device power changes have their own tile and aren't counted as tweaks), a
+  cleanup with at least one target done (the Recycle Bin and the Delivery Optimization cache are
+  measured before and after), an app that was installed and is gone, a driver that installed. The
+  number counts applies, not distinct tweaks: apply, undo and apply again count 2. Only
+  administrators write there, and everything counted needs administrator rights anyway; the
+  totals aren't shown from a data folder that isn't provably ours. The start date is the first
+  counted action, never the first visit: opening the dashboard writes nothing. A write goes to a
+  temp file swapped in with `File.Replace`; a file that isn't valid JSON is kept as
+  `stats.json.bad` and the count starts over, one that can't be opened right now is left alone,
+  and nothing about counting can fail the action it counts.
+
+No score and no claim about speed or boot time: the dashboard shows what was read, and leaves out
+what couldn't be.
 
 ## New-version notice
 

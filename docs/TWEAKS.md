@@ -38,7 +38,7 @@ what comes next. 🧩 = needs a new engine action type, 📋 = only content or U
 | ✅ | Status filter (applied, not applied, installed...), tick all shown, ticked count |
 | ✅ | Memory page and more maintenance (optimize drives, read-only disk check, DNS cache) |
 | ✅ | Device power page: "Allow the computer to turn off this device" for every device in one list, with Undo in History |
-| 📋 | Dashboard: the PC at a glance, what PitCrew changed (before and now), totals from cleanup, apps and drivers |
+| ✅ | Dashboard: the PC at a glance, what PitCrew changed (before and now), totals from cleanup, apps, drivers and tweaks |
 | 📋 | Pre-flight checks before applying: pending restart, third-party antivirus, BitLocker state, settings locked by policy |
 | 📋 | Update installed programs with `winget upgrade` (needs structured output, not the localized table) |
 

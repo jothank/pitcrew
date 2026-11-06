@@ -224,6 +224,9 @@ function Invoke-PcWindowsUpdateCacheCleanup {
 
 function Invoke-PcCleanup {
     param([Parameter(Mandatory)][string[]]$Ids)
+    # For the dashboard's totals: what the targets that worked freed
+    $totalFreed = [int64]0
+    $anyDone = $false
     foreach ($id in $Ids) {
       # One target failing (reboot pending, cache busy) doesn't stop the others
       try {
@@ -235,13 +238,21 @@ function Invoke-PcCleanup {
         $freed = [int64]0
         $failed = 0
         switch ($id) {
+            # Measured before and after: what is still there (a file in use) wasn't freed, and an
+            # "after" that can't be read counts as nothing freed rather than everything
             'recycle-bin' {
-                $freed = (Get-PcRecycleBinSize).Bytes
+                $before = (Get-PcRecycleBinSize).Bytes
                 Clear-RecycleBin -Force -ErrorAction SilentlyContinue
+                $after = $before
+                try { $after = (Get-PcRecycleBinSize).Bytes } catch { Write-PcLog "Recycle Bin size after cleanup not read: $($_.Exception.Message)" 'Warn' }
+                $freed = [Math]::Max([int64]0, [int64]($before - $after))
             }
             'delivery-optimization' {
-                $freed = Get-PcDeliveryOptimizationCacheBytes
+                $before = Get-PcDeliveryOptimizationCacheBytes
                 Delete-DeliveryOptimizationCache -Force -ErrorAction Stop
+                $after = $before
+                try { $after = [int64](Get-DeliveryOptimizationPerfSnap -ErrorAction Stop).FileSizeInCache } catch { Write-PcLog "Delivery Optimization cache size after cleanup not read: $($_.Exception.Message)" 'Warn' }
+                $freed = [Math]::Max([int64]0, [int64]($before - $after))
             }
             'wu-cache' {
                 if (Test-PcRebootPending) { throw (Get-PcText 'cleanup.rebootPending') }
@@ -258,12 +269,15 @@ function Invoke-PcCleanup {
             }
         }
         Write-PcLog "Cleanup $id freed $freed bytes ($failed files in use)"
+        $totalFreed += [int64]$freed
+        $anyDone = $true
         [pscustomobject]@{ Id = $id; FreedBytes = $freed; InUse = $failed; Error = $null }
       } catch {
         Write-PcLog "Cleanup $id failed: $($_.Exception.Message)" 'Error'
         [pscustomobject]@{ Id = $id; FreedBytes = [int64]0; InUse = 0; Error = $_.Exception.Message }
       }
     }
+    if ($anyDone) { Add-PcStats @{ cleanups = 1; cleanupBytes = $totalFreed } }
 }
 
 function Format-PcBytes([int64]$Bytes) {

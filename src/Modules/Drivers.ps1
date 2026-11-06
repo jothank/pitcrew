@@ -76,7 +76,12 @@ function Get-PcBoardInfo {
     foreach ($pattern in $script:PcBoardSupport.Keys) {
         if ($board.Manufacturer -match $pattern) { $url = $script:PcBoardSupport[$pattern]; break }
     }
-    [pscustomobject]@{ Maker = ($board.Manufacturer -replace '\s*(Technology|Co\.,?|Ltd\.?|Inc\.?|Corporation|Computer)\b', '').Trim(' ,'); Model = $board.Product; SupportUrl = $url }
+    [pscustomobject]@{ Maker = Get-PcCompanyName $board.Manufacturer; Model = $board.Product; SupportUrl = $url }
+}
+
+function Get-PcCompanyName([string]$Name) {
+    # "Gigabyte Technology Co., Ltd." -> "Gigabyte", "Dell Inc." -> "Dell", "ASUSTeK COMPUTER INC." -> "ASUSTeK"
+    ($Name -replace '\s*\b(Technology|Co|Ltd|Inc|Corporation|Computer)\b\.?,?', '').Trim(' ,.')
 }
 
 function Test-PcDriverPolicyBlocksUpdates {
@@ -208,11 +213,14 @@ function Install-PcDriverUpdates {
     $installer.Updates = $toInstall
     $result = $installer.Install()
     $codes = @{ 2 = 'installed'; 3 = 'installedWithErrors'; 4 = 'failed'; 5 = 'aborted' }
+    $installed = 0   # for the dashboard's totals
     for ($i = 0; $i -lt $installing.Count; $i++) {
         $r = $result.GetUpdateResult($i)
         $code = $codes[[int]$r.ResultCode]
         if (-not $code) { $code = "code$($r.ResultCode)" }
+        if (@('installed', 'installedWithErrors') -contains $code) { $installed++ }
         Write-PcLog ('Driver {0}: {1} (0x{2:X8})' -f $installing[$i].Offer.Device, $code, $r.HResult)
         [pscustomobject]@{ Device = $installing[$i].Offer.Device; Result = $code; RebootRequired = [bool]$result.RebootRequired }
     }
+    if ($installed -gt 0) { Add-PcStats @{ driversInstalled = $installed } }
 }
