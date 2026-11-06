@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.3-beta (2026-11-05)
 
 - **Dashboard, the new first page:** a summary of the PC (Windows version, computer, processor,
   memory, graphics card, free space, drives and their health, last full start); what PitCrew
@@ -13,6 +13,7 @@
   (the keyboard's two entries are one card, a hub shows what is plugged into it). "Keep always on"
   and "Let Windows turn off" change the same box as Device Manager's Power Management tab, and
   every change can be undone here or in History. On a laptop the page says it costs battery.
+- **Fix:** the Drivers page named the motherboard maker "Gigabyte Co.,."; it now says "Gigabyte".
 
 ## 0.1.2-beta (2026-11-05)
 

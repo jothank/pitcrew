@@ -317,8 +317,8 @@ is checked against a list of what may ship (no stray binaries, keys or archives,
 and the SHA-256 is written next to the zip.
 
 Official releases are built by `.github/workflows/build.yml` on a GitHub-hosted runner (0.1.0-beta
-was still built locally; 0.1.1-beta and 0.1.2-beta were built there but are unsigned, since SignPath had not approved
-the project yet). Signing needs that too, since
+was still built locally; 0.1.1-beta to 0.1.3-beta were built there but are unsigned, since SignPath
+had not approved the project yet). Signing needs that too, since
 SignPath Foundation only signs what a CI built from the public source. For a version tag, the
 workflow builds `PitCrew.exe` (`-ExeOnly`), sends only that file to SignPath, and builds the zip
 around the copy that comes back (`-ExeFile <signed exe> -RequireSignature`). Signing touches no other
