@@ -2,6 +2,16 @@
   {
     "id": "essentials",
     "name": { "en": "Essentials", "pt-BR": "Essencial", "es": "Esencial", "fr": "Essentiel", "de": "Grundlagen", "ru": "Основное", "tr": "Temel", "zh-CN": "基础" },
+    "description": {
+      "en": "Fewer ads, suggestions and data collection; file extensions shown; long file paths allowed",
+      "pt-BR": "Menos anúncios, sugestões e coleta de dados; extensões de arquivo à vista; caminhos de arquivo longos",
+      "es": "Menos anuncios, sugerencias y recopilación de datos; extensiones de archivo visibles; rutas de archivo largas",
+      "fr": "Moins de publicités, de suggestions et de collecte de données ; extensions de fichier visibles ; chemins de fichier longs",
+      "de": "Weniger Werbung, Vorschläge und Datensammlung; Dateierweiterungen sichtbar; lange Dateipfade erlaubt",
+      "ru": "Меньше рекламы, подсказок и сбора данных; расширения файлов видны; длинные пути к файлам разрешены",
+      "tr": "Daha az reklam, öneri ve veri toplama; dosya uzantıları görünür; uzun dosya yollarına izin verilir",
+      "zh-CN": "减少广告、建议和数据收集；显示文件扩展名；允许长文件路径"
+    },
     "tweaks": [
       "privacy.advertising-id", "privacy.tailored-experiences", "privacy.feedback-notifications", "privacy.feedback-frequency",
       "privacy.start-settings-suggestions", "privacy.silent-app-installs", "privacy.lockscreen-tips", "privacy.start-web-search",
@@ -12,6 +22,16 @@
   {
     "id": "gaming",
     "name": { "en": "Gaming", "pt-BR": "Jogos", "es": "Juegos", "fr": "Jeux", "de": "Gaming", "ru": "Игры", "tr": "Oyun", "zh-CN": "游戏" },
+    "description": {
+      "en": "Game recording and background capture off, no mouse acceleration, windowed game optimizations, High Performance plan on desktops",
+      "pt-BR": "Gravação de jogos e captura em segundo plano desligadas, mouse sem aceleração, otimizações para jogos em janela, plano Alto Desempenho em PC de mesa",
+      "es": "Grabación de juegos y captura en segundo plano desactivadas, ratón sin aceleración, optimizaciones para juegos en ventana, plan Alto rendimiento en equipos de escritorio",
+      "fr": "Enregistrement des jeux et capture en arrière-plan désactivés, souris sans accélération, optimisations pour les jeux fenêtrés, mode Performances élevées sur les ordinateurs de bureau",
+      "de": "Spielaufzeichnung und Hintergrundaufnahme aus, keine Mausbeschleunigung, Optimierungen für Spiele im Fenster, Höchstleistung auf Desktop-PCs",
+      "ru": "Запись игр и фоновая запись отключены, без ускорения мыши, оптимизации для игр в окне, схема «Высокая производительность» на настольных ПК",
+      "tr": "Oyun kaydı ve arka plan yakalama kapalı, fare ivmesi yok, pencereli oyun iyileştirmeleri, masaüstünde Yüksek performans planı",
+      "zh-CN": "关闭游戏录制和后台捕获，关闭鼠标加速，窗口化游戏优化，台式机使用高性能电源计划"
+    },
     "tweaks": [
       "performance.game-recording", "performance.game-bar-capture", "performance.mouse-acceleration",
       "performance.windowed-game-optimizations", "performance.high-performance-plan", "performance.gpu-scheduling",
@@ -21,6 +41,16 @@
   {
     "id": "privacy",
     "name": { "en": "More privacy", "pt-BR": "Mais privacidade", "es": "Más privacidad", "fr": "Plus de confidentialité", "de": "Mehr Datenschutz", "ru": "Больше конфиденциальности", "tr": "Daha fazla gizlilik", "zh-CN": "更多隐私" },
+    "description": {
+      "en": "Telemetry, activity history, Copilot, Recall, Widgets, typing data, cloud clipboard and app data collection off",
+      "pt-BR": "Telemetria, histórico de atividades, Copilot, Recall, Widgets, dados de digitação, área de transferência na nuvem e coleta de dados de apps desligados",
+      "es": "Telemetría, historial de actividad, Copilot, Recall, Widgets, datos de escritura, portapapeles en la nube y recopilación de datos de apps desactivados",
+      "fr": "Télémétrie, historique d'activités, Copilot, Recall, Widgets, données de saisie, presse-papiers cloud et collecte de données des applications désactivés",
+      "de": "Telemetrie, Aktivitätsverlauf, Copilot, Recall, Widgets, Eingabedaten, Cloud-Zwischenablage und Datensammlung von Apps aus",
+      "ru": "Телеметрия, журнал действий, Copilot, Recall, виджеты, данные ввода, облачный буфер обмена и сбор данных приложениями отключены",
+      "tr": "Telemetri, etkinlik geçmişi, Copilot, Recall, Pencere öğeleri, yazma verileri, bulut panosu ve uygulama veri toplama kapalı",
+      "zh-CN": "关闭遥测、活动历史记录、Copilot、Recall、小组件、键入数据、云剪贴板和应用数据收集"
+    },
     "tweaks": [
       "privacy.advertising-id", "privacy.activity-history", "privacy.tailored-experiences", "privacy.feedback-notifications",
       "privacy.feedback-frequency", "privacy.diagnostic-data-minimum", "privacy.diagnostic-data-off", "privacy.diagnostic-service",

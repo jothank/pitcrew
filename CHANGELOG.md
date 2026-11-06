@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+- **Automatic analysis:** a new page, also opened from the dashboard. Pick one or more profiles
+  (Essentials, Gaming, More privacy) and PitCrew checks the tweak, cleanup, built-in apps and
+  startup pages: tweaks from those profiles that aren't in place yet, cleanup with something to
+  free, installed built-in apps marked safe to remove, and what starts with Windows. Each card says
+  how it comes back (Undo in History, reinstall with internet, turn back on, or not at all for
+  cleanup). Only safe tweaks and cleanup other than the Recycle Bin come ticked; apps and startup
+  programs are listed for you to decide. Applying asks you to confirm that the analysis is
+  automatic and the choice is yours, offers a restore point, and then runs everything ticked in one
+  go. Nothing is analyzed or changed until you click.
+- **Dashboard:** a memory card with what is in use and a button to the Memory page, and a button
+  to the automatic analysis. Still no "RAM cleaner" (see docs/NOT-INCLUDED.md).
+- Each preset now has a short description in every language.
+
 ## 0.1.3-beta (2026-11-05)
 
 - **Dashboard, the new first page:** a summary of the PC (Windows version, computer, processor,

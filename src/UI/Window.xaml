@@ -113,6 +113,16 @@
         </DataTemplate.Triggers>
       </DataTemplate>
 
+      <!-- A profile the automatic analysis can use (PitCrew.ListItem: Title, Detail, IsSelected) -->
+      <DataTemplate x:Key="ProfileOption">
+        <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" Margin="0,4">
+          <StackPanel Margin="2,0,0,0">
+            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="{DynamicResource Ink}"/>
+            <TextBlock Text="{Binding Detail}" Foreground="{DynamicResource Muted}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </CheckBox>
+      </DataTemplate>
+
       <Style x:Key="Pill" TargetType="Border">
         <Setter Property="CornerRadius" Value="10"/>
         <Setter Property="Padding" Value="8,2"/>
@@ -221,6 +231,7 @@
         </StackPanel>
         <ListBox x:Name="Nav" Style="{StaticResource NavList}" ItemContainerStyle="{StaticResource NavItem}" FontSize="14">
           <ListBoxItem x:Name="NavDashboard" Tag="dashboard"/>
+          <ListBoxItem x:Name="NavAnalysis" Tag="analysis"/>
           <ListBoxItem x:Name="NavPerformance" Tag="performance"/>
           <ListBoxItem x:Name="NavPrivacy" Tag="privacy"/>
           <ListBoxItem x:Name="NavExplorer" Tag="explorer"/>
@@ -294,6 +305,34 @@
             <!-- Dashboard: filled by Show-PcDashboard from src\Modules\Dashboard.ps1; the before/now cards
                  that follow are the Items list below -->
             <StackPanel x:Name="DashboardPanel" Visibility="Collapsed">
+              <!-- Two ways in: the automatic analysis, and the memory in use (no RAM "cleaner": docs/NOT-INCLUDED.md) -->
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="12"/>
+                  <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource AboutCard}">
+                  <DockPanel>
+                    <Button x:Name="DashAnalysisButton" DockPanel.Dock="Bottom" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+                    <StackPanel>
+                      <TextBlock x:Name="DashAnalysisTitle" Style="{StaticResource AboutHeading}"/>
+                      <TextBlock x:Name="DashAnalysisText" Style="{StaticResource AboutBody}"/>
+                    </StackPanel>
+                  </DockPanel>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource AboutCard}">
+                  <DockPanel>
+                    <Button x:Name="DashMemoryButton" DockPanel.Dock="Bottom" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+                    <StackPanel>
+                      <TextBlock x:Name="DashMemoryTitle" Style="{StaticResource AboutHeading}"/>
+                      <ProgressBar x:Name="DashMemoryBar" Height="10" Minimum="0" Maximum="100" Margin="0,4,0,8"
+                                   Foreground="{DynamicResource Accent}" Background="{DynamicResource Line}" BorderThickness="0"/>
+                      <TextBlock x:Name="DashMemoryText" Style="{StaticResource AboutBody}"/>
+                    </StackPanel>
+                  </DockPanel>
+                </Border>
+              </Grid>
               <Border Style="{StaticResource AboutCard}">
                 <StackPanel>
                   <TextBlock x:Name="DashSystemTitle" Style="{StaticResource AboutHeading}"/>
@@ -320,6 +359,23 @@
               </Border>
               <TextBlock x:Name="DashChangesTitle" Style="{StaticResource AboutHeading}" Margin="0,10,0,4"/>
               <TextBlock x:Name="DashChangesIntro" Foreground="{DynamicResource Muted}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+            </StackPanel>
+            <!-- Automatic analysis (src\Modules\Analysis.ps1): profiles, the notice, then the recommendations as cards below -->
+            <StackPanel x:Name="AnalysisPanel" Visibility="Collapsed">
+              <Border Style="{StaticResource AboutCard}">
+                <StackPanel>
+                  <TextBlock x:Name="AnalysisProfilesTitle" Style="{StaticResource AboutHeading}"/>
+                  <ItemsControl x:Name="AnalysisProfiles" Focusable="False" ItemTemplate="{StaticResource ProfileOption}"/>
+                  <WrapPanel Margin="0,12,0,0">
+                    <Button x:Name="AnalysisRun" Style="{StaticResource PrimaryButton}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="AnalysisHint" Foreground="{DynamicResource Muted}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                  </WrapPanel>
+                </StackPanel>
+              </Border>
+              <Border Background="{DynamicResource WarnBg}" BorderBrush="{DynamicResource WarnLine}" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,12">
+                <TextBlock x:Name="AnalysisNotice" Foreground="{DynamicResource WarnText}" TextWrapping="Wrap" LineHeight="19"/>
+              </Border>
+              <TextBlock x:Name="AnalysisSummary" Foreground="{DynamicResource Ink}" TextWrapping="Wrap" Margin="0,0,0,10" Visibility="Collapsed"/>
             </StackPanel>
             <!-- About page: filled by Show-PcAbout; links come from $script:PcLinks -->
             <StackPanel x:Name="AboutPanel" Visibility="Collapsed" MaxWidth="860" HorizontalAlignment="Left" Margin="0,0,0,8">

@@ -27,7 +27,9 @@ pelo Windows Update, tudo numa janela só.
 - **Tudo pode ser desfeito.** Antes de mudar algo, o PitCrew anota exatamente o que havia (inclusive
   "esse valor não existia"). O Desfazer devolve isso e não mexe no que você mesmo mudou depois.
   Antes de aplicar, o PitCrew oferece criar um ponto de restauração (já marcado).
-- **Nada vem marcado.** Você vê o estado atual de cada item e escolhe o que mudar.
+- **Nada vem marcado.** Você vê o estado atual de cada item e escolhe o que mudar. A análise
+  automática só marca as recomendações depois que você escolhe um perfil e pede, e você revisa
+  tudo antes de qualquer coisa rodar.
 - **Linguagem simples.** Cada item diz o que faz e o que você perde.
 - **Sem telemetria, sem anúncios, sem baixar código desconhecido.**
 
@@ -35,7 +37,8 @@ pelo Windows Update, tudo numa janela só.
 
 | Área | O que faz |
 |---|---|
-| Painel | A primeira página: o PC num relance (Windows, processador, memória, discos, última inicialização completa), o que o PitCrew mudou e continua valendo, cada mudança antes e agora, e totais daí em diante (espaço liberado, apps removidos, drivers instalados, ajustes aplicados). Só fatos: sem nota |
+| Painel | A primeira página: o PC num relance (Windows, processador, memória, discos, última inicialização completa), a memória em uso, o que o PitCrew mudou e continua valendo, cada mudança antes e agora, e totais daí em diante (espaço liberado, apps removidos, drivers instalados, ajustes aplicados). Só fatos: sem nota |
+| Análise automática | Escolha um perfil (Essencial, Jogos, Mais privacidade) e o PitCrew lista o que ajustaria, limparia, removeria e tiraria da inicialização, cada item dizendo como volta atrás. Só vêm marcados os ajustes seguros (que dá para desfazer) e a limpeza (que não dá); você desmarca o que não quiser, confirma que a escolha é sua e aplica tudo de uma vez |
 | Desempenho | Planos de energia (PC de mesa), hibernação e Inicialização Rápida, gravação de jogos, aceleração do mouse, jogos em janela, agendamento de GPU, apps em segundo plano e mais |
 | Privacidade | Dados de diagnóstico, serviço e tarefas de telemetria, anúncios e sugestões, Copilot, Recall, Widgets, localização, coleta de dados do Edge/Firefox/Brave e mais |
 | Explorer e barra de tarefas | Extensões de arquivo, menu de contexto clássico, alinhamento e botões da barra, Finalizar tarefa, modo escuro e mais |

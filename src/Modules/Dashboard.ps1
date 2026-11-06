@@ -31,10 +31,6 @@ function Get-PcSystemSummary {
     $cpus = @(Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue)
     $memory = [int64](@(Get-CimInstance Win32_PhysicalMemory -ErrorAction SilentlyContinue | ForEach-Object { [int64]$_.Capacity }) | Measure-Object -Sum).Sum
     if ($memory -le 0 -and $cs) { $memory = [int64]$cs.TotalPhysicalMemory }
-    $usedPercent = $null
-    if ($os -and [int64]$os.TotalVisibleMemorySize -gt 0) {
-        $usedPercent = [int][Math]::Round(100.0 * ([int64]$os.TotalVisibleMemorySize - [int64]$os.FreePhysicalMemory) / [int64]$os.TotalVisibleMemorySize)
-    }
 
     # The Storage namespace directly: Get-PhysicalDisk loads a module and takes seconds more
     $disks = @(Get-CimInstance -Namespace 'root/Microsoft/Windows/Storage' -ClassName MSFT_PhysicalDisk -ErrorAction SilentlyContinue | ForEach-Object {
@@ -60,7 +56,6 @@ function Get-PcSystemSummary {
         Cores             = [int](@($cpus | ForEach-Object { [int]$_.NumberOfCores }) | Measure-Object -Sum).Sum
         Threads           = [int](@($cpus | ForEach-Object { [int]$_.NumberOfLogicalProcessors }) | Measure-Object -Sum).Sum
         MemoryBytes       = $memory
-        MemoryUsedPercent = $usedPercent
         Gpus              = @(Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue | ForEach-Object { ([string]$_.Name).Trim() } |
                 Where-Object { $_ -and $script:PcIgnoredGpus -notcontains $_ } | Select-Object -Unique)
         Volumes           = @(Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' -ErrorAction SilentlyContinue | Where-Object { [int64]$_.Size -gt 0 } | ForEach-Object {
@@ -95,11 +90,8 @@ function ConvertTo-PcSummaryRows($Summary, [datetime]$Now = (Get-Date)) {
         if ($Summary.CpuCount -gt 1) { $cpu = '{0} x {1}' -f $Summary.CpuCount, $cpu }
         & $row 'cpu' $cpu
     }
-    if ($Summary.MemoryBytes -gt 0) {
-        $memory = Format-PcMemorySize $Summary.MemoryBytes
-        if ($null -ne $Summary.MemoryUsedPercent) { $memory = Get-PcText 'dashboard.memoryValue' -FormatArgs $memory, $Summary.MemoryUsedPercent }
-        & $row 'memory' $memory
-    }
+    # Installed memory only: how much is in use has its own card
+    if ($Summary.MemoryBytes -gt 0) { & $row 'memory' (Format-PcMemorySize $Summary.MemoryBytes) }
     & $row 'gpu' (@($Summary.Gpus) -join ', ')
     & $row 'storage' ((@($Summary.Volumes) | ForEach-Object {
                 Get-PcText 'dashboard.volumeValue' -FormatArgs $_.Letter, (Format-PcBytes $_.FreeBytes), (Format-PcBytes $_.SizeBytes)
@@ -379,5 +371,6 @@ function Get-PcDashboard {
             [pscustomobject]@{ Total = $apps.Count; NotInstalled = @($apps | Where-Object { -not $_.Installed }).Count }
         }
         Stats   = & $part 'totals' { Get-PcStats }
+        Memory  = & $part 'memory' { Get-PcMemoryStatus }
     }
 }

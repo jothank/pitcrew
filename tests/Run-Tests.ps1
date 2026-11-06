@@ -673,7 +673,11 @@ try {
         foreach ($r in 'safe', 'moderate', 'advanced') { $used += "risk.$r" }
         foreach ($v in 'recommended', 'older', 'noDate', 'firmware', 'display', 'unknownDevice') { $used += "drivers.verdict.$v" }
         foreach ($v in 'installed', 'installedWithErrors', 'failed', 'aborted', 'downloadFailed') { $used += "drivers.result.$v" }
-        foreach ($p in 'performance', 'privacy', 'explorer', 'startup', 'cleanup', 'memory', 'maintenance', 'apps', 'drivers', 'restore', 'history', 'about') { $used += "page.$p.title", "page.$p.intro", "nav.$p" }
+        foreach ($p in 'dashboard', 'analysis', 'performance', 'privacy', 'explorer', 'startup', 'cleanup', 'memory', 'maintenance', 'apps', 'drivers', 'devices', 'restore', 'history', 'about') { $used += "page.$p.title", "page.$p.intro", "nav.$p" }
+        foreach ($r in 'windows', 'computer', 'cpu', 'memory', 'gpu', 'storage', 'disks', 'boot') { $used += "dashboard.row.$r" }
+        foreach ($f in 'desktop', 'laptop') { $used += "dashboard.$f" }
+        foreach ($s in $script:PcStartTypes.Keys) { $used += "dashboard.start.$s" }
+        foreach ($u in 'history', 'none', 'reinstall', 'startup') { $used += "analysis.undo.$u" }
         foreach ($o in @($script:PcFilterOptions.Values | ForEach-Object { $_ }) | Sort-Object -Unique) { $used += "filter.$o" }
         foreach ($t in 'auto', 'light', 'dark') { $used += "theme.$t" }
         foreach ($r in 'safe', 'caution') { $used += "apps.risk.$r" }
@@ -718,7 +722,11 @@ try {
         $ids = @(Import-PcTweaks | ForEach-Object id)
         $languages = @(Get-ChildItem (Join-Path $root 'locales') -Filter *.json | ForEach-Object BaseName)
         foreach ($p in @(Read-PcJson (Join-Path $root 'data\presets.json'))) {
-            foreach ($lang in $languages) { Assert-True ($p.name.$lang) "preset $($p.id) name in $lang" }
+            foreach ($lang in $languages) {
+                Assert-True ($p.name.$lang) "preset $($p.id) name in $lang"
+                # Shown on the automatic analysis page under the profile's name
+                Assert-True ($p.description.$lang) "preset $($p.id) description in $lang"
+            }
             $unknown = @(@($p.tweaks) | Where-Object { $ids -notcontains $_ })
             Assert-True ($unknown.Count -eq 0) "preset $($p.id) unknown tweaks: $($unknown -join ', ')"
         }
@@ -1059,7 +1067,7 @@ try {
 
     Test-Case 'dashboard PC summary: rows from what was read, nothing invented' {
         $s = [pscustomobject]@{ Windows = 'Windows 11 Pro'; DisplayVersion = '25H2'; Build = '26300.100'; Maker = 'Gigabyte'; Model = 'A520M K V2'
-            FormFactor = 'desktop'; Cpu = 'AMD Ryzen 5 5600G'; CpuCount = 1; Cores = 6; Threads = 12; MemoryBytes = 32GB; MemoryUsedPercent = 41
+            FormFactor = 'desktop'; Cpu = 'AMD Ryzen 5 5600G'; CpuCount = 1; Cores = 6; Threads = 12; MemoryBytes = 32GB
             Gpus = @('NVIDIA GeForce RTX 3060'); Volumes = @([pscustomobject]@{ Letter = 'C:'; FreeBytes = 62GB; SizeBytes = 465GB })
             Disks = @([pscustomobject]@{ Name = 'KINGSTON SNVS500G'; Media = 'SSD'; Nvme = $true; Usb = $false; SizeBytes = 500GB; Health = 'Healthy' })
             LastBoot = [datetime]'2026-11-04T08:14:00' }
@@ -1067,7 +1075,7 @@ try {
         Assert-Equal 'Windows|Computer|Processor|Memory|Graphics card|Disk space|Drives|Last full start' (($rows | ForEach-Object Label) -join '|') 'labels'
         Assert-Equal 'Windows 11 Pro, version 25H2 (build 26300.100)' $rows[0].Value 'Windows'
         Assert-Equal 'Gigabyte A520M K V2 · desktop' $rows[1].Value 'computer'
-        Assert-Equal '32 GB · 41% in use now' $rows[3].Value 'memory in whole gigabytes'
+        Assert-Equal '32 GB' $rows[3].Value 'installed memory in whole gigabytes (what is in use has its own card)'
         Assert-True ($rows[6].Value -like 'KINGSTON SNVS500G · SSD NVMe · * · healthy') "drive: $($rows[6].Value)"
         Assert-True ($rows[7].Value -like '*, 1 d 4 h ago') "uptime: $($rows[7].Value)"
         # Missing facts are left out rather than shown empty
@@ -1075,6 +1083,124 @@ try {
         Assert-Equal 'Windows' (($bare | ForEach-Object Label) -join '|') 'only what was read'
         Assert-Equal 'Gigabyte' (Get-PcCompanyName 'Gigabyte Technology Co., Ltd.') 'maker suffixes'
         Assert-Equal 'Dell|ASUSTeK|Micro-Star International|LENOVO' (@('Dell Inc.', 'ASUSTeK COMPUTER INC.', 'Micro-Star International Co., Ltd.', 'LENOVO') | ForEach-Object { Get-PcCompanyName $_ }) 'other makers'
+    }
+
+    Write-Host "`nAutomatic analysis" -ForegroundColor Cyan
+
+    Test-Case 'analysis: recommends only what is missing, ticks only what is safe and can be undone' {
+        $tw = {
+            param($Id, $Risk = 'safe', $Conflicts = $null, $Category = 'privacy', $Requires = $null)
+            [pscustomobject]@{ id = $Id; risk = $Risk; category = $Category; conflictsWith = $Conflicts; requires = $Requires; reference = 'https://learn.microsoft.com/x'
+                evidence = 'learn'; title = [pscustomobject]@{ en = "T $Id" }; description = [pscustomobject]@{ en = "D $Id" } }
+        }
+        $catalog = @(
+            (& $tw 'a.safe'), (& $tw 'a.mod' 'moderate'), (& $tw 'a.adv' 'advanced'), (& $tw 'a.done'), (& $tw 'a.na'), (& $tw 'a.err'), (& $tw 'a.part'),
+            (& $tw 'p.high' 'moderate' @('p.ult') 'performance' ([pscustomobject]@{ restart = $true })), (& $tw 'p.ult' 'moderate' @('p.high') 'performance'),
+            (& $tw 'q.one' 'safe' @('q.two')), (& $tw 'q.two' 'safe' @('q.one')),
+            (& $tw 'r.one' 'safe' @('r.two')), (& $tw 'r.two' 'safe' @('r.one')))
+        $states = @{ 'a.safe' = 'NotApplied'; 'a.mod' = 'NotApplied'; 'a.adv' = 'NotApplied'; 'a.done' = 'Applied'; 'a.na' = 'NotApplicable'; 'a.err' = 'Error'
+            'a.part' = 'Partial'; 'p.high' = 'NotApplied'; 'p.ult' = 'NotApplied'; 'q.one' = 'NotApplied'; 'q.two' = 'Applied'; 'r.one' = 'NotApplied'; 'r.two' = 'NotApplied' }
+        $presets = @(
+            [pscustomobject]@{ id = 'one'; name = [pscustomobject]@{ en = 'One' }; tweaks = @('a.safe', 'a.mod', 'a.adv', 'a.done', 'a.na', 'a.err', 'p.high', 'missing.id') }
+            [pscustomobject]@{ id = 'two'; name = [pscustomobject]@{ en = 'Two' }; tweaks = @('a.safe', 'a.part', 'p.ult', 'q.one', 'r.one') })
+        $cleanup = @(
+            [pscustomobject]@{ Id = 'user-temp'; Name = 'Temp'; Bytes = [int64]100; Files = 3; Available = $true; BlockedKey = $null }
+            [pscustomobject]@{ Id = 'recycle-bin'; Name = 'Bin'; Bytes = [int64]50; Files = 1; Available = $true; BlockedKey = $null }
+            [pscustomobject]@{ Id = 'windows-temp'; Name = 'Win temp'; Bytes = [int64]0; Files = 0; Available = $true; BlockedKey = $null }
+            [pscustomobject]@{ Id = 'wu-cache'; Name = 'WU'; Bytes = [int64]0; Files = 0; Available = $false; BlockedKey = 'cleanup.rebootPending' })
+        $apps = @(
+            [pscustomobject]@{ Package = 'App.Safe'; Name = 'Safe app'; Note = ''; Risk = 'safe'; Installed = $true }
+            [pscustomobject]@{ Package = 'App.Caution'; Name = 'Caution app'; Note = 'x'; Risk = 'caution'; Installed = $true }
+            [pscustomobject]@{ Package = 'App.Gone'; Name = 'Gone app'; Note = ''; Risk = 'safe'; Installed = $false })
+        $startup = @(
+            [pscustomobject]@{ Id = 'HKCU|Run|On'; Name = 'On'; Command = 'on.exe'; Source = 'Run'; Publisher = 'Pub'; Enabled = $true }
+            [pscustomobject]@{ Id = 'HKCU|Run|Off'; Name = 'Off'; Command = 'off.exe'; Source = 'Run'; Publisher = ''; Enabled = $false })
+
+        # r.two isn't in place any more but is still in the journal: the engine would refuse r.one
+        $r = @(ConvertTo-PcRecommendations -Catalog $catalog -Presets $presets -States $states -Recorded @('r.two') -Cleanup $cleanup -Apps $apps -Startup $startup)
+        Assert-Equal 'tweak|a.safe|True tweak|a.mod|False tweak|p.high|False tweak|a.part|True cleanup|user-temp|True cleanup|recycle-bin|False cleanup|wu-cache|False app|App.Safe|False startup|HKCU|Run|On|False' (
+            ($r | ForEach-Object { '{0}|{1}|{2}' -f $_.Area, $_.Id, $_.Ticked }) -join ' ') 'what is listed and what comes ticked'
+        Assert-Equal 'One, Two' (@(($r | Where-Object Id -eq 'a.safe').Profiles) -join ', ') 'both profiles named, listed once'
+        Assert-Equal $false ($r | Where-Object Id -eq 'wu-cache').Enabled 'a cleanup that cannot run now has no tick box'
+
+        $cards = @($r | ForEach-Object { ConvertTo-PcRecommendationCard $_ })
+        $high = $cards | Where-Object Id -eq 'tweak|p.high'
+        Assert-True ($high.Meta -like '*Has side effects*' -and $high.Meta -like '*Needs a restart*') "moderate and restart said: $($high.Meta)"
+        Assert-Equal 'Performance' $high.Tag 'the page it belongs to'
+        Assert-Equal "Can be undone|Can't be undone|Can be reinstalled (needs internet)|Can be turned back on" ((@('tweak|a.safe', 'cleanup|user-temp', 'app|App.Safe', 'startup|HKCU|Run|On') | ForEach-Object { $id = $_; ($cards | Where-Object Id -eq $id).Badge }) -join '|') 'how each one comes back'
+        $wu = $cards | Where-Object Id -eq 'cleanup|wu-cache'
+        Assert-True (-not $wu.IsEnabled -and -not $wu.IsSelected) 'blocked cleanup neither enabled nor ticked'
+        Assert-Equal (Get-PcText 'cleanup.rebootPending') $wu.Meta 'says why'
+        Assert-Equal 3 @($cards | Where-Object { $_.IsSelected }).Count 'ticked: the two safe tweaks and the temp files'
+        $n = Get-PcRecommendationCounts @($r | Where-Object { $_.Ticked })
+        Assert-Equal '2|1|100|0|0' ('{0}|{1}|{2}|{3}|{4}' -f $n.Tweaks, $n.Cleanup, $n.CleanupBytes, $n.Apps, $n.Startup) 'counts of what will run'
+
+        # Nothing chosen: nothing listed but what is always there to review
+        $none = @(ConvertTo-PcRecommendations -Catalog $catalog -Presets @() -States $states -Cleanup @() -Apps @() -Startup @())
+        Assert-Equal 0 $none.Count 'no profile, no tweak recommendations'
+        # A tweak the catalog marks as not reversible is never ticked and says so
+        $oneWay = & $tw 'w.once'
+        $oneWay | Add-Member -NotePropertyName reversible -NotePropertyValue $false
+        $w = @(ConvertTo-PcRecommendations -Catalog @($oneWay) -Presets @([pscustomobject]@{ id = 'w'; name = 'W'; tweaks = @('w.once') }) -States @{ 'w.once' = 'NotApplied' })
+        Assert-Equal 'False|none' ('{0}|{1}' -f $w[0].Ticked, $w[0].Undo) 'not reversible: not ticked, cannot be undone'
+    }
+
+    Test-Case 'analysis: the confirmation cannot be accepted without ticking that the choice is yours' {
+        . (Join-Path $root 'src\UI\Window.ps1')
+        $dialog = New-PcAnalysisDialog ([pscustomobject]@{ Tweaks = 2; Cleanup = 1; CleanupBytes = 100MB; Apps = 1; Startup = 0 })
+        $d = $script:PcDialog
+        Assert-True (-not $d.Agree.IsChecked -and -not $d.Confirm.IsEnabled) 'Apply starts off, the box unticked'
+        Assert-True ($d.Cancel.IsDefault -and $d.Cancel.IsCancel -and -not $d.Confirm.IsDefault) 'Enter and Esc cancel'
+        Assert-Equal 3 @($d.Changes.ItemsSource).Count 'one line per area that runs'
+        Assert-True (@($d.Changes.ItemsSource)[2] -like '*internet*') 'the apps line says reinstalling needs internet'
+        $d.Agree.IsChecked = $true
+        Assert-True $d.Confirm.IsEnabled 'ticking it turns Apply on'
+        $d.Agree.IsChecked = $false
+        Assert-True (-not $d.Confirm.IsEnabled) 'unticking turns it off again'
+        $dialog.Close()
+    }
+
+    Test-Case 'analysis: applying runs only the ids given, area by area, and one failing area does not stop the rest' {
+        [void](Set-PcRegistryValue 'HKLM:\SOFTWARE\PcRec' 'Already' 'DWord' 1)
+        $recA = New-TestTweak 't.rec.a' @(New-RegAction 'HKLM:\SOFTWARE\PcRec' 'A' 'DWord' 1)
+        $recA | Add-Member -NotePropertyName requires -NotePropertyValue ([pscustomobject]@{ restart = $true })
+        $recB = New-TestTweak 't.rec.b' @(New-RegAction 'HKLM:\SOFTWARE\PcRec' 'Already' 'DWord' 1)
+        $recC = New-TestTweak 't.rec.c' @(New-RegAction 'HKLM:\SOFTWARE\PcRec' 'C' 'DWord' 1)
+        $script:RecCatalog = @($recA, $recB, $recC)
+        $script:RecTempFolder = Join-Path $testData 'rec-temp'
+        New-Item -ItemType Directory -Force -Path $script:RecTempFolder | Out-Null
+        [IO.File]::WriteAllBytes((Join-Path $script:RecTempFolder 'old.tmp'), (New-Object byte[] 2048))
+        (Get-Item (Join-Path $script:RecTempFolder 'old.tmp')).LastWriteTime = (Get-Date).AddDays(-3)
+        $script:RecApps = @(Get-PcAppCatalog | ForEach-Object package)
+        $script:RecStartupOff = @()
+        $saved = @{}
+        foreach ($fn in 'Import-PcTweaks', 'Get-PcCleanupFolders', 'Remove-PcAppxPackage', 'Set-PcStartupItemEnabled') { $saved[$fn] = (Get-Item "function:$fn").ScriptBlock }
+        try {
+            function script:Import-PcTweaks { $script:RecCatalog }
+            function script:Get-PcCleanupFolders([string]$Id) { if ($Id -eq 'user-temp') { $script:RecTempFolder } }
+            function script:Get-AppxPackage { [CmdletBinding()] param([string]$Name) if ($Name -eq $script:RecApps[0]) { [pscustomobject]@{ PackageFullName = "$($Name)_1.0_x64" } } }
+            function script:Remove-PcAppxPackage([string]$FullName) { }
+            function script:Set-PcStartupItemEnabled([string]$Id, [bool]$Enabled) {
+                if ($Id -like '*Locked') { throw 'fake: access denied' }
+                $script:RecStartupOff += "$Id=$Enabled"
+            }
+            Assert-Equal $script:RecTempFolder (Get-PcCleanupFolders 'user-temp') 'cleanup points at the test folder'
+
+            $res = Invoke-PcRecommendations -TweakIds 't.rec.a', 't.rec.b', 't.rec.missing' -CleanupIds 'user-temp', 'nope' -AppPackages $script:RecApps[0] `
+                -StartupIds 'HKCU|Run|One', 'HKCU|Run|Locked' -Names @{ 'tweak|t.rec.missing' = 'Missing tweak'; 'startup|HKCU|Run|Locked' = 'Locked app' }
+            Assert-Equal '1|1|1|2048|1|1' ('{0}|{1}|{2}|{3}|{4}|{5}' -f $res.Changed, $res.AlreadySet, $res.Cleaned, $res.Freed, $res.AppsRemoved, $res.StartupOff) 'what happened'
+            Assert-Equal ('tweak|t.rec.a tweak|t.rec.b cleanup|user-temp app|{0} startup|HKCU|Run|One' -f $script:RecApps[0]) (@($res.Done) -join ' ') 'done, to mark the cards'
+            Assert-Equal 3 @($res.Failed).Count 'the missing tweak, the unknown cleanup and the locked startup entry'
+            Assert-True (@($res.Failed) -like 'Missing tweak:*') 'failures are named'
+            Assert-True $res.Restart 'a tweak that needs a restart says so'
+            Assert-Equal 'NotApplied' (Get-PcTweakState $recC) 'a tweak that was not chosen is left alone'
+            Assert-Equal 'HKCU|Run|One=False' ($script:RecStartupOff -join ',') 'startup turned off, not deleted'
+        } finally {
+            foreach ($fn in $saved.Keys) { Set-Item -LiteralPath "function:script:$fn" -Value $saved[$fn] }
+            Remove-Item -LiteralPath 'function:script:Get-AppxPackage' -ErrorAction SilentlyContinue
+            foreach ($t in $recA, $recB) { if (Get-PcJournalEntry $t) { [void](Undo-PcTweak $t) } }
+        }
+        Assert-True ((${function:Set-PcStartupItemEnabled}).ToString() -match 'Invalid startup item id') 'the real startup switch is back'
     }
 
     Test-Case 'the Pix code follows the Banco Central format and the QR picture is up to date' {

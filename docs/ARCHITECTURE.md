@@ -38,6 +38,7 @@ src/Core/Pix.ps1            the Pix "copia e cola" code (Banco Central BR Code w
 src/Core/Update.ps1         the new-version check: GitHub's list of releases, version order, the link
 src/Core/Stats.ps1          the dashboard's running totals (stats.json next to the journal)
 src/Modules/Dashboard.ps1   the dashboard: PC summary, before and now from the journal, tiles
+src/Modules/Analysis.ps1    the automatic analysis: recommendations from the presets, and applying them in one go
 .github/workflows/build.yml tests and builds on GitHub Actions; signs PitCrew.exe for version tags (docs/SIGNING.md)
 .github/signpath/           copy of the SignPath artifact configuration (what gets signed, and its checks)
 ```
@@ -248,7 +249,44 @@ each part is read on its own, so one that fails is left out and the rest still s
   and nothing about counting can fail the action it counts.
 
 No score and no claim about speed or boot time: the dashboard shows what was read, and leaves out
-what couldn't be.
+what couldn't be. The memory card shows what is in use and leads to the Memory page; there is no
+"clean memory" button (docs/NOT-INCLUDED.md).
+
+## Automatic analysis
+
+For people who don't know which pages to visit, `src/Modules/Analysis.ps1` gathers the
+recommendations of the tweak, cleanup, built-in apps and startup pages in one list. Drivers,
+device power, maintenance and memory stay out: installing drivers carries risk, device power only
+fixes a problem someone has, and repairs take long. It never runs on its own: the profiles (the
+presets in `data/presets.json`) start unticked, and Analyze stays off until one is ticked.
+
+`Get-PcAnalysis` only reads: the state of the tweaks the chosen presets name (and of their
+`conflictsWith` alternatives), the cleanup sizes, the built-in apps and the startup programs.
+`ConvertTo-PcRecommendations` turns that into the list, without touching the system:
+
+| Area | Listed | Ticked |
+|---|---|---|
+| Tweaks | in a chosen preset, Not applied or Partial | `safe` only; `moderate` listed unticked; `advanced` never listed |
+| Cleanup | something to free, or blocked with the reason | yes, except the Recycle Bin |
+| Built-in apps | installed and labelled `safe` | no: whether you use an app is not something an analysis knows |
+| Startup | starts with Windows now | no: it could be the antivirus or a driver's helper |
+
+A tweak is left out when its alternative is applied (High Performance while Ultimate is on) or is
+still in the journal (the engine refuses the pair until that entry is undone), and of two presets
+asking for both sides of a pair the first wins, so a batch never hits `error.conflict`. A tweak
+the catalog marks `reversible: false` is never ticked. Each card says how it comes back: Undo in
+History, reinstall from the Apps page (needs internet and the Store; a restore point doesn't bring
+apps back), turn back on in the Startup page, or not at all (cleanup). "Tick all shown" is hidden
+on this page, so startup programs and apps are only ever ticked one by one.
+
+Apply counts exactly the ticked, visible cards, and its dialog lists them per area, offers the
+restore point under the same rules as the tweak pages, and keeps Apply off until the user ticks
+that they understand the analysis is automatic and the decision is theirs (Enter and Esc cancel).
+`Invoke-PcRecommendations` then runs only those ids, area by area: restore point (failing stops
+everything, with the same offer to turn System Protection on), tweaks through the engine, cleanup,
+app removal (through `Remove-PcAppxPackage`, which refuses to run under the test redirect), and
+startup entries turned off the way Task Manager does. One area failing doesn't stop the others;
+the cards that went through are marked Done in place.
 
 ## New-version notice
 

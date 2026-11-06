@@ -27,6 +27,8 @@ disk cleanup, removal of preinstalled apps and driver updates from Windows Updat
   (including "this value didn't exist"). Undo puts it back, and leaves alone anything you changed
   yourself afterwards. Before applying, PitCrew offers to create a restore point (ticked by default).
 - **Nothing is preselected.** You see the current state of each item and choose what to change.
+  The automatic analysis only ticks its recommendations after you pick a profile and ask for it,
+  and you review them before anything runs.
 - **Plain language.** Each item says what it does and what you lose.
 - **No telemetry, no ads, no downloads of unknown code.**
 
@@ -34,7 +36,8 @@ disk cleanup, removal of preinstalled apps and driver updates from Windows Updat
 
 | Area | What it does |
 |---|---|
-| Dashboard | The first page: the PC at a glance (Windows, processor, memory, drives, last full start), what PitCrew changed and is still in place, each change before and now, and totals from then on (space freed, apps removed, drivers installed, tweaks applied). Facts only: no score |
+| Dashboard | The first page: the PC at a glance (Windows, processor, memory, drives, last full start), memory in use, what PitCrew changed and is still in place, each change before and now, and totals from then on (space freed, apps removed, drivers installed, tweaks applied). Facts only: no score |
+| Automatic analysis | Pick a profile (Essentials, Gaming, More privacy) and PitCrew lists what it would tweak, clean, remove and take out of startup, each with how it comes back. Only safe tweaks (they can be undone) and cleanup (it can't) come ticked; you untick what you don't want, confirm that the choice is yours, and apply it all in one go |
 | Performance | Power plans (desktops), hibernation and Fast Startup, game recording, mouse acceleration, windowed games, GPU scheduling, background apps and more |
 | Privacy | Diagnostic data, telemetry service and tasks, ads and suggestions, Copilot, Recall, Widgets, location, Edge/Firefox/Brave data collection and more |
 | Explorer & taskbar | File extensions, classic context menu, taskbar alignment and buttons, End Task, dark mode and more |

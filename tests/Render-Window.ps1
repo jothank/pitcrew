@@ -7,7 +7,7 @@
 param(
     [Parameter(Mandatory)][string]$Out,
     [string]$Language = 'en',
-    [ValidateSet('dashboard', 'performance', 'privacy', 'explorer', 'startup', 'cleanup', 'memory', 'maintenance', 'apps', 'devices', 'history', 'about',
+    [ValidateSet('dashboard', 'analysis', 'analysis-dialog', 'performance', 'privacy', 'explorer', 'startup', 'cleanup', 'memory', 'maintenance', 'apps', 'devices', 'history', 'about',
         'apply-dialog', 'message-dialog', 'confirm-dialog')][string]$Page = 'performance',
     [int]$Width = 1120,
     [int]$Height = 760,
@@ -17,7 +17,9 @@ param(
     # Draw the page as it looks while a job runs (navigation and buttons disabled)
     [switch]$Busy,
     # Draw the new-version notice for this version (higher than the running one), e.g. 0.2.0
-    [string]$NewerVersion
+    [string]$NewerVersion,
+    # The analysis page: run a (read-only) analysis with these profiles first; none = the page as it opens
+    [string[]]$Profiles = @()
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
@@ -40,7 +42,11 @@ if ($AsAdmin) {
     $script:PcIsAdmin = $true
     Set-PcStaticTexts
 }
-if ($Page -eq 'apply-dialog') {
+if ($Page -eq 'analysis-dialog') {
+    # The confirmation before applying recommendations, with every area in it
+    $source = New-PcAnalysisDialog ([pscustomobject]@{ Tweaks = 12; Cleanup = 4; CleanupBytes = 1.1GB; Apps = 2; Startup = 1 })
+    $Height = 0
+} elseif ($Page -eq 'apply-dialog') {
     # The confirmation shown before applying, filled with every tweak of the catalog
     $source = New-PcApplyDialog @($script:PcTweaks | Select-Object -First 4)
     $Height = 0
@@ -52,6 +58,14 @@ if ($Page -eq 'apply-dialog') {
     $Ui.Nav.SelectedItem = $Ui["Nav$((Get-Culture).TextInfo.ToTitleCase($Page))"]
     Wait-PcJob
     if ($AsAdmin) { Show-PcPage $Page; Wait-PcJob }
+    if ($Page -eq 'analysis' -and $Profiles) {
+        # powershell -File passes "a,b" as one string
+        $wanted = @($Profiles | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() })
+        foreach ($p in @($Ui.AnalysisProfiles.ItemsSource)) { $p.IsSelected = $wanted -contains $p.Id }
+        Update-PcAnalysisRunButton
+        Invoke-PcRunAnalysis
+        Wait-PcJob
+    }
     if ($Busy) { Set-PcBusy $true (Get-PcText 'status.creatingRestorePoint') }
     if ($NewerVersion) { Show-PcUpdateNotice (Select-PcNewerRelease -Tags "v$NewerVersion") }
     $source = $window

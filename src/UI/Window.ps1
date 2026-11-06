@@ -192,9 +192,12 @@ function Complete-PcJob {
 function Set-PcBusy([bool]$IsBusy, [string]$Status) {
     $Ui.Busy.Visibility = if ($IsBusy) { 'Visible' } else { 'Collapsed' }
     # Anything that would start another job or switch pages waits until this one ends
-    foreach ($control in $Ui.Nav, $Ui.LanguageBox, $Ui.Items, $Ui.RefreshButton, $Ui.ExportProfile, $Ui.PresetBox) {
+    foreach ($control in $Ui.Nav, $Ui.LanguageBox, $Ui.Items, $Ui.RefreshButton, $Ui.ExportProfile, $Ui.PresetBox,
+        $Ui.DashAnalysisButton, $Ui.DashMemoryButton, $Ui.AnalysisProfiles) {
         if ($control) { $control.IsEnabled = -not $IsBusy }
     }
+    # Analyze also needs a profile ticked
+    if ($Ui.AnalysisRun) { if ($IsBusy) { $Ui.AnalysisRun.IsEnabled = $false } else { Update-PcAnalysisRunButton } }
     if ($IsBusy) {
         $Ui.PrimaryAction.IsEnabled = $false
         $Ui.SecondaryAction.IsEnabled = $false
@@ -308,12 +311,14 @@ $script:PcFilterOptions = @{
     apps    = @('all', 'installed', 'notInstalled', 'selected')
     startup = @('all', 'on', 'off', 'selected')
     devices = @('all', 'canTurnOff', 'alwaysOn', 'selected')
+    analysis = @('all', 'selected', 'areaTweak', 'areaCleanup', 'areaApp', 'areaStartup')
 }
 # Options that keep only one State (set on each card, never translated)
 $script:PcFilterStates = @{
     notApplied = 'NotApplied'; applied = 'Applied'; partial = 'Partial'
     installed = 'Installed'; notInstalled = 'NotInstalled'; on = 'On'; off = 'Off'
     canTurnOff = 'CanTurnOff'; alwaysOn = 'AlwaysOn'
+    areaTweak = 'AreaTweak'; areaCleanup = 'AreaCleanup'; areaApp = 'AreaApp'; areaStartup = 'AreaStartup'
 }
 $script:PcStatusFilter = 'all'
 
@@ -467,6 +472,7 @@ $script:PcTweakCategories = @('performance', 'privacy', 'explorer')
 # For each button: its text, whether it needs administrator rights and whether it needs items
 $script:PcPages = @{
     dashboard   = @{}
+    analysis    = @{ Primary = @('button.applyRecommended', $true, $true) }
     performance = @{ Primary = @('button.apply', $true, $true); Secondary = @('button.undo', $true, $true) }
     privacy     = @{ Primary = @('button.apply', $true, $true); Secondary = @('button.undo', $true, $true) }
     explorer    = @{ Primary = @('button.apply', $true, $true); Secondary = @('button.undo', $true, $true) }
@@ -506,17 +512,23 @@ function Show-PcPage([string]$Page) {
     $Ui.FilterBar.Visibility = if (Get-PcFilterKind $Page) { 'Visible' } else { 'Collapsed' }
     $Ui.PresetBox.Visibility = if ($isTweakPage) { 'Visible' } else { 'Collapsed' }
     $Ui.ExportProfile.Visibility = if ($isTweakPage) { 'Visible' } else { 'Collapsed' }
+    # On the analysis page one click would also tick every startup program (the antivirus among
+    # them) and every app; there each one is ticked by hand
+    $Ui.SelectVisible.Visibility = if ($Page -eq 'analysis') { 'Collapsed' } else { 'Visible' }
     Update-PcStatusFilter $Page
     $Ui.SearchBox.Text = ''
     Set-PcItems @()
     $Ui.EmptyText.Visibility = 'Collapsed'
     $Ui.AboutPanel.Visibility = 'Collapsed'
     $Ui.DashboardPanel.Visibility = 'Collapsed'
+    $Ui.AnalysisPanel.Visibility = 'Collapsed'
     $Ui.MemoryBar.Visibility = 'Collapsed'
     $Ui.RefreshButton.Visibility = if (@('memory', 'dashboard') -contains $Page) { 'Visible' } else { 'Collapsed' }
     $Ui.StatusText.Text = Get-PcText 'status.ready'
     switch ($Page) {
         'dashboard' { Invoke-PcLoadDashboard }
+        # Never analyzes on its own: that takes a while and waits for a profile and a click
+        'analysis' { Show-PcAnalysisPage }
         'startup' { Invoke-PcLoadStartup }
         'cleanup' { Invoke-PcAnalyzeCleanup }
         'memory'  { Invoke-PcLoadMemory }
@@ -713,6 +725,7 @@ function Update-PcCurrentPage {
 function Invoke-PcPrimaryAction {
     switch ($script:PcPage) {
         { $script:PcTweakCategories -contains $_ } { Invoke-PcApplyTweaks }
+        'analysis'    { Invoke-PcApplyRecommendations }
         'startup'     { Invoke-PcSetStartup $false }
         'cleanup'     { Invoke-PcRunCleanup }
         'memory'      { Invoke-PcCloseApps }
@@ -750,6 +763,20 @@ function Invoke-PcLoadDashboard {
 }
 
 function Show-PcDashboard($Data) {
+    $Ui.DashAnalysisTitle.Text = Get-PcText 'dashboard.analysisTitle'
+    $Ui.DashAnalysisText.Text = Get-PcText 'dashboard.analysisText'
+    $Ui.DashAnalysisButton.Content = Get-PcText 'dashboard.analysisButton'
+    $Ui.DashMemoryTitle.Text = Get-PcText 'dashboard.memoryTitle'
+    $Ui.DashMemoryButton.Content = Get-PcText 'dashboard.memoryButton'
+    $m = $Data.Memory
+    if ($m -and $m.TotalBytes -gt 0) {
+        $Ui.DashMemoryBar.Value = $m.Percent
+        $Ui.DashMemoryBar.Visibility = 'Visible'
+        $Ui.DashMemoryText.Text = Get-PcText 'memory.summary' -FormatArgs (Format-PcBytes $m.UsedBytes), (Format-PcBytes $m.TotalBytes), $m.Percent, (Format-PcBytes $m.AvailableBytes)
+    } else {
+        $Ui.DashMemoryBar.Visibility = 'Collapsed'
+        $Ui.DashMemoryText.Text = Get-PcText 'state.Error'
+    }
     $Ui.DashSystemTitle.Text = Get-PcText 'dashboard.systemTitle'
     $Ui.DashSystem.ItemsSource = @(foreach ($row in @(ConvertTo-PcSummaryRows $Data.Summary)) { New-PcItem @{ Title = $row.Label; Detail = $row.Value } })
     $tile = { param($t) New-PcItem @{ Badge = $t.Value; Title = $t.Label; Detail = $t.Note } }
@@ -764,6 +791,222 @@ function Show-PcDashboard($Data) {
     $Ui.DashChangesIntro.Text = Get-PcText 'dashboard.changesIntro'
     $Ui.DashboardPanel.Visibility = 'Visible'
     Set-PcItems @(foreach ($c in @(ConvertTo-PcChangeCards @($Data.Changes))) { New-PcItem $c }) 'history.empty'
+}
+
+# --- Automatic analysis (src\Modules\Analysis.ps1) ------------------------------------------------
+
+function Show-PcAnalysisPage {
+    # Profiles start unticked ("nothing is preselected"); analyzing waits for one and a click
+    $Ui.AnalysisProfilesTitle.Text = Get-PcText 'analysis.profilesTitle'
+    $Ui.AnalysisProfiles.ItemsSource = @(foreach ($p in Get-PcPresets) {
+            $detail = Resolve-PcLocalized $p.description
+            $count = Get-PcText 'analysis.profileCount' -FormatArgs @($p.tweaks).Count
+            New-PcItem @{ Id = [string]$p.id; Title = Resolve-PcLocalized $p.name; Detail = $(if ($detail) { "$detail  ·  $count" } else { $count }) }
+        })
+    $Ui.AnalysisRun.Content = Get-PcText 'analysis.run'
+    $Ui.AnalysisNotice.Text = Get-PcText 'analysis.notice'
+    $Ui.AnalysisSummary.Visibility = 'Collapsed'
+    # The search and filters only make sense once there is a list
+    $Ui.FilterBar.Visibility = 'Collapsed'
+    $Ui.AnalysisPanel.Visibility = 'Visible'
+    Update-PcAnalysisRunButton
+    Set-PcItems @() 'analysis.start'
+}
+
+function Get-PcChosenProfiles { @($Ui.AnalysisProfiles.ItemsSource | Where-Object { $_.IsSelected } | ForEach-Object { $_.Id }) }
+
+function Update-PcAnalysisRunButton {
+    $any = @(Get-PcChosenProfiles).Count -gt 0
+    $Ui.AnalysisRun.IsEnabled = $any -and -not $script:PcJob
+    $Ui.AnalysisHint.Text = if ($any) { '' } else { Get-PcText 'analysis.pickProfile' }
+}
+
+function Invoke-PcRunAnalysis {
+    $profiles = @(Get-PcChosenProfiles)
+    if ($profiles.Count -eq 0) { return }
+    # Reads only: tweak states, sizes to clean, apps and startup programs
+    Start-PcJob -Work { param($Sync, $Profiles) Get-PcAnalysis -ProfileIds $Profiles -Sync $Sync } -Arguments @{ Profiles = $profiles } -Status (Get-PcText 'status.analyzing') -OnDone {
+        param($r)
+        if ($script:PcPage -ne 'analysis') { return }
+        Show-PcRecommendations $r[-1]
+    }
+}
+
+function Show-PcRecommendations($Analysis) {
+    $items = @($Analysis.Items)
+    # A new list starts unfiltered, and the filter bar is shown before the cards so a filter left
+    # from an earlier analysis can't hide ticked cards from Apply
+    Update-PcStatusFilter $script:PcPage
+    $Ui.SearchBox.Text = ''
+    $Ui.FilterBar.Visibility = if ($items.Count -gt 0) { 'Visible' } else { 'Collapsed' }
+    # Nothing listed because something couldn't be read is not "nothing to recommend"
+    $emptyKey = if (@($Analysis.Failed).Count -gt 0) { 'state.Error' } else { 'analysis.empty' }
+    Set-PcItems @(foreach ($i in $items) { New-PcItem (ConvertTo-PcRecommendationCard $i) }) $emptyKey
+    $c = Get-PcRecommendationCounts $items
+    $text = Get-PcText 'analysis.summary' -FormatArgs $items.Count, $c.Tweaks, $c.Cleanup, (Format-PcBytes $c.CleanupBytes), $c.Apps, $c.Startup
+    if (@($Analysis.Failed).Count -gt 0) {
+        $areas = @($Analysis.Failed | ForEach-Object { Get-PcText $(switch ($_) { 'tweak' { 'filter.areaTweak' } 'cleanup' { 'filter.areaCleanup' } 'app' { 'filter.areaApp' } default { 'filter.areaStartup' } }) })
+        $text += "`n" + (Get-PcText 'analysis.notRead' -FormatArgs ($areas -join ', '))
+    }
+    $Ui.AnalysisSummary.Text = $text
+    $Ui.AnalysisSummary.Visibility = 'Visible'
+}
+
+function New-PcAnalysisDialog($Counts) {
+    # What will run, the notice that the choice is the user's, the restore point, and a box the user
+    # must tick before Apply is possible. Esc and Enter cancel.
+    $xaml = @'
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="560" SizeToContent="Height" WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        ShowInTaskbar="False" FontFamily="Segoe UI" FontSize="13" Background="{DynamicResource Surface}">
+  <Window.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries><!--THEME--></ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Window.Resources>
+  <StackPanel Margin="26,22">
+    <TextBlock x:Name="Heading" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource Ink}"/>
+    <TextBlock x:Name="Intro" Foreground="{DynamicResource Muted}" Margin="0,8,0,6" TextWrapping="Wrap"/>
+    <ItemsControl x:Name="Changes" Margin="0,0,0,14">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,2" Foreground="{DynamicResource Ink}"/></DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    <Border Background="{DynamicResource WarnBg}" BorderBrush="{DynamicResource WarnLine}" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,14">
+      <TextBlock x:Name="Notice" Foreground="{DynamicResource WarnText}" TextWrapping="Wrap" LineHeight="19"/>
+    </Border>
+    <CheckBox x:Name="RestorePoint" IsChecked="True">
+      <TextBlock x:Name="RestorePointText" TextWrapping="Wrap" FontWeight="SemiBold"/>
+    </CheckBox>
+    <TextBlock x:Name="LastPoint" Foreground="{DynamicResource Muted}" TextWrapping="Wrap" Margin="24,4,0,0" FontSize="12" Visibility="Collapsed"/>
+    <TextBlock x:Name="Note" Foreground="{DynamicResource WarnText}" TextWrapping="Wrap" Margin="24,6,0,0" Visibility="Collapsed"/>
+    <CheckBox x:Name="Agree" Margin="0,14,0,0">
+      <TextBlock x:Name="AgreeText" TextWrapping="Wrap"/>
+    </CheckBox>
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+      <Button x:Name="Cancel" Style="{StaticResource SecondaryButton}" IsCancel="True" IsDefault="True"/>
+      <Button x:Name="Confirm" Style="{StaticResource PrimaryButton}" IsEnabled="False"/>
+    </StackPanel>
+  </StackPanel>
+</Window>
+'@
+    $dialog = ConvertFrom-PcXaml $xaml
+    Initialize-PcDialogWindow $dialog
+    $script:PcDialog = @{ Window = $dialog }
+    foreach ($n in 'Heading', 'Intro', 'Changes', 'Notice', 'RestorePoint', 'RestorePointText', 'LastPoint', 'Note', 'Agree', 'AgreeText', 'Cancel', 'Confirm') { $script:PcDialog[$n] = $dialog.FindName($n) }
+    $d = $script:PcDialog
+    $dialog.Title = 'PitCrew'
+    $d.Heading.Text = Get-PcText 'analysis.dialog.title'
+    $d.Intro.Text = Get-PcText 'analysis.dialog.intro'
+    $d.Changes.ItemsSource = @(
+        if ($Counts.Tweaks -gt 0) { '•  ' + (Get-PcText 'analysis.dialog.tweaks' -FormatArgs $Counts.Tweaks) }
+        if ($Counts.Cleanup -gt 0) { '•  ' + (Get-PcText 'analysis.dialog.cleanup' -FormatArgs $Counts.Cleanup, (Format-PcBytes $Counts.CleanupBytes)) }
+        if ($Counts.Apps -gt 0) { '•  ' + (Get-PcText 'analysis.dialog.apps' -FormatArgs $Counts.Apps) }
+        if ($Counts.Startup -gt 0) { '•  ' + (Get-PcText 'analysis.dialog.startup' -FormatArgs $Counts.Startup) }
+    )
+    $d.Notice.Text = Get-PcText 'analysis.dialog.notice'
+    $d.RestorePointText.Text = Get-PcText 'dialog.apply.restorePoint'
+    $d.AgreeText.Text = Get-PcText 'analysis.dialog.agree'
+    $d.Cancel.Content = Get-PcText 'dialog.cancel'
+    $d.Confirm.Content = Get-PcText 'analysis.dialog.confirm'
+    $d.Note.Text = Get-PcText 'dialog.apply.noRestorePointNote'
+    # Same restore point rules as the apply dialog
+    $blockedKey = $null
+    if ($Pc.SkipRestorePoint) { $blockedKey = 'dialog.apply.testMode' }
+    elseif (Test-PcRestorePolicyBlocked) { $blockedKey = 'dialog.apply.policyBlocked' }
+    if ($blockedKey) {
+        $d.RestorePoint.IsChecked = $false
+        $d.RestorePoint.IsEnabled = $false
+        $d.Note.Text = Get-PcText $blockedKey
+        $d.Note.Visibility = 'Visible'
+    } elseif ($script:PcIsAdmin) {
+        $last = Get-PcLastRestorePoint
+        if ($last) {
+            $d.LastPoint.Text = Get-PcText 'dialog.apply.lastPoint' -FormatArgs $last.Created.ToString('g'), $last.Description
+            $d.LastPoint.Visibility = 'Visible'
+        }
+    }
+    $toggle = { $script:PcDialog.Note.Visibility = if ($script:PcDialog.RestorePoint.IsChecked) { 'Collapsed' } else { 'Visible' } }
+    $d.RestorePoint.Add_Checked($toggle)
+    $d.RestorePoint.Add_Unchecked($toggle)
+    $agree = { $script:PcDialog.Confirm.IsEnabled = [bool]$script:PcDialog.Agree.IsChecked }
+    $d.Agree.Add_Checked($agree)
+    $d.Agree.Add_Unchecked($agree)
+    $d.Confirm.Add_Click({ if ($script:PcDialog.Agree.IsChecked) { $script:PcDialog.Window.DialogResult = $true } })
+    return $dialog
+}
+
+function Show-PcAnalysisDialog($Counts) {
+    # $null when cancelled, otherwise whether to create a restore point first
+    $dialog = New-PcAnalysisDialog $Counts
+    if (-not $dialog.ShowDialog()) { return $null }
+    return @{ RestorePoint = [bool]$script:PcDialog.RestorePoint.IsChecked }
+}
+
+$script:PcAnalysisWork = {
+    param($Sync, $TweakIds, $CleanupIds, $AppPackages, $StartupIds, $Names, $CreateRestorePoint)
+    Invoke-PcRecommendations -Sync $Sync -TweakIds $TweakIds -CleanupIds $CleanupIds -AppPackages $AppPackages -StartupIds $StartupIds -Names $Names -CreateRestorePoint $CreateRestorePoint
+}
+
+function Invoke-PcApplyRecommendations {
+    # Exactly what is ticked and on screen: the dialog counts the same items that run
+    $selected = @(Get-PcSelectedItems)
+    if ($selected.Count -eq 0) { Show-PcMessage (Get-PcText 'msg.selectFirst'); return }
+    $items = @($selected | ForEach-Object { $_.Data })
+    $choice = Show-PcAnalysisDialog (Get-PcRecommendationCounts $items)
+    if (-not $choice) { return }
+    $names = @{}
+    foreach ($s in $selected) { $names[$s.Id] = $s.Title }
+    $pick = { param($Area) @($items | Where-Object { $_.Area -eq $Area } | ForEach-Object { [string]$_.Id }) }
+    $script:PcPendingAnalysis = @{
+        TweakIds = @(& $pick 'tweak'); CleanupIds = @(& $pick 'cleanup'); AppPackages = @(& $pick 'app'); StartupIds = @(& $pick 'startup')
+        Names = $names; CreateRestorePoint = [bool]$choice.RestorePoint
+    }
+    $status = if ($choice.RestorePoint) { Get-PcText 'status.creatingRestorePoint' } else { Get-PcText 'status.applying' }
+    Start-PcJob -Work $script:PcAnalysisWork -Arguments $script:PcPendingAnalysis -Status $status -OnDone {
+        param($r)
+        if ($r[-1].NoRestorePoint) {
+            # Same path as Apply on the tweak pages: offer to turn System Protection on and try again
+            if (-not (Test-PcRestoreConfigLocked) -and (Confirm-PcAction (Get-PcText 'msg.noRestorePoint'))) {
+                Start-PcJob -Work { param($Sync) Enable-PcSystemProtection } -Status (Get-PcText 'status.enablingProtection') -OnDone {
+                    param($r)
+                    Start-PcJob -Work $script:PcAnalysisWork -Arguments $script:PcPendingAnalysis -Status (Get-PcText 'status.creatingRestorePoint') -OnDone ${function:Complete-PcAnalysisApply}
+                }
+            } else {
+                Show-PcMessage (Get-PcText 'msg.noRestorePointAbort') 'Warning'
+            }
+            return
+        }
+        Complete-PcAnalysisApply $r
+    }
+}
+
+function Complete-PcAnalysisApply($r) {
+    $res = $r[-1]
+    if ($res.NoRestorePoint) { Show-PcMessage (Get-PcText 'msg.noRestorePointAbort') 'Warning'; return }
+    $p = $script:PcPendingAnalysis
+    $lines = @()
+    if (@($p.TweakIds).Count -gt 0) { $lines += Get-PcText 'analysis.result.tweaks' -FormatArgs $res.Changed, $res.AlreadySet }
+    if (@($p.CleanupIds).Count -gt 0) { $lines += Get-PcText 'analysis.result.cleanup' -FormatArgs $res.Cleaned, (Format-PcBytes $res.Freed) }
+    if (@($p.AppPackages).Count -gt 0) { $lines += Get-PcText 'analysis.result.apps' -FormatArgs $res.AppsRemoved }
+    if (@($p.StartupIds).Count -gt 0) { $lines += Get-PcText 'analysis.result.startup' -FormatArgs $res.StartupOff }
+    if ($res.Restart) { $lines += Get-PcText 'analysis.result.restart' }
+    elseif ($res.SignOut -or $res.RestartExplorer) { $lines += Get-PcText 'analysis.result.signOut' }
+    if (@($res.Failed).Count -gt 0) { $lines += (Get-PcText 'analysis.result.failed') + "`n" + ((@($res.Failed) | ForEach-Object { "  • $_" }) -join "`n") }
+    # The cards that went through are marked in place; analyzing again is one click away
+    if ($script:PcPage -eq 'analysis') {
+        foreach ($item in @($Ui.Items.ItemsSource)) {
+            if (@($res.Done) -contains $item.Id) {
+                $item.IsSelected = $false
+                $item.IsEnabled = $false
+                $item.Badge = Get-PcText 'analysis.done'
+                $item.BadgeKind = 'good'
+            }
+        }
+        Update-PcSelectionCount
+    }
+    Show-PcMessage ($lines -join "`n`n")
 }
 
 # --- Tweaks ---------------------------------------------------------------------------------------
@@ -1437,7 +1680,7 @@ function Set-PcStaticTexts {
     $Ui.ExportProfile.Content = Get-PcText 'button.exportProfile'
     Update-PcPresetBox
     Update-PcThemeBox
-    foreach ($page in 'Dashboard', 'Performance', 'Privacy', 'Explorer', 'Startup', 'Cleanup', 'Memory', 'Maintenance', 'Apps', 'Drivers', 'Devices', 'Restore', 'History', 'About') {
+    foreach ($page in 'Dashboard', 'Analysis', 'Performance', 'Privacy', 'Explorer', 'Startup', 'Cleanup', 'Memory', 'Maintenance', 'Apps', 'Drivers', 'Devices', 'Restore', 'History', 'About') {
         $Ui["Nav$page"].Content = Get-PcText "nav.$($page.ToLowerInvariant())"
     }
     $Ui.ModeText.Text = if ($script:PcIsAdmin) { Get-PcText 'mode.admin' } else { Get-PcText 'mode.readOnly' }
@@ -1470,7 +1713,7 @@ function New-PcWindow {
     $xaml = [IO.File]::ReadAllText((Join-Path $Pc.Root 'src\UI\Window.xaml'))
     $window = ConvertFrom-PcXaml $xaml
     $script:Ui = @{ Window = $window }
-    foreach ($name in 'Tagline', 'ModeText', 'LanguageBox', 'ThemeBox', 'Nav', 'NavDashboard', 'NavPerformance',
+    foreach ($name in 'Tagline', 'ModeText', 'LanguageBox', 'ThemeBox', 'Nav', 'NavDashboard', 'NavAnalysis', 'NavPerformance',
         'NavPrivacy', 'NavExplorer', 'NavStartup', 'NavCleanup', 'NavMemory', 'NavMaintenance', 'NavApps', 'NavDrivers', 'NavDevices', 'NavRestore', 'NavHistory',
         'NavAbout', 'PageTitle', 'PageIntro', 'RefreshButton', 'Banner', 'BannerText', 'MemoryBar', 'PageInfo', 'Items', 'EmptyText',
         'PrimaryAction', 'SecondaryAction', 'SelectionText', 'Busy', 'StatusText', 'FilterBar', 'SearchBox', 'SearchHint', 'StatusFilter',
@@ -1481,7 +1724,9 @@ function New-PcWindow {
         'AboutProjectTitle', 'AboutRepoText', 'LinkRepo', 'LinkRepoText', 'LinkIssues', 'LinkIssuesText', 'AboutCredits',
         'AboutTranslations', 'AboutDataDir', 'UpdateBar', 'UpdateText', 'UpdateLink', 'UpdateLinkText', 'UpdateTitle', 'UpdateAuto',
         'UpdateAutoText', 'UpdateCheckNow', 'UpdateStatus', 'DashboardPanel', 'DashSystemTitle', 'DashSystem', 'DashOptimizedTitle',
-        'DashOptimized', 'DashOptimizedNote', 'DashTotalsTitle', 'DashTotals', 'DashTotalsNote', 'DashChangesTitle', 'DashChangesIntro') {
+        'DashOptimized', 'DashOptimizedNote', 'DashTotalsTitle', 'DashTotals', 'DashTotalsNote', 'DashChangesTitle', 'DashChangesIntro',
+        'DashAnalysisTitle', 'DashAnalysisText', 'DashAnalysisButton', 'DashMemoryTitle', 'DashMemoryBar', 'DashMemoryText', 'DashMemoryButton',
+        'AnalysisPanel', 'AnalysisProfilesTitle', 'AnalysisProfiles', 'AnalysisRun', 'AnalysisHint', 'AnalysisNotice', 'AnalysisSummary') {
         $Ui[$name] = $window.FindName($name)
     }
 
@@ -1546,6 +1791,9 @@ function New-PcWindow {
             'dashboard' { Invoke-PcLoadDashboard }
         }
     })
+    $Ui.DashAnalysisButton.Add_Click({ $Ui.Nav.SelectedItem = $Ui.NavAnalysis })
+    $Ui.DashMemoryButton.Add_Click({ $Ui.Nav.SelectedItem = $Ui.NavMemory })
+    $Ui.AnalysisRun.Add_Click({ Invoke-PcRunAnalysis })
     $Ui.CopyPixKey.Add_Click({ Copy-PcText $script:PcDonation.PixKey })
     $Ui.CopyPixCode.Add_Click({ Copy-PcText (Get-PcPixPayload) })
     $Ui.UpdateAuto.Add_Click({
@@ -1572,7 +1820,11 @@ function New-PcWindow {
     $window.AddHandler([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent,
         [System.Windows.RoutedEventHandler] {
             param($s, $e)
-            if ($e.OriginalSource -is [System.Windows.Controls.CheckBox]) { Update-PcSelectionCount }
+            if ($e.OriginalSource -is [System.Windows.Controls.CheckBox]) {
+                Update-PcSelectionCount
+                # A profile ticked or unticked on the analysis page
+                if ($script:PcPage -eq 'analysis') { Update-PcAnalysisRunButton }
+            }
         })
 
     $timer = New-Object System.Windows.Threading.DispatcherTimer

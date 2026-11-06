@@ -64,7 +64,44 @@ Test-Page 'dashboard' { Show-PcPage 'dashboard' } {
         @($Ui.DashTotals.ItemsSource).Count -eq 4 -and $untranslated.Count -eq 0 -and (Get-DataFolderPrint) -eq $dataBefore -and
         @($items | Where-Object Selectable).Count -eq 0
 }
-Test-Page 'leaving dashboard' { Show-PcPage 'maintenance' } { param($items) $Ui.DashboardPanel.Visibility -eq 'Collapsed' }
+Test-Page 'dashboard cards' { } {
+    param($items)
+    Write-Host "    [$($Ui.DashAnalysisButton.Content)]  $($Ui.DashMemoryText.Text) [$($Ui.DashMemoryButton.Content)]"
+    $Ui.DashMemoryBar.Visibility -eq 'Visible' -and $Ui.DashMemoryBar.Value -gt 0 -and $Ui.DashMemoryText.Text -notlike 'memory.*' -and
+        $Ui.DashAnalysisButton.Content -notlike 'dashboard.*' -and $Ui.DashAnalysisButton.IsEnabled
+}
+Test-Page 'dashboard button opens the analysis' { $Ui.DashAnalysisButton.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent))) } {
+    param($items)
+    # Opens the page and waits: no profile is ticked and nothing is analyzed until a click
+    $profiles = @($Ui.AnalysisProfiles.ItemsSource)
+    Write-Host "    page '$script:PcPage', profiles: $(($profiles | ForEach-Object Title) -join ', '), Analyze enabled: $($Ui.AnalysisRun.IsEnabled), hint '$($Ui.AnalysisHint.Text)'"
+    $script:PcPage -eq 'analysis' -and $Ui.AnalysisPanel.Visibility -eq 'Visible' -and $profiles.Count -eq @(Get-PcPresets).Count -and
+        @($profiles | Where-Object IsSelected).Count -eq 0 -and -not $Ui.AnalysisRun.IsEnabled -and $items.Count -eq 0 -and
+        $Ui.EmptyText.Visibility -eq 'Visible' -and $Ui.FilterBar.Visibility -eq 'Collapsed' -and $Ui.AnalysisNotice.Text -notlike 'analysis.*'
+}
+Test-Page 'analysis (read only)' {
+    foreach ($p in @($Ui.AnalysisProfiles.ItemsSource)) { $p.IsSelected = $true }
+    Update-PcAnalysisRunButton
+    $Ui.AnalysisRun.RaiseEvent((New-Object System.Windows.RoutedEventArgs ([System.Windows.Controls.Primitives.ButtonBase]::ClickEvent)))
+} {
+    param($items)
+    Write-Host "    $($Ui.AnalysisSummary.Text -replace "`n", ' | ')"
+    foreach ($i in $items | Select-Object -First 12) { Write-Host ("    [{0}] {1} | {2} | {3}" -f $(if ($i.IsSelected) { 'x' } else { ' ' }), $i.Title, $i.Tag, $i.Badge) }
+    $texts = @($items | ForEach-Object { $_.Tag; $_.Badge; $_.Meta }) + @($Ui.AnalysisSummary.Text)
+    $untranslated = @($texts | Where-Object { $_ -match '(^|\s)(analysis|nav|risk|cleanup|tweak|filter)\.[a-zA-Z]' })
+    if ($untranslated) { Write-Host "    untranslated: $($untranslated -join ', ')" }
+    # Only safe tweaks and cleanup other than the Recycle Bin come ticked; apps and startup never
+    $wrongTick = @($items | Where-Object { $_.IsSelected -and ($_.State -in 'AreaApp', 'AreaStartup' -or $_.Id -eq 'cleanup|recycle-bin' -or ($_.State -eq 'AreaTweak' -and $_.Data.Risk -ne 'safe')) })
+    $items.Count -gt 0 -and $untranslated.Count -eq 0 -and $wrongTick.Count -eq 0 -and $Ui.FilterBar.Visibility -eq 'Visible' -and
+        (Get-DataFolderPrint) -eq $dataBefore
+}
+Test-Page 'analysis area filter' { $Ui.StatusFilter.SelectedItem = @($Ui.StatusFilter.Items | Where-Object { $_.Tag -eq 'areaCleanup' })[0] } {
+    param($items)
+    $visible = @($items | Where-Object { Test-PcItemVisible $_ })
+    Write-Host "    '$($Ui.StatusFilter.SelectedItem.Content)' shows $($visible.Count) of $($items.Count)"
+    @($visible | Where-Object { $_.State -ne 'AreaCleanup' }).Count -eq 0
+}
+Test-Page 'leaving dashboard' { Show-PcPage 'maintenance' } { param($items) $Ui.DashboardPanel.Visibility -eq 'Collapsed' -and $Ui.AnalysisPanel.Visibility -eq 'Collapsed' }
 Test-Page 'cleanup' { Show-PcPage 'cleanup' } { param($items) $items.Count -eq @($script:PcCleanupTargets).Count }
 Test-Page 'apps' { Show-PcPage 'apps' } { param($items) $items.Count -eq @(Get-PcAppCatalog).Count }
 Test-Page 'drivers summary' { Show-PcPage 'drivers' } { param($items) [bool]$Ui.PageInfo.Text }
